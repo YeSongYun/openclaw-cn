@@ -1,5 +1,5 @@
 {
-  "name": "openclaw",
+  "name": "openclaw-cn",
   "version": "2026.1.29",
   "description": "WhatsApp gateway CLI (Baileys web) with Pi RPC agent",
   "type": "module",
@@ -11,7 +11,10 @@
     "./cli-entry": "./openclaw.mjs"
   },
   "bin": {
-    "openclaw": "./openclaw.mjs"
+    "openclaw-cn": "./openclaw.mjs",
+    "openclaw": "./openclaw.mjs",
+    "clawdbot": "./openclaw.mjs",
+    "moltbot": "./openclaw.mjs"
   },
   "files": [
     "locales/**",
