@@ -1,13 +1,12 @@
-import { listChannelDocks } from "../channels/dock.js";
-import { t, ti } from "../i18n/index.js";
-import { getActivePluginRegistry } from "../plugins/runtime.js";
-import { listThinkingLevels } from "./thinking.js";
-import { COMMAND_ARG_FORMATTERS } from "./commands-args.js";
 import type {
   ChatCommandDefinition,
   CommandCategory,
   CommandScope,
 } from "./commands-registry.types.js";
+import { listChannelDocks } from "../channels/dock.js";
+import { getActivePluginRegistry } from "../plugins/runtime.js";
+import { COMMAND_ARG_FORMATTERS } from "./commands-args.js";
+import { listThinkingLevels } from "./thinking.js";
 
 type DefineChatCommandInput = {
   key: string;
@@ -32,39 +31,15 @@ function defineChatCommand(command: DefineChatCommandInput): ChatCommandDefiniti
     command.scope ?? (command.nativeName ? (aliases.length ? "both" : "native") : "text");
   const acceptsArgs = command.acceptsArgs ?? Boolean(command.args?.length);
   const argsParsing = command.argsParsing ?? (command.args?.length ? "positional" : "none");
-
-  // 翻译命令描述
-  const translatedDescription = t("commands", `${command.key}.description`, command.description);
-
-  // 翻译参数描述
-  const translatedArgs = command.args?.map((arg) => ({
-    ...arg,
-    description: t("commands", `${command.key}.args.${arg.name}`, arg.description),
-  }));
-
-  // 翻译参数菜单
-  let translatedArgsMenu = command.argsMenu;
-  if (
-    command.argsMenu &&
-    typeof command.argsMenu === "object" &&
-    "title" in command.argsMenu &&
-    command.argsMenu.title
-  ) {
-    translatedArgsMenu = {
-      ...command.argsMenu,
-      title: t("commands", `${command.key}.argsMenu.title`, command.argsMenu.title),
-    };
-  }
-
   return {
     key: command.key,
     nativeName: command.nativeName,
-    description: translatedDescription,
+    description: command.description,
     acceptsArgs,
-    args: translatedArgs,
+    args: command.args,
     argsParsing,
     formatArgs: command.formatArgs,
-    argsMenu: translatedArgsMenu,
+    argsMenu: command.argsMenu,
     textAliases: aliases,
     scope,
     category: command.category,
@@ -77,9 +52,7 @@ function defineDockCommand(dock: ChannelDock): ChatCommandDefinition {
   return defineChatCommand({
     key: `dock:${dock.id}`,
     nativeName: `dock_${dock.id}`,
-    description: ti("commands", "dock.description", `Switch to ${dock.id} for replies.`, {
-      dock: dock.id,
-    }),
+    description: `Switch to ${dock.id} for replies.`,
     textAliases: [`/dock-${dock.id}`, `/dock_${dock.id}`],
     category: "docks",
   });
@@ -93,9 +66,13 @@ function registerAlias(commands: ChatCommandDefinition[], key: string, ...aliase
   const existing = new Set(command.textAliases.map((alias) => alias.trim().toLowerCase()));
   for (const alias of aliases) {
     const trimmed = alias.trim();
-    if (!trimmed) continue;
+    if (!trimmed) {
+      continue;
+    }
     const lowered = trimmed.toLowerCase();
-    if (existing.has(lowered)) continue;
+    if (existing.has(lowered)) {
+      continue;
+    }
     existing.add(lowered);
     command.textAliases.push(trimmed);
   }
@@ -612,7 +589,9 @@ function buildChatCommands(): ChatCommandDefinition[] {
 
 export function getChatCommands(): ChatCommandDefinition[] {
   const registry = getActivePluginRegistry();
-  if (cachedCommands && registry === cachedRegistry) return cachedCommands;
+  if (cachedCommands && registry === cachedRegistry) {
+    return cachedCommands;
+  }
   const commands = buildChatCommands();
   cachedCommands = commands;
   cachedRegistry = registry;

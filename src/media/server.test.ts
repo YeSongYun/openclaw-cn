@@ -1,7 +1,6 @@
-import fs from "node:fs/promises";
 import type { AddressInfo } from "node:net";
+import fs from "node:fs/promises";
 import path from "node:path";
-
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 const MEDIA_DIR = path.join(process.cwd(), "tmp-media-test");
@@ -77,7 +76,7 @@ describe("media server", () => {
     await new Promise((r) => server.close(r));
   });
 
-  it.skipIf(process.platform === "win32")("blocks symlink escaping outside media dir", async () => {
+  it("blocks symlink escaping outside media dir", async () => {
     const target = path.join(process.cwd(), "package.json"); // outside MEDIA_DIR
     const link = path.join(MEDIA_DIR, "link-out");
     await fs.symlink(target, link);

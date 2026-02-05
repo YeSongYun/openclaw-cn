@@ -1,5 +1,4 @@
 import type { Command } from "commander";
-import { formatCliChannelOptions } from "./channel-options.js";
 import {
   channelsAddCommand,
   channelsCapabilitiesCommand,
@@ -10,11 +9,11 @@ import {
   channelsStatusCommand,
 } from "../commands/channels.js";
 import { danger } from "../globals.js";
-import { t } from "../i18n/index.js";
 import { defaultRuntime } from "../runtime.js";
 import { formatDocsLink } from "../terminal/links.js";
 import { theme } from "../terminal/theme.js";
 import { runChannelLogin, runChannelLogout } from "./channel-auth.js";
+import { formatCliChannelOptions } from "./channel-options.js";
 import { runCommandWithRuntime } from "./cli-utils.js";
 import { hasExplicitOptions } from "./command-options.js";
 
@@ -75,7 +74,7 @@ export function registerChannelsCli(program: Command) {
     .addHelpText(
       "after",
       () =>
-        `\n${theme.muted(t("cli", "help.docs", "Docs:"))} ${formatDocsLink(
+        `\n${theme.muted("Docs:")} ${formatDocsLink(
           "/cli/channels",
           "docs.openclaw.ai/cli/channels",
         )}\n`,

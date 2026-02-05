@@ -1,9 +1,8 @@
-import fs from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-
 import type { OpenClawConfig } from "../config/config.js";
+import { resolveControlUiRootSync } from "../infra/control-ui-assets.js";
 import { DEFAULT_ASSISTANT_IDENTITY, resolveAssistantIdentity } from "./assistant-identity.js";
 import {
   buildControlUiAvatarUrl,
@@ -18,32 +17,13 @@ export type ControlUiRequestOptions = {
   basePath?: string;
   config?: OpenClawConfig;
   agentId?: string;
+  root?: ControlUiRootState;
 };
 
-function resolveControlUiRoot(): string | null {
-  const here = path.dirname(fileURLToPath(import.meta.url));
-  const execDir = (() => {
-    try {
-      return path.dirname(fs.realpathSync(process.execPath));
-    } catch {
-      return null;
-    }
-  })();
-  const candidates = [
-    // Packaged app: control-ui lives alongside the executable.
-    execDir ? path.resolve(execDir, "control-ui") : null,
-    // Running from dist: dist/gateway/control-ui.js -> dist/control-ui
-    path.resolve(here, "../control-ui"),
-    // Running from source: src/gateway/control-ui.ts -> dist/control-ui
-    path.resolve(here, "../../dist/control-ui"),
-    // Fallback to cwd (dev)
-    path.resolve(process.cwd(), "dist", "control-ui"),
-  ].filter((dir): dir is string => Boolean(dir));
-  for (const dir of candidates) {
-    if (fs.existsSync(path.join(dir, "index.html"))) return dir;
-  }
-  return null;
-}
+export type ControlUiRootState =
+  | { kind: "resolved"; path: string }
+  | { kind: "invalid"; path: string }
+  | { kind: "missing" };
 
 function contentTypeForExt(ext: string): string {
   switch (ext) {
@@ -86,6 +66,12 @@ type ControlUiAvatarMeta = {
   avatarUrl: string | null;
 };
 
+function applyControlUiSecurityHeaders(res: ServerResponse) {
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Content-Security-Policy", "frame-ancestors 'none'");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+}
+
 function sendJson(res: ServerResponse, status: number, body: unknown) {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -103,8 +89,12 @@ export function handleControlUiAvatarRequest(
   opts: { basePath?: string; resolveAvatar: (agentId: string) => ControlUiAvatarResolution },
 ): boolean {
   const urlRaw = req.url;
-  if (!urlRaw) return false;
-  if (req.method !== "GET" && req.method !== "HEAD") return false;
+  if (!urlRaw) {
+    return false;
+  }
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    return false;
+  }
 
   const url = new URL(urlRaw, "http://localhost");
   const basePath = normalizeControlUiBasePath(opts.basePath);
@@ -112,7 +102,11 @@ export function handleControlUiAvatarRequest(
   const pathWithBase = basePath
     ? `${basePath}${CONTROL_UI_AVATAR_PREFIX}/`
     : `${CONTROL_UI_AVATAR_PREFIX}/`;
-  if (!pathname.startsWith(pathWithBase)) return false;
+  if (!pathname.startsWith(pathWithBase)) {
+    return false;
+  }
+
+  applyControlUiSecurityHeaders(res);
 
   const agentIdParts = pathname.slice(pathWithBase.length).split("/").filter(Boolean);
   const agentId = agentIdParts[0] ?? "";
@@ -170,11 +164,10 @@ interface ControlUiInjectionOpts {
   basePath: string;
   assistantName?: string;
   assistantAvatar?: string;
-  locale?: string;
 }
 
 function injectControlUiConfig(html: string, opts: ControlUiInjectionOpts): string {
-  const { basePath, assistantName, assistantAvatar, locale } = opts;
+  const { basePath, assistantName, assistantAvatar } = opts;
   const script =
     `<script>` +
     `window.__OPENCLAW_CONTROL_UI_BASE_PATH__=${JSON.stringify(basePath)};` +
@@ -184,10 +177,11 @@ function injectControlUiConfig(html: string, opts: ControlUiInjectionOpts): stri
     `window.__OPENCLAW_ASSISTANT_AVATAR__=${JSON.stringify(
       assistantAvatar ?? DEFAULT_ASSISTANT_IDENTITY.avatar,
     )};` +
-    `window.__CLAWDBOT_LOCALE__=${JSON.stringify(locale ?? "zh-CN")};` +
     `</script>`;
   // Check if already injected
-  if (html.includes("__OPENCLAW_ASSISTANT_NAME__")) return html;
+  if (html.includes("__OPENCLAW_ASSISTANT_NAME__")) {
+    return html;
+  }
   const headClose = html.indexOf("</head>");
   if (headClose !== -1) {
     return `${html.slice(0, headClose)}${script}${html.slice(headClose)}`;
@@ -216,10 +210,6 @@ function serveIndexHtml(res: ServerResponse, indexPath: string, opts: ServeIndex
       agentId: resolvedAgentId,
       basePath,
     }) ?? identity.avatar;
-  const locale =
-    ((config as Record<string, unknown>)?.locale as string | undefined) ??
-    process.env.CLAWDBOT_LOCALE ??
-    "zh-CN";
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", "no-cache");
   const raw = fs.readFileSync(indexPath, "utf8");
@@ -228,68 +218,21 @@ function serveIndexHtml(res: ServerResponse, indexPath: string, opts: ServeIndex
       basePath,
       assistantName: identity.name,
       assistantAvatar: avatarValue,
-      locale,
     }),
   );
 }
 
-function resolveLocalesRoot(): string | null {
-  const here = path.dirname(fileURLToPath(import.meta.url));
-  const candidates = [
-    // Running from dist: dist/gateway/control-ui.js -> locales
-    path.resolve(here, "../../locales"),
-    // Running from source: src/gateway/control-ui.ts -> locales
-    path.resolve(here, "../../locales"),
-    // Fallback to cwd
-    path.resolve(process.cwd(), "locales"),
-  ];
-  for (const dir of candidates) {
-    if (fs.existsSync(dir)) return dir;
-  }
-  return null;
-}
-
-function handleLocalesRequest(
-  req: IncomingMessage,
-  res: ServerResponse,
-  pathname: string,
-  basePath: string,
-): boolean {
-  const prefix = basePath ? `${basePath}/locales/` : "/locales/";
-  if (!pathname.startsWith(prefix)) return false;
-
-  const relPath = pathname.slice(prefix.length);
-  if (!relPath || !isSafeRelativePath(relPath)) {
-    respondNotFound(res);
-    return true;
-  }
-
-  const localesRoot = resolveLocalesRoot();
-  if (!localesRoot) {
-    respondNotFound(res);
-    return true;
-  }
-
-  const filePath = path.join(localesRoot, relPath);
-  if (!filePath.startsWith(localesRoot)) {
-    respondNotFound(res);
-    return true;
-  }
-
-  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-    serveFile(res, filePath);
-    return true;
-  }
-
-  respondNotFound(res);
-  return true;
-}
-
 function isSafeRelativePath(relPath: string) {
-  if (!relPath) return false;
+  if (!relPath) {
+    return false;
+  }
   const normalized = path.posix.normalize(relPath);
-  if (normalized.startsWith("../") || normalized === "..") return false;
-  if (normalized.includes("\0")) return false;
+  if (normalized.startsWith("../") || normalized === "..") {
+    return false;
+  }
+  if (normalized.includes("\0")) {
+    return false;
+  }
   return true;
 }
 
@@ -299,7 +242,9 @@ export function handleControlUiHttpRequest(
   opts?: ControlUiRequestOptions,
 ): boolean {
   const urlRaw = req.url;
-  if (!urlRaw) return false;
+  if (!urlRaw) {
+    return false;
+  }
   if (req.method !== "GET" && req.method !== "HEAD") {
     res.statusCode = 405;
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
@@ -313,6 +258,7 @@ export function handleControlUiHttpRequest(
 
   if (!basePath) {
     if (pathname === "/ui" || pathname.startsWith("/ui/")) {
+      applyControlUiSecurityHeaders(res);
       respondNotFound(res);
       return true;
     }
@@ -320,18 +266,45 @@ export function handleControlUiHttpRequest(
 
   if (basePath) {
     if (pathname === basePath) {
+      applyControlUiSecurityHeaders(res);
       res.statusCode = 302;
       res.setHeader("Location", `${basePath}/${url.search}`);
       res.end();
       return true;
     }
-    if (!pathname.startsWith(`${basePath}/`)) return false;
+    if (!pathname.startsWith(`${basePath}/`)) {
+      return false;
+    }
   }
 
-  // Serve locale files before resolving UI root
-  if (handleLocalesRequest(req, res, pathname, basePath)) return true;
+  applyControlUiSecurityHeaders(res);
 
-  const root = resolveControlUiRoot();
+  const rootState = opts?.root;
+  if (rootState?.kind === "invalid") {
+    res.statusCode = 503;
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.end(
+      `Control UI assets not found at ${rootState.path}. Build them with \`pnpm ui:build\` (auto-installs UI deps), or update gateway.controlUi.root.`,
+    );
+    return true;
+  }
+  if (rootState?.kind === "missing") {
+    res.statusCode = 503;
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.end(
+      "Control UI assets not found. Build them with `pnpm ui:build` (auto-installs UI deps), or run `pnpm ui:dev` during development.",
+    );
+    return true;
+  }
+
+  const root =
+    rootState?.kind === "resolved"
+      ? rootState.path
+      : resolveControlUiRootSync({
+          moduleUrl: import.meta.url,
+          argv1: process.argv[1],
+          cwd: process.cwd(),
+        });
   if (!root) {
     res.statusCode = 503;
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
@@ -344,9 +317,13 @@ export function handleControlUiHttpRequest(
   const uiPath =
     basePath && pathname.startsWith(`${basePath}/`) ? pathname.slice(basePath.length) : pathname;
   const rel = (() => {
-    if (uiPath === ROOT_PREFIX) return "";
+    if (uiPath === ROOT_PREFIX) {
+      return "";
+    }
     const assetsIndex = uiPath.indexOf("/assets/");
-    if (assetsIndex >= 0) return uiPath.slice(assetsIndex + 1);
+    if (assetsIndex >= 0) {
+      return uiPath.slice(assetsIndex + 1);
+    }
     return uiPath.slice(1);
   })();
   const requested = rel && !rel.endsWith("/") ? rel : `${rel}index.html`;

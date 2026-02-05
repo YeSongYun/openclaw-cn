@@ -4,18 +4,15 @@ export {
 } from "../agents/synthetic-models.js";
 export { VENICE_DEFAULT_MODEL_ID, VENICE_DEFAULT_MODEL_REF } from "../agents/venice-models.js";
 export {
-  DMXAPI_DEFAULT_MODEL_ID,
-  DMXAPI_DEFAULT_MODEL_REF,
-  DMXAPI_DEFAULT_BASE_URL,
-} from "../agents/dmxapi-models.js";
-export {
   applyAuthProfileConfig,
-  applyDmxapiConfig,
-  applyDmxapiProviderConfig,
+  applyCloudflareAiGatewayConfig,
+  applyCloudflareAiGatewayProviderConfig,
   applyKimiCodeConfig,
   applyKimiCodeProviderConfig,
   applyMoonshotConfig,
+  applyMoonshotConfigCn,
   applyMoonshotProviderConfig,
+  applyMoonshotProviderConfigCn,
   applyOpenrouterConfig,
   applyOpenrouterProviderConfig,
   applySyntheticConfig,
@@ -42,12 +39,12 @@ export {
   applyOpencodeZenProviderConfig,
 } from "./onboard-auth.config-opencode.js";
 export {
-  DMXAPI_DEFAULT_MODEL_REF as DMXAPI_DEFAULT_MODEL_REF_CRED,
+  CLOUDFLARE_AI_GATEWAY_DEFAULT_MODEL_REF,
   OPENROUTER_DEFAULT_MODEL_REF,
   setAnthropicApiKey,
-  setDmxapiApiKey,
+  setCloudflareAiGatewayConfig,
   setGeminiApiKey,
-  setKimiCodeApiKey,
+  setKimiCodingApiKey,
   setMinimaxApiKey,
   setMoonshotApiKey,
   setOpencodeZenApiKey,
@@ -63,14 +60,13 @@ export {
   ZAI_DEFAULT_MODEL_REF,
 } from "./onboard-auth.credentials.js";
 export {
-  buildKimiCodeModelDefinition,
   buildMinimaxApiModelDefinition,
   buildMinimaxModelDefinition,
   buildMoonshotModelDefinition,
   DEFAULT_MINIMAX_BASE_URL,
-  KIMI_CODE_BASE_URL,
-  KIMI_CODE_MODEL_ID,
-  KIMI_CODE_MODEL_REF,
+  MOONSHOT_CN_BASE_URL,
+  KIMI_CODING_MODEL_ID,
+  KIMI_CODING_MODEL_REF,
   MINIMAX_API_BASE_URL,
   MINIMAX_HOSTED_MODEL_ID,
   MINIMAX_HOSTED_MODEL_REF,

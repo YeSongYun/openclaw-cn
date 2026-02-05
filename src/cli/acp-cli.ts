@@ -1,8 +1,6 @@
 import type { Command } from "commander";
-
 import { runAcpClientInteractive } from "../acp/client.js";
 import { serveAcpGateway } from "../acp/server.js";
-import { t } from "../i18n/index.js";
 import { defaultRuntime } from "../runtime.js";
 import { formatDocsLink } from "../terminal/links.js";
 import { theme } from "../terminal/theme.js";

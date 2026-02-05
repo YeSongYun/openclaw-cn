@@ -1,8 +1,8 @@
+import type { OpenClawConfig } from "../config/config.js";
 import {
-  buildDmxapiModelDefinition,
-  DMXAPI_DEFAULT_BASE_URL,
-  DMXAPI_MODEL_CATALOG,
-} from "../agents/dmxapi-models.js";
+  buildCloudflareAiGatewayModelDefinition,
+  resolveCloudflareAiGatewayBaseUrl,
+} from "../agents/cloudflare-ai-gateway.js";
 import { buildXiaomiProvider, XIAOMI_DEFAULT_MODEL_ID } from "../agents/models-config.providers.js";
 import {
   buildSyntheticModelDefinition,
@@ -16,21 +16,18 @@ import {
   VENICE_DEFAULT_MODEL_REF,
   VENICE_MODEL_CATALOG,
 } from "../agents/venice-models.js";
-import type { OpenClawConfig } from "../config/config.js";
 import {
-  DMXAPI_DEFAULT_MODEL_REF,
+  CLOUDFLARE_AI_GATEWAY_DEFAULT_MODEL_REF,
   OPENROUTER_DEFAULT_MODEL_REF,
   VERCEL_AI_GATEWAY_DEFAULT_MODEL_REF,
   XIAOMI_DEFAULT_MODEL_REF,
   ZAI_DEFAULT_MODEL_REF,
 } from "./onboard-auth.credentials.js";
 import {
-  buildKimiCodeModelDefinition,
   buildMoonshotModelDefinition,
-  KIMI_CODE_BASE_URL,
-  KIMI_CODE_MODEL_ID,
-  KIMI_CODE_MODEL_REF,
+  KIMI_CODING_MODEL_REF,
   MOONSHOT_BASE_URL,
+  MOONSHOT_CN_BASE_URL,
   MOONSHOT_DEFAULT_MODEL_ID,
   MOONSHOT_DEFAULT_MODEL_REF,
 } from "./onboard-auth.models.js";
@@ -101,6 +98,73 @@ export function applyVercelAiGatewayProviderConfig(cfg: OpenClawConfig): OpenCla
   };
 }
 
+export function applyCloudflareAiGatewayProviderConfig(
+  cfg: OpenClawConfig,
+  params?: { accountId?: string; gatewayId?: string },
+): OpenClawConfig {
+  const models = { ...cfg.agents?.defaults?.models };
+  models[CLOUDFLARE_AI_GATEWAY_DEFAULT_MODEL_REF] = {
+    ...models[CLOUDFLARE_AI_GATEWAY_DEFAULT_MODEL_REF],
+    alias: models[CLOUDFLARE_AI_GATEWAY_DEFAULT_MODEL_REF]?.alias ?? "Cloudflare AI Gateway",
+  };
+
+  const providers = { ...cfg.models?.providers };
+  const existingProvider = providers["cloudflare-ai-gateway"];
+  const existingModels = Array.isArray(existingProvider?.models) ? existingProvider.models : [];
+  const defaultModel = buildCloudflareAiGatewayModelDefinition();
+  const hasDefaultModel = existingModels.some((model) => model.id === defaultModel.id);
+  const mergedModels = hasDefaultModel ? existingModels : [...existingModels, defaultModel];
+  const baseUrl =
+    params?.accountId && params?.gatewayId
+      ? resolveCloudflareAiGatewayBaseUrl({
+          accountId: params.accountId,
+          gatewayId: params.gatewayId,
+        })
+      : existingProvider?.baseUrl;
+
+  if (!baseUrl) {
+    return {
+      ...cfg,
+      agents: {
+        ...cfg.agents,
+        defaults: {
+          ...cfg.agents?.defaults,
+          models,
+        },
+      },
+    };
+  }
+
+  const { apiKey: existingApiKey, ...existingProviderRest } = (existingProvider ?? {}) as Record<
+    string,
+    unknown
+  > as { apiKey?: string };
+  const resolvedApiKey = typeof existingApiKey === "string" ? existingApiKey : undefined;
+  const normalizedApiKey = resolvedApiKey?.trim();
+  providers["cloudflare-ai-gateway"] = {
+    ...existingProviderRest,
+    baseUrl,
+    api: "anthropic-messages",
+    ...(normalizedApiKey ? { apiKey: normalizedApiKey } : {}),
+    models: mergedModels.length > 0 ? mergedModels : [defaultModel],
+  };
+
+  return {
+    ...cfg,
+    agents: {
+      ...cfg.agents,
+      defaults: {
+        ...cfg.agents?.defaults,
+        models,
+      },
+    },
+    models: {
+      mode: cfg.models?.mode ?? "merge",
+      providers,
+    },
+  };
+}
+
 export function applyVercelAiGatewayConfig(cfg: OpenClawConfig): OpenClawConfig {
   const next = applyVercelAiGatewayProviderConfig(cfg);
   const existingModel = next.agents?.defaults?.model;
@@ -117,6 +181,31 @@ export function applyVercelAiGatewayConfig(cfg: OpenClawConfig): OpenClawConfig 
               }
             : undefined),
           primary: VERCEL_AI_GATEWAY_DEFAULT_MODEL_REF,
+        },
+      },
+    },
+  };
+}
+
+export function applyCloudflareAiGatewayConfig(
+  cfg: OpenClawConfig,
+  params?: { accountId?: string; gatewayId?: string },
+): OpenClawConfig {
+  const next = applyCloudflareAiGatewayProviderConfig(cfg, params);
+  const existingModel = next.agents?.defaults?.model;
+  return {
+    ...next,
+    agents: {
+      ...next.agents,
+      defaults: {
+        ...next.agents?.defaults,
+        model: {
+          ...(existingModel && "fallbacks" in (existingModel as Record<string, unknown>)
+            ? {
+                fallbacks: (existingModel as { fallbacks?: string[] }).fallbacks,
+              }
+            : undefined),
+          primary: CLOUDFLARE_AI_GATEWAY_DEFAULT_MODEL_REF,
         },
       },
     },
@@ -146,10 +235,21 @@ export function applyOpenrouterConfig(cfg: OpenClawConfig): OpenClawConfig {
 }
 
 export function applyMoonshotProviderConfig(cfg: OpenClawConfig): OpenClawConfig {
+  return applyMoonshotProviderConfigWithBaseUrl(cfg, MOONSHOT_BASE_URL);
+}
+
+export function applyMoonshotProviderConfigCn(cfg: OpenClawConfig): OpenClawConfig {
+  return applyMoonshotProviderConfigWithBaseUrl(cfg, MOONSHOT_CN_BASE_URL);
+}
+
+function applyMoonshotProviderConfigWithBaseUrl(
+  cfg: OpenClawConfig,
+  baseUrl: string,
+): OpenClawConfig {
   const models = { ...cfg.agents?.defaults?.models };
   models[MOONSHOT_DEFAULT_MODEL_REF] = {
     ...models[MOONSHOT_DEFAULT_MODEL_REF],
-    alias: models[MOONSHOT_DEFAULT_MODEL_REF]?.alias ?? "Kimi K2",
+    alias: models[MOONSHOT_DEFAULT_MODEL_REF]?.alias ?? "Kimi",
   };
 
   const providers = { ...cfg.models?.providers };
@@ -166,7 +266,7 @@ export function applyMoonshotProviderConfig(cfg: OpenClawConfig): OpenClawConfig
   const normalizedApiKey = resolvedApiKey?.trim();
   providers.moonshot = {
     ...existingProviderRest,
-    baseUrl: MOONSHOT_BASE_URL,
+    baseUrl,
     api: "openai-completions",
     ...(normalizedApiKey ? { apiKey: normalizedApiKey } : {}),
     models: mergedModels.length > 0 ? mergedModels : [defaultModel],
@@ -210,31 +310,33 @@ export function applyMoonshotConfig(cfg: OpenClawConfig): OpenClawConfig {
   };
 }
 
+export function applyMoonshotConfigCn(cfg: OpenClawConfig): OpenClawConfig {
+  const next = applyMoonshotProviderConfigCn(cfg);
+  const existingModel = next.agents?.defaults?.model;
+  return {
+    ...next,
+    agents: {
+      ...next.agents,
+      defaults: {
+        ...next.agents?.defaults,
+        model: {
+          ...(existingModel && "fallbacks" in (existingModel as Record<string, unknown>)
+            ? {
+                fallbacks: (existingModel as { fallbacks?: string[] }).fallbacks,
+              }
+            : undefined),
+          primary: MOONSHOT_DEFAULT_MODEL_REF,
+        },
+      },
+    },
+  };
+}
+
 export function applyKimiCodeProviderConfig(cfg: OpenClawConfig): OpenClawConfig {
   const models = { ...cfg.agents?.defaults?.models };
-  models[KIMI_CODE_MODEL_REF] = {
-    ...models[KIMI_CODE_MODEL_REF],
-    alias: models[KIMI_CODE_MODEL_REF]?.alias ?? "Kimi Code",
-  };
-
-  const providers = { ...cfg.models?.providers };
-  const existingProvider = providers["kimi-code"];
-  const existingModels = Array.isArray(existingProvider?.models) ? existingProvider.models : [];
-  const defaultModel = buildKimiCodeModelDefinition();
-  const hasDefaultModel = existingModels.some((model) => model.id === KIMI_CODE_MODEL_ID);
-  const mergedModels = hasDefaultModel ? existingModels : [...existingModels, defaultModel];
-  const { apiKey: existingApiKey, ...existingProviderRest } = (existingProvider ?? {}) as Record<
-    string,
-    unknown
-  > as { apiKey?: string };
-  const resolvedApiKey = typeof existingApiKey === "string" ? existingApiKey : undefined;
-  const normalizedApiKey = resolvedApiKey?.trim();
-  providers["kimi-code"] = {
-    ...existingProviderRest,
-    baseUrl: KIMI_CODE_BASE_URL,
-    api: "openai-completions",
-    ...(normalizedApiKey ? { apiKey: normalizedApiKey } : {}),
-    models: mergedModels.length > 0 ? mergedModels : [defaultModel],
+  models[KIMI_CODING_MODEL_REF] = {
+    ...models[KIMI_CODING_MODEL_REF],
+    alias: models[KIMI_CODING_MODEL_REF]?.alias ?? "Kimi K2.5",
   };
 
   return {
@@ -245,10 +347,6 @@ export function applyKimiCodeProviderConfig(cfg: OpenClawConfig): OpenClawConfig
         ...cfg.agents?.defaults,
         models,
       },
-    },
-    models: {
-      mode: cfg.models?.mode ?? "merge",
-      providers,
     },
   };
 }
@@ -268,7 +366,7 @@ export function applyKimiCodeConfig(cfg: OpenClawConfig): OpenClawConfig {
                 fallbacks: (existingModel as { fallbacks?: string[] }).fallbacks,
               }
             : undefined),
-          primary: KIMI_CODE_MODEL_REF,
+          primary: KIMI_CODING_MODEL_REF,
         },
       },
     },
@@ -484,87 +582,6 @@ export function applyVeniceConfig(cfg: OpenClawConfig): OpenClawConfig {
               }
             : undefined),
           primary: VENICE_DEFAULT_MODEL_REF,
-        },
-      },
-    },
-  };
-}
-
-/**
- * Apply DMXAPI provider configuration without changing the default model.
- * Registers DMXAPI models and sets up the provider, but preserves existing model selection.
- */
-export function applyDmxapiProviderConfig(
-  cfg: OpenClawConfig,
-  baseUrl: string = DMXAPI_DEFAULT_BASE_URL,
-): OpenClawConfig {
-  const models = { ...cfg.agents?.defaults?.models };
-  models[DMXAPI_DEFAULT_MODEL_REF] = {
-    ...models[DMXAPI_DEFAULT_MODEL_REF],
-    alias: models[DMXAPI_DEFAULT_MODEL_REF]?.alias ?? "Claude Opus 4.5 CC",
-  };
-
-  const providers = { ...cfg.models?.providers };
-  const existingProvider = providers.dmxapi;
-  const existingModels = Array.isArray(existingProvider?.models) ? existingProvider.models : [];
-  const dmxapiModels = DMXAPI_MODEL_CATALOG.map(buildDmxapiModelDefinition);
-  const mergedModels = [
-    ...existingModels,
-    ...dmxapiModels.filter((model) => !existingModels.some((existing) => existing.id === model.id)),
-  ];
-  const { apiKey: existingApiKey, ...existingProviderRest } = (existingProvider ?? {}) as Record<
-    string,
-    unknown
-  > as { apiKey?: string };
-  const resolvedApiKey = typeof existingApiKey === "string" ? existingApiKey : undefined;
-  const normalizedApiKey = resolvedApiKey?.trim();
-  providers.dmxapi = {
-    ...existingProviderRest,
-    baseUrl,
-    api: "anthropic-messages",
-    ...(normalizedApiKey ? { apiKey: normalizedApiKey } : {}),
-    models: mergedModels.length > 0 ? mergedModels : dmxapiModels,
-  };
-
-  return {
-    ...cfg,
-    agents: {
-      ...cfg.agents,
-      defaults: {
-        ...cfg.agents?.defaults,
-        models,
-      },
-    },
-    models: {
-      mode: cfg.models?.mode ?? "merge",
-      providers,
-    },
-  };
-}
-
-/**
- * Apply DMXAPI provider configuration AND set DMXAPI as the default model.
- * Use this when DMXAPI is the primary provider choice during onboarding.
- */
-export function applyDmxapiConfig(
-  cfg: OpenClawConfig,
-  baseUrl: string = DMXAPI_DEFAULT_BASE_URL,
-): OpenClawConfig {
-  const next = applyDmxapiProviderConfig(cfg, baseUrl);
-  const existingModel = next.agents?.defaults?.model;
-  return {
-    ...next,
-    agents: {
-      ...next.agents,
-      defaults: {
-        ...next.agents?.defaults,
-        model: {
-          ...(existingModel && "fallbacks" in (existingModel as Record<string, unknown>)
-            ? {
-                fallbacks: (existingModel as { fallbacks?: string[] }).fallbacks,
-              }
-            : undefined),
-          primary: DMXAPI_DEFAULT_MODEL_REF,
         },
       },
     },

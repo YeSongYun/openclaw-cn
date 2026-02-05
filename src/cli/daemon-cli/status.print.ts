@@ -1,4 +1,3 @@
-import { t, ti } from "../../i18n/index.js";
 import { resolveControlUiLinks } from "../../commands/onboard-helpers.js";
 import {
   resolveGatewayLaunchAgentLabel,
@@ -30,7 +29,9 @@ import {
 
 function sanitizeDaemonStatusForJson(status: DaemonStatus): DaemonStatus {
   const command = status.service.command;
-  if (!command?.environment) return status;
+  if (!command?.environment) {
+    return status;
+  }
   const safeEnv = filterDaemonEnv(command.environment);
   const nextCommand = {
     ...command,
@@ -65,55 +66,39 @@ export function printDaemonStatus(status: DaemonStatus, opts: { json: boolean })
   const serviceStatus = service.loaded
     ? okText(service.loadedText)
     : warnText(service.notLoadedText);
-  defaultRuntime.log(
-    `${label(t("cli", "status.service", "Service:"))} ${accent(service.label)} (${serviceStatus})`,
-  );
+  defaultRuntime.log(`${label("Service:")} ${accent(service.label)} (${serviceStatus})`);
   try {
     const logFile = getResolvedLoggerSettings().file;
-    defaultRuntime.log(
-      `${label(t("cli", "status.fileLogs", "File logs:"))} ${infoText(shortenHomePath(logFile))}`,
-    );
+    defaultRuntime.log(`${label("File logs:")} ${infoText(shortenHomePath(logFile))}`);
   } catch {
     // ignore missing config/log resolution
   }
   if (service.command?.programArguments?.length) {
     defaultRuntime.log(
-      `${label(t("cli", "status.command", "Command:"))} ${infoText(service.command.programArguments.join(" "))}`,
+      `${label("Command:")} ${infoText(service.command.programArguments.join(" "))}`,
     );
   }
   if (service.command?.sourcePath) {
     defaultRuntime.log(
-      `${label(t("cli", "status.serviceFile", "Service file:"))} ${infoText(shortenHomePath(service.command.sourcePath))}`,
+      `${label("Service file:")} ${infoText(shortenHomePath(service.command.sourcePath))}`,
     );
   }
   if (service.command?.workingDirectory) {
     defaultRuntime.log(
-      `${label(t("cli", "status.workingDir", "Working dir:"))} ${infoText(shortenHomePath(service.command.workingDirectory))}`,
+      `${label("Working dir:")} ${infoText(shortenHomePath(service.command.workingDirectory))}`,
     );
   }
   const daemonEnvLines = safeDaemonEnv(service.command?.environment);
   if (daemonEnvLines.length > 0) {
-    defaultRuntime.log(
-      `${label(t("cli", "status.serviceEnv", "Service env:"))} ${daemonEnvLines.join(" ")}`,
-    );
+    defaultRuntime.log(`${label("Service env:")} ${daemonEnvLines.join(" ")}`);
   }
   spacer();
 
   if (service.configAudit?.issues.length) {
-    defaultRuntime.error(
-      warnText(
-        t(
-          "cli",
-          "status.serviceConfigOutdated",
-          "Service config looks out of date or non-standard.",
-        ),
-      ),
-    );
+    defaultRuntime.error(warnText("Service config looks out of date or non-standard."));
     for (const issue of service.configAudit.issues) {
       const detail = issue.detail ? ` (${issue.detail})` : "";
-      defaultRuntime.error(
-        `${warnText(t("cli", "status.serviceConfigIssueLabel", "Service config issue:"))} ${issue.message}${detail}`,
-      );
+      defaultRuntime.error(`${warnText("Service config issue:")} ${issue.message}${detail}`);
     }
     defaultRuntime.error(
       warnText(
@@ -123,28 +108,22 @@ export function printDaemonStatus(status: DaemonStatus, opts: { json: boolean })
   }
 
   if (status.config) {
-    const missingLabel = ` (${t("cli", "status.missing", "missing")})`;
-    const invalidLabel = ` (${t("cli", "status.invalid", "invalid")})`;
-    const cliCfg = `${shortenHomePath(status.config.cli.path)}${status.config.cli.exists ? "" : missingLabel}${status.config.cli.valid ? "" : invalidLabel}`;
-    defaultRuntime.log(
-      `${label(t("cli", "status.configCli", "Config (cli):"))} ${infoText(cliCfg)}`,
-    );
+    const cliCfg = `${shortenHomePath(status.config.cli.path)}${status.config.cli.exists ? "" : " (missing)"}${status.config.cli.valid ? "" : " (invalid)"}`;
+    defaultRuntime.log(`${label("Config (cli):")} ${infoText(cliCfg)}`);
     if (!status.config.cli.valid && status.config.cli.issues?.length) {
       for (const issue of status.config.cli.issues.slice(0, 5)) {
         defaultRuntime.error(
-          `${errorText(t("cli", "status.configIssue", "Config issue:"))} ${issue.path || "<root>"}: ${issue.message}`,
+          `${errorText("Config issue:")} ${issue.path || "<root>"}: ${issue.message}`,
         );
       }
     }
     if (status.config.daemon) {
-      const daemonCfg = `${shortenHomePath(status.config.daemon.path)}${status.config.daemon.exists ? "" : missingLabel}${status.config.daemon.valid ? "" : invalidLabel}`;
-      defaultRuntime.log(
-        `${label(t("cli", "status.configService", "Config (service):"))} ${infoText(daemonCfg)}`,
-      );
+      const daemonCfg = `${shortenHomePath(status.config.daemon.path)}${status.config.daemon.exists ? "" : " (missing)"}${status.config.daemon.valid ? "" : " (invalid)"}`;
+      defaultRuntime.log(`${label("Config (service):")} ${infoText(daemonCfg)}`);
       if (!status.config.daemon.valid && status.config.daemon.issues?.length) {
         for (const issue of status.config.daemon.issues.slice(0, 5)) {
           defaultRuntime.error(
-            `${errorText(t("cli", "status.serviceConfigIssue", "Service config issue:"))} ${issue.path || "<root>"}: ${issue.message}`,
+            `${errorText("Service config issue:")} ${issue.path || "<root>"}: ${issue.message}`,
           );
         }
       }
@@ -152,11 +131,7 @@ export function printDaemonStatus(status: DaemonStatus, opts: { json: boolean })
     if (status.config.mismatch) {
       defaultRuntime.error(
         errorText(
-          t(
-            "cli",
-            "status.configMismatchCause",
-            "Root cause: CLI and service are using different config paths (likely a profile/state-dir mismatch).",
-          ),
+          "Root cause: CLI and service are using different config paths (likely a profile/state-dir mismatch).",
         ),
       );
       defaultRuntime.error(
@@ -171,16 +146,12 @@ export function printDaemonStatus(status: DaemonStatus, opts: { json: boolean })
   if (status.gateway) {
     const bindHost = status.gateway.bindHost ?? "n/a";
     defaultRuntime.log(
-      `${label(t("cli", "status.gateway", "Gateway:"))} bind=${infoText(status.gateway.bindMode)} (${infoText(bindHost)}), port=${infoText(String(status.gateway.port))} (${infoText(status.gateway.portSource)})`,
+      `${label("Gateway:")} bind=${infoText(status.gateway.bindMode)} (${infoText(bindHost)}), port=${infoText(String(status.gateway.port))} (${infoText(status.gateway.portSource)})`,
     );
-    defaultRuntime.log(
-      `${label(t("cli", "status.probeTarget", "Probe target:"))} ${infoText(status.gateway.probeUrl)}`,
-    );
+    defaultRuntime.log(`${label("Probe target:")} ${infoText(status.gateway.probeUrl)}`);
     const controlUiEnabled = status.config?.daemon?.controlUi?.enabled ?? true;
     if (!controlUiEnabled) {
-      defaultRuntime.log(
-        `${label(t("cli", "status.dashboard", "Dashboard:"))} ${warnText(t("cli", "status.disabled", "disabled"))}`,
-      );
+      defaultRuntime.log(`${label("Dashboard:")} ${warnText("disabled")}`);
     } else {
       const links = resolveControlUiLinks({
         port: status.gateway.port,
@@ -188,14 +159,10 @@ export function printDaemonStatus(status: DaemonStatus, opts: { json: boolean })
         customBindHost: status.gateway.customBindHost,
         basePath: status.config?.daemon?.controlUi?.basePath,
       });
-      defaultRuntime.log(
-        `${label(t("cli", "status.dashboard", "Dashboard:"))} ${infoText(links.httpUrl)}`,
-      );
+      defaultRuntime.log(`${label("Dashboard:")} ${infoText(links.httpUrl)}`);
     }
     if (status.gateway.probeNote) {
-      defaultRuntime.log(
-        `${label(t("cli", "status.probeNote", "Probe note:"))} ${infoText(status.gateway.probeNote)}`,
-      );
+      defaultRuntime.log(`${label("Probe note:")} ${infoText(status.gateway.probeNote)}`);
     }
     spacer();
   }
@@ -211,33 +178,22 @@ export function printDaemonStatus(status: DaemonStatus, opts: { json: boolean })
           : runtimeStatus === "unknown"
             ? theme.muted
             : theme.warn;
-    defaultRuntime.log(
-      `${label(t("cli", "status.runtime", "Runtime:"))} ${colorize(rich, runtimeColor, runtimeLine)}`,
-    );
+    defaultRuntime.log(`${label("Runtime:")} ${colorize(rich, runtimeColor, runtimeLine)}`);
   }
 
   if (rpc && !rpc.ok && service.loaded && service.runtime?.status === "running") {
     defaultRuntime.log(
-      warnText(
-        t(
-          "cli",
-          "status.warmUp",
-          "Warm-up: launch agents can take a few seconds. Try again shortly.",
-        ),
-      ),
+      warnText("Warm-up: launch agents can take a few seconds. Try again shortly."),
     );
   }
   if (rpc) {
     if (rpc.ok) {
-      defaultRuntime.log(
-        `${label(t("cli", "status.rpcProbe", "RPC probe:"))} ${okText(t("cli", "status.ok", "ok"))}`,
-      );
+      defaultRuntime.log(`${label("RPC probe:")} ${okText("ok")}`);
     } else {
-      defaultRuntime.error(
-        `${label(t("cli", "status.rpcProbe", "RPC probe:"))} ${errorText(t("cli", "status.failed", "failed"))}`,
-      );
-      if (rpc.url)
-        defaultRuntime.error(`${label(t("cli", "status.rpcTarget", "RPC target:"))} ${rpc.url}`);
+      defaultRuntime.error(`${label("RPC probe:")} ${errorText("failed")}`);
+      if (rpc.url) {
+        defaultRuntime.error(`${label("RPC target:")} ${rpc.url}`);
+      }
       const lines = String(rpc.error ?? "unknown")
         .split(/\r?\n/)
         .filter(Boolean);
@@ -251,9 +207,7 @@ export function printDaemonStatus(status: DaemonStatus, opts: { json: boolean })
   const systemdUnavailable =
     process.platform === "linux" && isSystemdUnavailableDetail(service.runtime?.detail);
   if (systemdUnavailable) {
-    defaultRuntime.error(
-      errorText(t("cli", "status.systemdUnavailable", "systemd user services unavailable.")),
-    );
+    defaultRuntime.error(errorText("systemd user services unavailable."));
     for (const hint of renderSystemdUnavailableHints({ wsl: isWSLEnv() })) {
       defaultRuntime.error(errorText(hint));
     }
@@ -261,21 +215,13 @@ export function printDaemonStatus(status: DaemonStatus, opts: { json: boolean })
   }
 
   if (service.runtime?.missingUnit) {
-    defaultRuntime.error(
-      errorText(t("cli", "status.serviceUnitNotFound", "Service unit not found.")),
-    );
+    defaultRuntime.error(errorText("Service unit not found."));
     for (const hint of renderRuntimeHints(service.runtime)) {
       defaultRuntime.error(errorText(hint));
     }
   } else if (service.loaded && service.runtime?.status === "stopped") {
     defaultRuntime.error(
-      errorText(
-        t(
-          "cli",
-          "status.serviceLoadedNotRunning",
-          "Service is loaded but not running (likely exited immediately).",
-        ),
-      ),
+      errorText("Service is loaded but not running (likely exited immediately)."),
     );
     for (const hint of renderRuntimeHints(
       service.runtime,
@@ -307,15 +253,13 @@ export function printDaemonStatus(status: DaemonStatus, opts: { json: boolean })
   if (status.port) {
     const addrs = resolvePortListeningAddresses(status);
     if (addrs.length > 0) {
-      defaultRuntime.log(
-        `${label(t("cli", "status.listening", "Listening:"))} ${infoText(addrs.join(", "))}`,
-      );
+      defaultRuntime.log(`${label("Listening:")} ${infoText(addrs.join(", "))}`);
     }
   }
 
   if (status.portCli && status.portCli.port !== status.port?.port) {
     defaultRuntime.log(
-      `${label(t("cli", "status.note", "Note:"))} CLI config resolves gateway port=${status.portCli.port} (${status.portCli.status}).`,
+      `${label("Note:")} CLI config resolves gateway port=${status.portCli.port} (${status.portCli.status}).`,
     );
   }
 
@@ -326,19 +270,10 @@ export function printDaemonStatus(status: DaemonStatus, opts: { json: boolean })
     status.port.status !== "busy"
   ) {
     defaultRuntime.error(
-      errorText(
-        ti(
-          "cli",
-          "status.gatewayPortNotListening",
-          `Gateway port ${status.port.port} is not listening (service appears running).`,
-          { port: status.port.port },
-        ),
-      ),
+      errorText(`Gateway port ${status.port.port} is not listening (service appears running).`),
     );
     if (status.lastError) {
-      defaultRuntime.error(
-        `${errorText(t("cli", "status.lastGatewayError", "Last gateway error:"))} ${status.lastError}`,
-      );
+      defaultRuntime.error(`${errorText("Last gateway error:")} ${status.lastError}`);
     }
     if (process.platform === "linux") {
       const env = (service.command?.environment ?? process.env) as NodeJS.ProcessEnv;
@@ -350,27 +285,19 @@ export function printDaemonStatus(status: DaemonStatus, opts: { json: boolean })
       const logs = resolveGatewayLogPaths(
         (service.command?.environment ?? process.env) as NodeJS.ProcessEnv,
       );
-      defaultRuntime.error(
-        `${errorText(t("cli", "status.logs", "Logs:"))} ${shortenHomePath(logs.stdoutPath)}`,
-      );
-      defaultRuntime.error(
-        `${errorText(t("cli", "status.errors", "Errors:"))} ${shortenHomePath(logs.stderrPath)}`,
-      );
+      defaultRuntime.error(`${errorText("Logs:")} ${shortenHomePath(logs.stdoutPath)}`);
+      defaultRuntime.error(`${errorText("Errors:")} ${shortenHomePath(logs.stderrPath)}`);
     }
     spacer();
   }
 
   if (extraServices.length > 0) {
-    defaultRuntime.error(
-      errorText(
-        t("cli", "status.extraDetected", "Other gateway-like services detected (best effort):"),
-      ),
-    );
+    defaultRuntime.error(errorText("Other gateway-like services detected (best effort):"));
     for (const svc of extraServices) {
       defaultRuntime.error(`- ${errorText(svc.label)} (${svc.scope}, ${svc.detail})`);
     }
     for (const hint of renderGatewayServiceCleanupHints()) {
-      defaultRuntime.error(`${errorText(t("cli", "status.cleanupHint", "Cleanup hint:"))} ${hint}`);
+      defaultRuntime.error(`${errorText("Cleanup hint:")} ${hint}`);
     }
     spacer();
   }
@@ -378,20 +305,12 @@ export function printDaemonStatus(status: DaemonStatus, opts: { json: boolean })
   if (extraServices.length > 0) {
     defaultRuntime.error(
       errorText(
-        t(
-          "cli",
-          "status.singleGatewayRecommend",
-          "Recommendation: run a single gateway per machine for most setups. One gateway supports multiple agents (see docs: /gateway#multiple-gateways-same-host).",
-        ),
+        "Recommendation: run a single gateway per machine for most setups. One gateway supports multiple agents (see docs: /gateway#multiple-gateways-same-host).",
       ),
     );
     defaultRuntime.error(
       errorText(
-        t(
-          "cli",
-          "status.multiGatewayNote",
-          "If you need multiple gateways (e.g., a rescue bot on the same host), isolate ports + config/state (see docs: /gateway#multiple-gateways-same-host).",
-        ),
+        "If you need multiple gateways (e.g., a rescue bot on the same host), isolate ports + config/state (see docs: /gateway#multiple-gateways-same-host).",
       ),
     );
     spacer();

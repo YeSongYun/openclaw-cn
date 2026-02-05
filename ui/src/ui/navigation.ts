@@ -1,30 +1,17 @@
 import type { IconName } from "./icons.js";
-import { t } from "../i18n/index.js";
 
-export function getTabGroups() {
-  return [
-    { label: t("nav.group.chat", "Chat"), tabs: ["chat"] as const },
-    {
-      label: t("nav.group.control", "Control"),
-      tabs: ["overview", "channels", "instances", "sessions", "cron"] as const,
-    },
-    { label: t("nav.group.agent", "Agent"), tabs: ["skills", "nodes"] as const },
-    { label: t("nav.group.settings", "Settings"), tabs: ["config", "debug", "logs"] as const },
-  ];
-}
-
-/** @deprecated Use getTabGroups() for translated labels */
 export const TAB_GROUPS = [
   { label: "Chat", tabs: ["chat"] },
   {
     label: "Control",
     tabs: ["overview", "channels", "instances", "sessions", "cron"],
   },
-  { label: "Agent", tabs: ["skills", "nodes"] },
+  { label: "Agent", tabs: ["agents", "skills", "nodes"] },
   { label: "Settings", tabs: ["config", "debug", "logs"] },
 ] as const;
 
 export type Tab =
+  | "agents"
   | "overview"
   | "channels"
   | "instances"
@@ -38,6 +25,7 @@ export type Tab =
   | "logs";
 
 const TAB_PATHS: Record<Tab, string> = {
+  agents: "/agents",
   overview: "/overview",
   channels: "/channels",
   instances: "/instances",
@@ -51,23 +39,33 @@ const TAB_PATHS: Record<Tab, string> = {
   logs: "/logs",
 };
 
-const PATH_TO_TAB = new Map(
-  Object.entries(TAB_PATHS).map(([tab, path]) => [path, tab as Tab]),
-);
+const PATH_TO_TAB = new Map(Object.entries(TAB_PATHS).map(([tab, path]) => [path, tab as Tab]));
 
 export function normalizeBasePath(basePath: string): string {
-  if (!basePath) return "";
+  if (!basePath) {
+    return "";
+  }
   let base = basePath.trim();
-  if (!base.startsWith("/")) base = `/${base}`;
-  if (base === "/") return "";
-  if (base.endsWith("/")) base = base.slice(0, -1);
+  if (!base.startsWith("/")) {
+    base = `/${base}`;
+  }
+  if (base === "/") {
+    return "";
+  }
+  if (base.endsWith("/")) {
+    base = base.slice(0, -1);
+  }
   return base;
 }
 
 export function normalizePath(path: string): string {
-  if (!path) return "/";
+  if (!path) {
+    return "/";
+  }
   let normalized = path.trim();
-  if (!normalized.startsWith("/")) normalized = `/${normalized}`;
+  if (!normalized.startsWith("/")) {
+    normalized = `/${normalized}`;
+  }
   if (normalized.length > 1 && normalized.endsWith("/")) {
     normalized = normalized.slice(0, -1);
   }
@@ -91,8 +89,12 @@ export function tabFromPath(pathname: string, basePath = ""): Tab | null {
     }
   }
   let normalized = normalizePath(path).toLowerCase();
-  if (normalized.endsWith("/index.html")) normalized = "/";
-  if (normalized === "/") return "chat";
+  if (normalized.endsWith("/index.html")) {
+    normalized = "/";
+  }
+  if (normalized === "/") {
+    return "chat";
+  }
   return PATH_TO_TAB.get(normalized) ?? null;
 }
 
@@ -101,9 +103,13 @@ export function inferBasePathFromPathname(pathname: string): string {
   if (normalized.endsWith("/index.html")) {
     normalized = normalizePath(normalized.slice(0, -"/index.html".length));
   }
-  if (normalized === "/") return "";
+  if (normalized === "/") {
+    return "";
+  }
   const segments = normalized.split("/").filter(Boolean);
-  if (segments.length === 0) return "";
+  if (segments.length === 0) {
+    return "";
+  }
   for (let i = 0; i < segments.length; i++) {
     const candidate = `/${segments.slice(i).join("/")}`.toLowerCase();
     if (PATH_TO_TAB.has(candidate)) {
@@ -116,6 +122,8 @@ export function inferBasePathFromPathname(pathname: string): string {
 
 export function iconForTab(tab: Tab): IconName {
   switch (tab) {
+    case "agents":
+      return "folder";
     case "chat":
       return "messageSquare";
     case "overview":
@@ -145,57 +153,61 @@ export function iconForTab(tab: Tab): IconName {
 
 export function titleForTab(tab: Tab) {
   switch (tab) {
+    case "agents":
+      return "Agents";
     case "overview":
-      return t("nav.overview", "Overview");
+      return "Overview";
     case "channels":
-      return t("nav.channels", "Channels");
+      return "Channels";
     case "instances":
-      return t("nav.instances", "Instances");
+      return "Instances";
     case "sessions":
-      return t("nav.sessions", "Sessions");
+      return "Sessions";
     case "cron":
-      return t("nav.cron", "Cron Jobs");
+      return "Cron Jobs";
     case "skills":
-      return t("nav.skills", "Skills");
+      return "Skills";
     case "nodes":
-      return t("nav.nodes", "Nodes");
+      return "Nodes";
     case "chat":
-      return t("nav.chat", "Chat");
+      return "Chat";
     case "config":
-      return t("nav.config", "Config");
+      return "Config";
     case "debug":
-      return t("nav.debug", "Debug");
+      return "Debug";
     case "logs":
-      return t("nav.logs", "Logs");
+      return "Logs";
     default:
-      return t("nav.control", "Control");
+      return "Control";
   }
 }
 
 export function subtitleForTab(tab: Tab) {
   switch (tab) {
+    case "agents":
+      return "Manage agent workspaces, tools, and identities.";
     case "overview":
-      return t("nav.overview.subtitle", "Gateway status, entry points, and a fast health read.");
+      return "Gateway status, entry points, and a fast health read.";
     case "channels":
-      return t("nav.channels.subtitle", "Manage channels and settings.");
+      return "Manage channels and settings.";
     case "instances":
-      return t("nav.instances.subtitle", "Presence beacons from connected clients and nodes.");
+      return "Presence beacons from connected clients and nodes.";
     case "sessions":
-      return t("nav.sessions.subtitle", "Inspect active sessions and adjust per-session defaults.");
+      return "Inspect active sessions and adjust per-session defaults.";
     case "cron":
-      return t("nav.cron.subtitle", "Schedule wakeups and recurring agent runs.");
+      return "Schedule wakeups and recurring agent runs.";
     case "skills":
-      return t("nav.skills.subtitle", "Manage skill availability and API key injection.");
+      return "Manage skill availability and API key injection.";
     case "nodes":
-      return t("nav.nodes.subtitle", "Paired devices, capabilities, and command exposure.");
+      return "Paired devices, capabilities, and command exposure.";
     case "chat":
-      return t("nav.chat.subtitle", "Direct gateway chat session for quick interventions.");
+      return "Direct gateway chat session for quick interventions.";
     case "config":
       return "Edit ~/.openclaw/openclaw.json safely.";
     case "debug":
-      return t("nav.debug.subtitle", "Gateway snapshots, events, and manual RPC calls.");
+      return "Gateway snapshots, events, and manual RPC calls.";
     case "logs":
-      return t("nav.logs.subtitle", "Live tail of the gateway file logs.");
+      return "Live tail of the gateway file logs.";
     default:
       return "";
   }

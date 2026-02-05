@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
-
 import type { OpenClawConfig } from "../../config/config.js";
 import type { MsgContext } from "../templating.js";
-import { buildCommandContext, handleCommands } from "./commands.js";
 import { extractMessageText } from "./commands-subagents.js";
+import { buildCommandContext, handleCommands } from "./commands.js";
 import { parseConfigCommand } from "./config-commands.js";
 import { parseDebugCommand } from "./debug-commands.js";
 import { parseInlineDirectives } from "./directive-handling.js";
@@ -120,6 +119,6 @@ describe("handleCommands /config configWrites gating", () => {
     const params = buildParams('/config set messages.ackReaction=":)"', cfg);
     const result = await handleCommands(params);
     expect(result.shouldContinue).toBe(false);
-    expect(result.reply?.text).toContain("配置写入已为 whatsapp 禁用");
+    expect(result.reply?.text).toContain("Config writes are disabled");
   });
 });

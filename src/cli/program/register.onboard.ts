@@ -1,6 +1,5 @@
 import type { Command } from "commander";
 import type { GatewayDaemonRuntime } from "../../commands/daemon-runtime.js";
-import { onboardCommand } from "../../commands/onboard.js";
 import type {
   AuthChoice,
   GatewayAuthChoice,
@@ -8,7 +7,7 @@ import type {
   NodeManagerChoice,
   TailscaleMode,
 } from "../../commands/onboard-types.js";
-import { t } from "../../i18n/index.js";
+import { onboardCommand } from "../../commands/onboard.js";
 import { defaultRuntime } from "../../runtime.js";
 import { formatDocsLink } from "../../terminal/links.js";
 import { theme } from "../../terminal/theme.js";
@@ -18,14 +17,20 @@ function resolveInstallDaemonFlag(
   command: unknown,
   opts: { installDaemon?: boolean },
 ): boolean | undefined {
-  if (!command || typeof command !== "object") return undefined;
+  if (!command || typeof command !== "object") {
+    return undefined;
+  }
   const getOptionValueSource =
     "getOptionValueSource" in command ? command.getOptionValueSource : undefined;
-  if (typeof getOptionValueSource !== "function") return undefined;
+  if (typeof getOptionValueSource !== "function") {
+    return undefined;
+  }
 
   // Commander doesn't support option conflicts natively; keep original behavior.
   // If --skip-daemon is explicitly passed, it wins.
-  if (getOptionValueSource.call(command, "skipDaemon") === "cli") return false;
+  if (getOptionValueSource.call(command, "skipDaemon") === "cli") {
+    return false;
+  }
   if (getOptionValueSource.call(command, "installDaemon") === "cli") {
     return Boolean(opts.installDaemon);
   }
@@ -35,7 +40,7 @@ function resolveInstallDaemonFlag(
 export function registerOnboardCommand(program: Command) {
   program
     .command("onboard")
-    .description(t("cli", "cmd.onboard", "Interactive wizard to set up the gateway, workspace, and skills"))
+    .description("Interactive wizard to set up the gateway, workspace, and skills")
     .addHelpText(
       "after",
       () =>
@@ -53,7 +58,7 @@ export function registerOnboardCommand(program: Command) {
     .option("--mode <mode>", "Wizard mode: local|remote")
     .option(
       "--auth-choice <choice>",
-      "Auth: setup-token|token|chutes|openai-codex|openai-api-key|openrouter-api-key|ai-gateway-api-key|moonshot-api-key|kimi-code-api-key|synthetic-api-key|venice-api-key|gemini-api-key|zai-api-key|apiKey|minimax-api|minimax-api-lightning|opencode-zen|skip",
+      "Auth: setup-token|token|chutes|openai-codex|openai-api-key|openrouter-api-key|ai-gateway-api-key|cloudflare-ai-gateway-api-key|moonshot-api-key|moonshot-api-key-cn|kimi-code-api-key|synthetic-api-key|venice-api-key|gemini-api-key|zai-api-key|xiaomi-api-key|apiKey|minimax-api|minimax-api-lightning|opencode-zen|skip",
     )
     .option(
       "--token-provider <id>",
@@ -69,10 +74,14 @@ export function registerOnboardCommand(program: Command) {
     .option("--openai-api-key <key>", "OpenAI API key")
     .option("--openrouter-api-key <key>", "OpenRouter API key")
     .option("--ai-gateway-api-key <key>", "Vercel AI Gateway API key")
+    .option("--cloudflare-ai-gateway-account-id <id>", "Cloudflare Account ID")
+    .option("--cloudflare-ai-gateway-gateway-id <id>", "Cloudflare AI Gateway ID")
+    .option("--cloudflare-ai-gateway-api-key <key>", "Cloudflare AI Gateway API key")
     .option("--moonshot-api-key <key>", "Moonshot API key")
-    .option("--kimi-code-api-key <key>", "Kimi Code API key")
+    .option("--kimi-code-api-key <key>", "Kimi Coding API key")
     .option("--gemini-api-key <key>", "Gemini API key")
     .option("--zai-api-key <key>", "Z.AI API key")
+    .option("--xiaomi-api-key <key>", "Xiaomi API key")
     .option("--minimax-api-key <key>", "MiniMax API key")
     .option("--synthetic-api-key <key>", "Synthetic API key")
     .option("--venice-api-key <key>", "Venice API key")
@@ -119,10 +128,14 @@ export function registerOnboardCommand(program: Command) {
             openaiApiKey: opts.openaiApiKey as string | undefined,
             openrouterApiKey: opts.openrouterApiKey as string | undefined,
             aiGatewayApiKey: opts.aiGatewayApiKey as string | undefined,
+            cloudflareAiGatewayAccountId: opts.cloudflareAiGatewayAccountId as string | undefined,
+            cloudflareAiGatewayGatewayId: opts.cloudflareAiGatewayGatewayId as string | undefined,
+            cloudflareAiGatewayApiKey: opts.cloudflareAiGatewayApiKey as string | undefined,
             moonshotApiKey: opts.moonshotApiKey as string | undefined,
             kimiCodeApiKey: opts.kimiCodeApiKey as string | undefined,
             geminiApiKey: opts.geminiApiKey as string | undefined,
             zaiApiKey: opts.zaiApiKey as string | undefined,
+            xiaomiApiKey: opts.xiaomiApiKey as string | undefined,
             minimaxApiKey: opts.minimaxApiKey as string | undefined,
             syntheticApiKey: opts.syntheticApiKey as string | undefined,
             veniceApiKey: opts.veniceApiKey as string | undefined,

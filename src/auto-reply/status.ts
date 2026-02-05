@@ -1,18 +1,23 @@
 import fs from "node:fs";
-
+import type { SkillCommandSpec } from "../agents/skills.js";
+import type { OpenClawConfig } from "../config/config.js";
+import type { MediaUnderstandingDecision } from "../media-understanding/types.js";
+import type { CommandCategory } from "./commands-registry.types.js";
+import type { ElevatedLevel, ReasoningLevel, ThinkLevel, VerboseLevel } from "./thinking.js";
 import { lookupContextTokens } from "../agents/context.js";
 import { DEFAULT_CONTEXT_TOKENS, DEFAULT_MODEL, DEFAULT_PROVIDER } from "../agents/defaults.js";
 import { resolveModelAuthMode } from "../agents/model-auth.js";
 import { resolveConfiguredModelRef } from "../agents/model-selection.js";
 import { resolveSandboxRuntimeStatus } from "../agents/sandbox.js";
 import { derivePromptTokens, normalizeUsage, type UsageLike } from "../agents/usage.js";
-import type { OpenClawConfig } from "../config/config.js";
 import {
   resolveMainSessionKey,
   resolveSessionFilePath,
   type SessionEntry,
   type SessionScope,
 } from "../config/sessions.js";
+import { resolveCommitHash } from "../infra/git-commit.js";
+import { listPluginCommands } from "../plugins/commands.js";
 import {
   getTtsMaxLength,
   getTtsProvider,
@@ -21,7 +26,6 @@ import {
   resolveTtsConfig,
   resolveTtsPrefsPath,
 } from "../tts/tts.js";
-import { resolveCommitHash } from "../infra/git-commit.js";
 import {
   estimateUsageCost,
   formatTokenCount as formatTokenCountShared,
@@ -34,12 +38,6 @@ import {
   listChatCommandsForConfig,
   type ChatCommandDefinition,
 } from "./commands-registry.js";
-import { listPluginCommands } from "../plugins/commands.js";
-import type { SkillCommandSpec } from "../agents/skills.js";
-import type { CommandCategory } from "./commands-registry.types.js";
-import type { ElevatedLevel, ReasoningLevel, ThinkLevel, VerboseLevel } from "./thinking.js";
-import type { MediaUnderstandingDecision } from "../media-understanding/types.js";
-import { t, ti } from "../i18n/index.js";
 
 type AgentConfig = Partial<NonNullable<NonNullable<OpenClawConfig["agents"]>["defaults"]>>;
 
@@ -85,16 +83,24 @@ function resolveRuntimeLabel(
       sessionKey,
     });
     const sandboxMode = runtimeStatus.mode ?? "off";
-    if (sandboxMode === "off") return "direct";
+    if (sandboxMode === "off") {
+      return "direct";
+    }
     const runtime = runtimeStatus.sandboxed ? "docker" : sessionKey ? "direct" : "unknown";
     return `${runtime}/${sandboxMode}`;
   }
 
   const sandboxMode = args.agent?.sandbox?.mode ?? "off";
-  if (sandboxMode === "off") return "direct";
+  if (sandboxMode === "off") {
+    return "direct";
+  }
   const sandboxed = (() => {
-    if (!sessionKey) return false;
-    if (sandboxMode === "all") return true;
+    if (!sessionKey) {
+      return false;
+    }
+    if (sandboxMode === "all") {
+      return true;
+    }
     if (args.config) {
       return resolveSandboxRuntimeStatus({
         cfg: args.config,
@@ -129,32 +135,48 @@ export const formatContextUsageShort = (
 ) => `Context ${formatTokens(total, contextTokens ?? null)}`;
 
 const formatAge = (ms?: number | null) => {
-  if (!ms || ms < 0) return t("status", "time.unknown", "unknown");
+  if (!ms || ms < 0) {
+    return "unknown";
+  }
   const minutes = Math.round(ms / 60_000);
-  if (minutes < 1) return t("status", "time.justNow", "just now");
-  if (minutes < 60) return ti("status", "time.minutesAgo", `${minutes}m ago`, { n: minutes });
+  if (minutes < 1) {
+    return "just now";
+  }
+  if (minutes < 60) {
+    return `${minutes}m ago`;
+  }
   const hours = Math.round(minutes / 60);
-  if (hours < 48) return ti("status", "time.hoursAgo", `${hours}h ago`, { n: hours });
+  if (hours < 48) {
+    return `${hours}h ago`;
+  }
   const days = Math.round(hours / 24);
-  return ti("status", "time.daysAgo", `${days}d ago`, { n: days });
+  return `${days}d ago`;
 };
 
 const formatQueueDetails = (queue?: QueueStatus) => {
-  if (!queue) return "";
+  if (!queue) {
+    return "";
+  }
   const depth = typeof queue.depth === "number" ? `depth ${queue.depth}` : null;
   if (!queue.showDetails) {
     return depth ? ` (${depth})` : "";
   }
   const detailParts: string[] = [];
-  if (depth) detailParts.push(depth);
+  if (depth) {
+    detailParts.push(depth);
+  }
   if (typeof queue.debounceMs === "number") {
     const ms = Math.max(0, Math.round(queue.debounceMs));
     const label =
       ms >= 1000 ? `${ms % 1000 === 0 ? ms / 1000 : (ms / 1000).toFixed(1)}s` : `${ms}ms`;
     detailParts.push(`debounce ${label}`);
   }
-  if (typeof queue.cap === "number") detailParts.push(`cap ${queue.cap}`);
-  if (queue.dropPolicy) detailParts.push(`drop ${queue.dropPolicy}`);
+  if (typeof queue.cap === "number") {
+    detailParts.push(`cap ${queue.cap}`);
+  }
+  if (queue.dropPolicy) {
+    detailParts.push(`drop ${queue.dropPolicy}`);
+  }
   return detailParts.length ? ` (${detailParts.join(" · ")})` : "";
 };
 
@@ -171,9 +193,13 @@ const readUsageFromSessionLog = (
     }
   | undefined => {
   // Transcripts are stored at the session file path (fallback: ~/.openclaw/sessions/<SessionId>.jsonl)
-  if (!sessionId) return undefined;
+  if (!sessionId) {
+    return undefined;
+  }
   const logPath = resolveSessionFilePath(sessionId, sessionEntry);
-  if (!fs.existsSync(logPath)) return undefined;
+  if (!fs.existsSync(logPath)) {
+    return undefined;
+  }
 
   try {
     const lines = fs.readFileSync(logPath, "utf-8").split(/\n+/);
@@ -184,7 +210,9 @@ const readUsageFromSessionLog = (
     let lastUsage: ReturnType<typeof normalizeUsage> | undefined;
 
     for (const line of lines) {
-      if (!line.trim()) continue;
+      if (!line.trim()) {
+        continue;
+      }
       try {
         const parsed = JSON.parse(line) as {
           message?: {
@@ -196,19 +224,25 @@ const readUsageFromSessionLog = (
         };
         const usageRaw = parsed.message?.usage ?? parsed.usage;
         const usage = normalizeUsage(usageRaw);
-        if (usage) lastUsage = usage;
+        if (usage) {
+          lastUsage = usage;
+        }
         model = parsed.message?.model ?? parsed.model ?? model;
       } catch {
         // ignore bad lines
       }
     }
 
-    if (!lastUsage) return undefined;
+    if (!lastUsage) {
+      return undefined;
+    }
     input = lastUsage.input ?? 0;
     output = lastUsage.output ?? 0;
     promptTokens = derivePromptTokens(lastUsage) ?? lastUsage.total ?? input + output;
     const total = lastUsage.total ?? promptTokens + output;
-    if (promptTokens === 0 && total === 0) return undefined;
+    if (promptTokens === 0 && total === 0) {
+      return undefined;
+    }
     return { input, output, promptTokens, total, model };
   } catch {
     return undefined;
@@ -216,17 +250,18 @@ const readUsageFromSessionLog = (
 };
 
 const formatUsagePair = (input?: number | null, output?: number | null) => {
-  if (input == null && output == null) return null;
+  if (input == null && output == null) {
+    return null;
+  }
   const inputLabel = typeof input === "number" ? formatTokenCount(input) : "?";
   const outputLabel = typeof output === "number" ? formatTokenCount(output) : "?";
-  const tokensLabel = t("status", "tokens.label", "Tokens");
-  const inLabel = t("status", "tokens.in", "in");
-  const outLabel = t("status", "tokens.out", "out");
-  return `🧮 ${tokensLabel}: ${inputLabel} ${inLabel} / ${outputLabel} ${outLabel}`;
+  return `🧮 Tokens: ${inputLabel} in / ${outputLabel} out`;
 };
 
 const formatMediaUnderstandingLine = (decisions?: MediaUnderstandingDecision[]) => {
-  if (!decisions || decisions.length === 0) return null;
+  if (!decisions || decisions.length === 0) {
+    return null;
+  }
   const parts = decisions
     .map((decision) => {
       const count = decision.attachments.length;
@@ -257,8 +292,12 @@ const formatMediaUnderstandingLine = (decisions?: MediaUnderstandingDecision[]) 
       return null;
     })
     .filter((part): part is string => part != null);
-  if (parts.length === 0) return null;
-  if (parts.every((part) => part.endsWith(" none"))) return null;
+  if (parts.length === 0) {
+    return null;
+  }
+  if (parts.every((part) => part.endsWith(" none"))) {
+    return null;
+  }
   return `📎 Media: ${parts.join(" · ")}`;
 };
 
@@ -266,7 +305,9 @@ const formatVoiceModeLine = (
   config?: OpenClawConfig,
   sessionEntry?: SessionEntry,
 ): string | null => {
-  if (!config) return null;
+  if (!config) {
+    return null;
+  }
   const ttsConfig = resolveTtsConfig(config);
   const prefsPath = resolveTtsPrefsPath(ttsConfig);
   const autoMode = resolveTtsAutoMode({
@@ -274,15 +315,13 @@ const formatVoiceModeLine = (
     prefsPath,
     sessionAuto: sessionEntry?.ttsAuto,
   });
-  if (autoMode === "off") return null;
+  if (autoMode === "off") {
+    return null;
+  }
   const provider = getTtsProvider(ttsConfig, prefsPath);
   const maxLength = getTtsMaxLength(prefsPath);
   const summarize = isSummarizationEnabled(prefsPath) ? "on" : "off";
-  const voiceLabel = t("status", "voice.label", "Voice");
-  const providerLabel = t("status", "voice.provider", "provider");
-  const limitLabel = t("status", "voice.limit", "limit");
-  const summaryLabel = t("status", "voice.summary", "summary");
-  return `🔊 ${voiceLabel}: ${autoMode} · ${providerLabel}=${provider} · ${limitLabel}=${maxLength} · ${summaryLabel}=${summarize}`;
+  return `🔊 Voice: ${autoMode} · provider=${provider} · limit=${maxLength} · summary=${summarize}`;
 };
 
 export function buildStatusMessage(args: StatusArgs): string {
@@ -318,12 +357,18 @@ export function buildStatusMessage(args: StatusArgs): string {
       if (!totalTokens || totalTokens === 0 || candidate > totalTokens) {
         totalTokens = candidate;
       }
-      if (!model) model = logUsage.model ?? model;
+      if (!model) {
+        model = logUsage.model ?? model;
+      }
       if (!contextTokens && logUsage.model) {
         contextTokens = lookupContextTokens(logUsage.model) ?? contextTokens;
       }
-      if (!inputTokens || inputTokens === 0) inputTokens = logUsage.input;
-      if (!outputTokens || outputTokens === 0) outputTokens = logUsage.output;
+      if (!inputTokens || inputTokens === 0) {
+        inputTokens = logUsage.input;
+      }
+      if (!outputTokens || outputTokens === 0) {
+        outputTokens = logUsage.output;
+      }
     }
   }
 
@@ -339,11 +384,9 @@ export function buildStatusMessage(args: StatusArgs): string {
   const runtime = { label: resolveRuntimeLabel(args) };
 
   const updatedAt = entry?.updatedAt;
-  const sessionLabel = t("status", "session.label", "Session");
-  const noActivityLabel = t("status", "session.noActivity", "no activity");
   const sessionLine = [
-    `${sessionLabel}: ${args.sessionKey ?? t("status", "time.unknown", "unknown")}`,
-    typeof updatedAt === "number" ? `${formatAge(now - updatedAt)}` : noActivityLabel,
+    `Session: ${args.sessionKey ?? "unknown"}`,
+    typeof updatedAt === "number" ? `updated ${formatAge(now - updatedAt)}` : "no activity",
   ]
     .filter(Boolean)
     .join(" • ");
@@ -357,45 +400,34 @@ export function buildStatusMessage(args: StatusArgs): string {
     ? (args.groupActivation ?? entry?.groupActivation ?? "mention")
     : undefined;
 
-  const contextLabel = t("status", "context.label", "Context");
-  const compactionsLabel = t("status", "context.compactions", "Compactions");
   const contextLine = [
-    `${contextLabel}: ${formatTokens(totalTokens, contextTokens ?? null)}`,
-    `🧹 ${compactionsLabel}: ${entry?.compactionCount ?? 0}`,
+    `Context: ${formatTokens(totalTokens, contextTokens ?? null)}`,
+    `🧹 Compactions: ${entry?.compactionCount ?? 0}`,
   ]
     .filter(Boolean)
     .join(" · ");
 
-  const queueMode = args.queue?.mode ?? t("status", "time.unknown", "unknown");
+  const queueMode = args.queue?.mode ?? "unknown";
   const queueDetails = formatQueueDetails(args.queue);
   const verboseLabel =
-    verboseLevel === "full"
-      ? `${t("status", "verbose", "verbose")}:full`
-      : verboseLevel === "on"
-        ? t("status", "verbose", "verbose")
-        : null;
+    verboseLevel === "full" ? "verbose:full" : verboseLevel === "on" ? "verbose" : null;
   const elevatedLabel =
     elevatedLevel && elevatedLevel !== "off"
       ? elevatedLevel === "on"
-        ? t("status", "elevated", "elevated")
-        : `${t("status", "elevated", "elevated")}:${elevatedLevel}`
+        ? "elevated"
+        : `elevated:${elevatedLevel}`
       : null;
-  const runtimeLabel = t("status", "runtime.label", "Runtime");
-  const thinkLabel = t("status", "think.label", "Think");
-  const reasoningLabel = t("status", "reasoning.label", "Reasoning");
   const optionParts = [
-    `${runtimeLabel}: ${runtime.label}`,
-    `${thinkLabel}: ${thinkLevel}`,
+    `Runtime: ${runtime.label}`,
+    `Think: ${thinkLevel}`,
     verboseLabel,
-    reasoningLevel !== "off" ? `${reasoningLabel}: ${reasoningLevel}` : null,
+    reasoningLevel !== "off" ? `Reasoning: ${reasoningLevel}` : null,
     elevatedLabel,
   ];
   const optionsLine = optionParts.filter(Boolean).join(" · ");
-  const activationLabel = t("status", "activation.label", "Activation");
-  const queueLabel = t("status", "queue.label", "Queue");
   const activationParts = [
-    groupActivationValue ? `👥 ${activationLabel}: ${groupActivationValue}` : null,
-    `🪢 ${queueLabel}: ${queueMode}${queueDetails}`,
+    groupActivationValue ? `👥 Activation: ${groupActivationValue}` : null,
+    `🪢 Queue: ${queueMode}${queueDetails}`,
   ];
   const activationLine = activationParts.filter(Boolean).join(" · ");
 
@@ -423,15 +455,13 @@ export function buildStatusMessage(args: StatusArgs): string {
       : undefined;
   const costLabel = showCost && hasUsage ? formatUsd(cost) : undefined;
 
-  const modelLabel = model ? `${provider}/${model}` : t("status", "time.unknown", "unknown");
+  const modelLabel = model ? `${provider}/${model}` : "unknown";
   const authLabel = authLabelValue ? ` · 🔑 ${authLabelValue}` : "";
-  const modelLabelText = t("status", "model.label", "Model");
-  const modelLine = `🧠 ${modelLabelText}: ${modelLabel}${authLabel}`;
+  const modelLine = `🧠 Model: ${modelLabel}${authLabel}`;
   const commit = resolveCommitHash();
   const versionLine = `🦞 OpenClaw ${VERSION}${commit ? ` (${commit})` : ""}`;
   const usagePair = formatUsagePair(inputTokens, outputTokens);
-  const costLabelText = t("status", "cost.label", "Cost");
-  const costLine = costLabel ? `💵 ${costLabelText}: ${costLabel}` : null;
+  const costLine = costLabel ? `💵 Cost: ${costLabel}` : null;
   const usageCostLine =
     usagePair && costLine ? `${usagePair} · ${costLine}` : (usagePair ?? costLine);
   const mediaLine = formatMediaUnderstandingLine(args.mediaDecisions);
@@ -456,13 +486,13 @@ export function buildStatusMessage(args: StatusArgs): string {
 }
 
 const CATEGORY_LABELS: Record<CommandCategory, string> = {
-  session: t("categories", "session", "Session"),
-  options: t("categories", "options", "Options"),
-  status: t("categories", "status", "Status"),
-  management: t("categories", "management", "Management"),
-  media: t("categories", "media", "Media"),
-  tools: t("categories", "tools", "Tools"),
-  docks: t("categories", "docks", "Docks"),
+  session: "Session",
+  options: "Options",
+  status: "Status",
+  management: "Management",
+  media: "Media",
+  tools: "Tools",
+  docks: "Docks",
 };
 
 const CATEGORY_ORDER: CommandCategory[] = [
@@ -494,26 +524,30 @@ function groupCommandsByCategory(
 export function buildHelpMessage(cfg?: OpenClawConfig): string {
   const lines = ["ℹ️ Help", ""];
 
-  lines.push(t("status", "help.session", "Session"));
+  lines.push("Session");
   lines.push("  /new  |  /reset  |  /compact [instructions]  |  /stop");
   lines.push("");
 
   const optionParts = ["/think <level>", "/model <id>", "/verbose on|off"];
-  if (cfg?.commands?.config === true) optionParts.push("/config");
-  if (cfg?.commands?.debug === true) optionParts.push("/debug");
-  lines.push(t("status", "help.options", "Options"));
+  if (cfg?.commands?.config === true) {
+    optionParts.push("/config");
+  }
+  if (cfg?.commands?.debug === true) {
+    optionParts.push("/debug");
+  }
+  lines.push("Options");
   lines.push(`  ${optionParts.join("  |  ")}`);
   lines.push("");
 
-  lines.push(t("status", "help.status", "Status"));
+  lines.push("Status");
   lines.push("  /status  |  /whoami  |  /context");
   lines.push("");
 
-  lines.push(t("status", "help.skills", "Skills"));
+  lines.push("Skills");
   lines.push("  /skill <name> [input]");
 
   lines.push("");
-  lines.push(t("status", "help.more", "More: /commands for full list"));
+  lines.push("More: /commands for full list");
 
   return lines.join("\n");
 }
@@ -544,7 +578,9 @@ function formatCommandEntry(command: ChatCommandDefinition): string {
     .filter((alias) => alias.toLowerCase() !== primary.toLowerCase())
     .filter((alias) => {
       const key = alias.toLowerCase();
-      if (seen.has(key)) return false;
+      if (seen.has(key)) {
+        return false;
+      }
       seen.add(key);
       return true;
     });
@@ -567,7 +603,9 @@ function buildCommandItems(
 
   for (const category of CATEGORY_ORDER) {
     const categoryCommands = grouped.get(category) ?? [];
-    if (categoryCommands.length === 0) continue;
+    if (categoryCommands.length === 0) {
+      continue;
+    }
     const label = CATEGORY_LABELS[category];
     for (const command of categoryCommands) {
       items.push({ label, text: formatCommandEntry(command) });
@@ -577,7 +615,7 @@ function buildCommandItems(
   for (const command of pluginCommands) {
     const pluginLabel = command.pluginId ? ` (${command.pluginId})` : "";
     items.push({
-      label: t("categories", "plugins", "Plugins"),
+      label: "Plugins",
       text: `/${command.name}${pluginLabel} - ${command.description}`,
     });
   }
@@ -591,7 +629,9 @@ function formatCommandList(items: CommandsListItem[]): string {
 
   for (const item of items) {
     if (item.label !== currentLabel) {
-      if (lines.length > 0) lines.push("");
+      if (lines.length > 0) {
+        lines.push("");
+      }
       lines.push(item.label);
       currentLabel = item.label;
     }
@@ -626,8 +666,7 @@ export function buildCommandsMessagePaginated(
   const items = buildCommandItems(commands, pluginCommands);
 
   if (!isTelegram) {
-    const commandsTitle = t("status", "commands.title", "Slash commands");
-    const lines = [`ℹ️ ${commandsTitle}`, ""];
+    const lines = ["ℹ️ Slash commands", ""];
     lines.push(formatCommandList(items));
     return {
       text: lines.join("\n").trim(),
@@ -645,11 +684,7 @@ export function buildCommandsMessagePaginated(
   const endIndex = startIndex + COMMANDS_PER_PAGE;
   const pageItems = items.slice(startIndex, endIndex);
 
-  const pageTitle = ti("status", "commands.pageTitle", `Commands (${currentPage}/${totalPages})`, {
-    current: currentPage,
-    total: totalPages,
-  });
-  const lines = [`ℹ️ ${pageTitle}`, ""];
+  const lines = [`ℹ️ Commands (${currentPage}/${totalPages})`, ""];
   lines.push(formatCommandList(pageItems));
 
   return {

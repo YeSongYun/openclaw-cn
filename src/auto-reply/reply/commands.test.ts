@@ -1,17 +1,15 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-
+import type { OpenClawConfig } from "../../config/config.js";
+import type { MsgContext } from "../templating.js";
 import {
   addSubagentRunForTests,
   resetSubagentRegistryForTests,
 } from "../../agents/subagent-registry.js";
-import type { OpenClawConfig } from "../../config/config.js";
 import * as internalHooks from "../../hooks/internal-hooks.js";
 import { clearPluginCommands, registerPluginCommand } from "../../plugins/commands.js";
-import type { MsgContext } from "../templating.js";
 import { resetBashChatCommandForTests } from "./bash-command.js";
 import { buildCommandContext, handleCommands } from "./commands.js";
 import { parseInlineDirectives } from "./directive-handling.js";
@@ -117,7 +115,7 @@ describe("handleCommands gating", () => {
     const params = buildParams("/config show", cfg);
     const result = await handleCommands(params);
     expect(result.shouldContinue).toBe(false);
-    expect(result.reply?.text).toContain("/config 已禁用");
+    expect(result.reply?.text).toContain("/config is disabled");
   });
 
   it("blocks /debug when disabled", async () => {
@@ -128,7 +126,7 @@ describe("handleCommands gating", () => {
     const params = buildParams("/debug show", cfg);
     const result = await handleCommands(params);
     expect(result.shouldContinue).toBe(false);
-    expect(result.reply?.text).toContain("/debug 已禁用");
+    expect(result.reply?.text).toContain("/debug is disabled");
   });
 });
 
@@ -431,6 +429,6 @@ describe("handleCommands /tts", () => {
     const params = buildParams("/tts", cfg);
     const result = await handleCommands(params);
     expect(result.shouldContinue).toBe(false);
-    expect(result.reply?.text).toContain("TTS 状态");
+    expect(result.reply?.text).toContain("TTS status");
   });
 });

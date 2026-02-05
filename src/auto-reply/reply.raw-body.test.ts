@@ -182,7 +182,7 @@ describe("RawBody directive parsing", () => {
       );
 
       const text = Array.isArray(res) ? res[0]?.text : res?.text;
-      expect(text).toContain("会话: agent:main:whatsapp:group:g1");
+      expect(text).toContain("Session: agent:main:whatsapp:group:g1");
       expect(text).toContain("anthropic/claude-opus-4-5");
       expect(runEmbeddedPiAgent).not.toHaveBeenCalled();
     });

@@ -1,8 +1,6 @@
 import type { Command } from "commander";
-
-import { sandboxListCommand, sandboxRecreateCommand } from "../commands/sandbox.js";
 import { sandboxExplainCommand } from "../commands/sandbox-explain.js";
-import { t } from "../i18n/index.js";
+import { sandboxListCommand, sandboxRecreateCommand } from "../commands/sandbox.js";
 import { defaultRuntime } from "../runtime.js";
 import { formatDocsLink } from "../terminal/links.js";
 import { theme } from "../terminal/theme.js";
@@ -64,7 +62,7 @@ export function registerSandboxCli(program: Command) {
     .description("Manage sandbox containers (Docker-based agent isolation)")
     .addHelpText(
       "after",
-      () => `\n${theme.heading(t("cli", "help.examples", "Examples:"))}\n${formatHelpExamples(SANDBOX_EXAMPLES.main)}\n`,
+      () => `\n${theme.heading("Examples:")}\n${formatHelpExamples(SANDBOX_EXAMPLES.main)}\n`,
     )
     .addHelpText(
       "after",
@@ -85,7 +83,7 @@ export function registerSandboxCli(program: Command) {
     .addHelpText(
       "after",
       () =>
-        `\n${theme.heading(t("cli", "help.examples", "Examples:"))}\n${formatHelpExamples(SANDBOX_EXAMPLES.list)}\n\n${theme.heading(
+        `\n${theme.heading("Examples:")}\n${formatHelpExamples(SANDBOX_EXAMPLES.list)}\n\n${theme.heading(
           "Output includes:",
         )}\n${theme.muted("- Container name and status (running/stopped)")}\n${theme.muted(
           "- Docker image and whether it matches current config",
@@ -118,7 +116,7 @@ export function registerSandboxCli(program: Command) {
     .addHelpText(
       "after",
       () =>
-        `\n${theme.heading(t("cli", "help.examples", "Examples:"))}\n${formatHelpExamples(SANDBOX_EXAMPLES.recreate)}\n\n${theme.heading(
+        `\n${theme.heading("Examples:")}\n${formatHelpExamples(SANDBOX_EXAMPLES.recreate)}\n\n${theme.heading(
           "Why use this?",
         )}\n${theme.muted(
           "After updating Docker images or sandbox configuration, existing containers continue running with old settings.",
@@ -159,7 +157,7 @@ export function registerSandboxCli(program: Command) {
     .option("--json", "Output result as JSON", false)
     .addHelpText(
       "after",
-      () => `\n${theme.heading(t("cli", "help.examples", "Examples:"))}\n${formatHelpExamples(SANDBOX_EXAMPLES.explain)}\n`,
+      () => `\n${theme.heading("Examples:")}\n${formatHelpExamples(SANDBOX_EXAMPLES.explain)}\n`,
     )
     .action(
       createRunner((opts) =>

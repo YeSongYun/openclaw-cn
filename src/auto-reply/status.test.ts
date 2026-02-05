@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { OpenClawConfig } from "../config/config.js";
 import { normalizeTestText } from "../../test/helpers/normalize-text.js";
 import { withTempHome } from "../../test/helpers/temp-home.js";
-import type { OpenClawConfig } from "../config/config.js";
 import {
   buildCommandsMessage,
   buildCommandsMessagePaginated,
@@ -72,19 +72,19 @@ describe("buildStatusMessage", () => {
     const normalized = normalizeTestText(text);
 
     expect(normalized).toContain("OpenClaw");
-    expect(normalized).toContain("模型: anthropic/pi:opus");
+    expect(normalized).toContain("Model: anthropic/pi:opus");
     expect(normalized).toContain("api-key");
-    expect(normalized).toContain("令牌: 1.2k 输入 / 800 输出");
-    expect(normalized).toContain("成本: $0.0020");
-    expect(normalized).toContain("上下文: 16k/32k (50%)");
-    expect(normalized).toContain("压缩次数: 2");
-    expect(normalized).toContain("会话: agent:main:main");
-    expect(normalized).toContain("10分钟前");
-    expect(normalized).toContain("运行时: direct");
-    expect(normalized).toContain("思考: medium");
-    expect(normalized).not.toContain("详细");
-    expect(normalized).toContain("提权");
-    expect(normalized).toContain("队列: collect");
+    expect(normalized).toContain("Tokens: 1.2k in / 800 out");
+    expect(normalized).toContain("Cost: $0.0020");
+    expect(normalized).toContain("Context: 16k/32k (50%)");
+    expect(normalized).toContain("Compactions: 2");
+    expect(normalized).toContain("Session: agent:main:main");
+    expect(normalized).toContain("updated 10m ago");
+    expect(normalized).toContain("Runtime: direct");
+    expect(normalized).toContain("Think: medium");
+    expect(normalized).not.toContain("verbose");
+    expect(normalized).toContain("elevated");
+    expect(normalized).toContain("Queue: collect");
   });
 
   it("uses per-agent sandbox config when config and session key are provided", () => {
@@ -103,7 +103,7 @@ describe("buildStatusMessage", () => {
       queue: { mode: "collect", depth: 0 },
     });
 
-    expect(normalizeTestText(text)).toContain("运行时: docker/all");
+    expect(normalizeTestText(text)).toContain("Runtime: docker/all");
   });
 
   it("shows verbose/elevated labels only when enabled", () => {
@@ -118,8 +118,8 @@ describe("buildStatusMessage", () => {
       queue: { mode: "collect", depth: 0 },
     });
 
-    expect(text).toContain("详细");
-    expect(text).toContain("提权");
+    expect(text).toContain("verbose");
+    expect(text).toContain("elevated");
   });
 
   it("includes media understanding decisions when present", () => {
@@ -204,7 +204,7 @@ describe("buildStatusMessage", () => {
 
     const optionsLine = text.split("\n").find((line) => line.trim().startsWith("⚙️"));
     expect(optionsLine).toBeTruthy();
-    expect(optionsLine).not.toContain("提权");
+    expect(optionsLine).not.toContain("elevated");
   });
 
   it("prefers model overrides over last-run model", () => {
@@ -228,7 +228,7 @@ describe("buildStatusMessage", () => {
       modelAuth: "api-key",
     });
 
-    expect(normalizeTestText(text)).toContain("模型: openai/gpt-4.1-mini");
+    expect(normalizeTestText(text)).toContain("Model: openai/gpt-4.1-mini");
   });
 
   it("keeps provider prefix from configured model", () => {
@@ -241,7 +241,7 @@ describe("buildStatusMessage", () => {
       modelAuth: "api-key",
     });
 
-    expect(normalizeTestText(text)).toContain("模型: google-antigravity/claude-sonnet-4-5");
+    expect(normalizeTestText(text)).toContain("Model: google-antigravity/claude-sonnet-4-5");
   });
 
   it("handles missing agent config gracefully", () => {
@@ -253,9 +253,9 @@ describe("buildStatusMessage", () => {
     });
 
     const normalized = normalizeTestText(text);
-    expect(normalized).toContain("模型:");
-    expect(normalized).toContain("上下文:");
-    expect(normalized).toContain("队列: collect");
+    expect(normalized).toContain("Model:");
+    expect(normalized).toContain("Context:");
+    expect(normalized).toContain("Queue: collect");
   });
 
   it("includes group activation for group sessions", () => {
@@ -273,7 +273,7 @@ describe("buildStatusMessage", () => {
       modelAuth: "api-key",
     });
 
-    expect(text).toContain("激活: always");
+    expect(text).toContain("Activation: always");
   });
 
   it("shows queue details when overridden", () => {
@@ -293,7 +293,7 @@ describe("buildStatusMessage", () => {
       modelAuth: "api-key",
     });
 
-    expect(text).toContain("队列: collect (depth 3 · debounce 2s · cap 5 · drop old)");
+    expect(text).toContain("Queue: collect (depth 3 · debounce 2s · cap 5 · drop old)");
   });
 
   it("inserts usage summary beneath context line", () => {
@@ -308,7 +308,7 @@ describe("buildStatusMessage", () => {
     });
 
     const lines = normalizeTestText(text).split("\n");
-    const contextIndex = lines.findIndex((line) => line.includes("上下文:"));
+    const contextIndex = lines.findIndex((line) => line.includes("Context:"));
     expect(contextIndex).toBeGreaterThan(-1);
     expect(lines[contextIndex + 1]).toContain("Usage: Claude 80% left (5h)");
   });
@@ -401,7 +401,7 @@ describe("buildStatusMessage", () => {
           modelAuth: "api-key",
         });
 
-        expect(normalizeTestText(text)).toContain("上下文: 1.0k/32k");
+        expect(normalizeTestText(text)).toContain("Context: 1.0k/32k");
       },
       { prefix: "openclaw-status-" },
     );
@@ -413,12 +413,12 @@ describe("buildCommandsMessage", () => {
     const text = buildCommandsMessage({
       commands: { config: false, debug: false },
     } as OpenClawConfig);
-    expect(text).toContain("ℹ️ 斜杠命令");
-    expect(text).toContain("状态");
-    expect(text).toContain("/commands - 列出所有斜杠命令。");
-    expect(text).toContain("/skill - 按名称运行技能。");
-    expect(text).toContain("/think (/thinking, /t) - 设置思考级别。");
-    expect(text).toContain("/compact [text] - 压缩会话上下文。");
+    expect(text).toContain("ℹ️ Slash commands");
+    expect(text).toContain("Status");
+    expect(text).toContain("/commands - List all slash commands.");
+    expect(text).toContain("/skill - Run a skill by name.");
+    expect(text).toContain("/think (/thinking, /t) - Set thinking level.");
+    expect(text).toContain("/compact [text] - Compact the session context.");
     expect(text).not.toContain("/config");
     expect(text).not.toContain("/debug");
   });
@@ -445,7 +445,7 @@ describe("buildHelpMessage", () => {
     const text = buildHelpMessage({
       commands: { config: false, debug: false },
     } as OpenClawConfig);
-    expect(text).toContain("技能");
+    expect(text).toContain("Skills");
     expect(text).toContain("/skill <name> [input]");
     expect(text).not.toContain("/config");
     expect(text).not.toContain("/debug");
@@ -461,9 +461,9 @@ describe("buildCommandsMessagePaginated", () => {
       undefined,
       { surface: "telegram", page: 1 },
     );
-    expect(result.text).toContain("ℹ️ 命令 (1/");
-    expect(result.text).toContain("会话");
-    expect(result.text).toContain("/stop - 停止当前运行。");
+    expect(result.text).toContain("ℹ️ Commands (1/");
+    expect(result.text).toContain("Session");
+    expect(result.text).toContain("/stop - Stop the current run.");
   });
 
   it("includes plugin commands in the paginated list", () => {
@@ -477,7 +477,7 @@ describe("buildCommandsMessagePaginated", () => {
       undefined,
       { surface: "telegram", page: 99 },
     );
-    expect(result.text).toContain("插件");
+    expect(result.text).toContain("Plugins");
     expect(result.text).toContain("/plugin_cmd (demo-plugin) - Plugin command");
   });
 });

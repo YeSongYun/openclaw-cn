@@ -1,18 +1,17 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { escapeRegExp, formatEnvelopeTimestamp } from "../../test/helpers/envelope-timestamp.js";
+import { expectInboundContextContract } from "../../test/helpers/inbound-contract.js";
 import {
   listNativeCommandSpecs,
   listNativeCommandSpecsForConfig,
 } from "../auto-reply/commands-registry.js";
-import { escapeRegExp, formatEnvelopeTimestamp } from "../../test/helpers/envelope-timestamp.js";
-import { expectInboundContextContract } from "../../test/helpers/inbound-contract.js";
+import { resetInboundDedupe } from "../auto-reply/reply/inbound-dedupe.js";
+import { createTelegramBot, getTelegramSequentialKey } from "./bot.js";
 import { resolveTelegramFetch } from "./fetch.js";
 
-let createTelegramBot: typeof import("./bot.js").createTelegramBot;
-let getTelegramSequentialKey: typeof import("./bot.js").getTelegramSequentialKey;
-let resetInboundDedupe: typeof import("../auto-reply/reply/inbound-dedupe.js").resetInboundDedupe;
 let replyModule: typeof import("../auto-reply/reply.js");
 const { listSkillCommandsForAgents } = vi.hoisted(() => ({
   listSkillCommandsForAgents: vi.fn(() => []),
@@ -56,17 +55,17 @@ vi.mock("../config/sessions.js", async (importOriginal) => {
   };
 });
 
-const { readTelegramAllowFromStore, upsertTelegramPairingRequest } = vi.hoisted(() => ({
-  readTelegramAllowFromStore: vi.fn(async () => [] as string[]),
-  upsertTelegramPairingRequest: vi.fn(async () => ({
+const { readChannelAllowFromStore, upsertChannelPairingRequest } = vi.hoisted(() => ({
+  readChannelAllowFromStore: vi.fn(async () => [] as string[]),
+  upsertChannelPairingRequest: vi.fn(async () => ({
     code: "PAIRCODE",
     created: true,
   })),
 }));
 
-vi.mock("./pairing-store.js", () => ({
-  readTelegramAllowFromStore,
-  upsertTelegramPairingRequest,
+vi.mock("../pairing/pairing-store.js", () => ({
+  readChannelAllowFromStore,
+  upsertChannelPairingRequest,
 }));
 
 const { enqueueSystemEvent } = vi.hoisted(() => ({
@@ -167,17 +166,19 @@ vi.mock("../auto-reply/reply.js", () => {
 
 const getOnHandler = (event: string) => {
   const handler = onSpy.mock.calls.find((call) => call[0] === event)?.[1];
-  if (!handler) throw new Error(`Missing handler for event: ${event}`);
+  if (!handler) {
+    throw new Error(`Missing handler for event: ${event}`);
+  }
   return handler as (ctx: Record<string, unknown>) => Promise<void>;
 };
 
 const ORIGINAL_TZ = process.env.TZ;
 describe("createTelegramBot", () => {
-  beforeEach(async () => {
-    vi.resetModules();
-    ({ resetInboundDedupe } = await import("../auto-reply/reply/inbound-dedupe.js"));
-    ({ createTelegramBot, getTelegramSequentialKey } = await import("./bot.js"));
+  beforeAll(async () => {
     replyModule = await import("../auto-reply/reply.js");
+  });
+
+  beforeEach(() => {
     process.env.TZ = "UTC";
     resetInboundDedupe();
     loadConfig.mockReturnValue({
@@ -310,8 +311,8 @@ describe("createTelegramBot", () => {
       { command: "custom_backup", description: "Git backup" },
       { command: "custom_generate", description: "Create an image" },
     ]);
-    const reserved = listNativeCommandSpecs().map((command) => command.name);
-    expect(registered.some((command) => reserved.includes(command.command))).toBe(false);
+    const reserved = new Set(listNativeCommandSpecs().map((command) => command.name));
+    expect(registered.some((command) => reserved.has(command.command))).toBe(false);
   });
 
   it("uses wrapped fetch when global fetch is available", () => {
@@ -466,7 +467,7 @@ describe("createTelegramBot", () => {
     const [chatId, messageId, text, params] = editMessageTextSpy.mock.calls[0] ?? [];
     expect(chatId).toBe(1234);
     expect(messageId).toBe(12);
-    expect(String(text)).toContain("ℹ️ 命令");
+    expect(String(text)).toContain("ℹ️ Commands");
     expect(params).toEqual(
       expect.objectContaining({
         reply_markup: expect.any(Object),
@@ -567,8 +568,8 @@ describe("createTelegramBot", () => {
     loadConfig.mockReturnValue({
       channels: { telegram: { dmPolicy: "pairing" } },
     });
-    readTelegramAllowFromStore.mockResolvedValue([]);
-    upsertTelegramPairingRequest.mockResolvedValue({
+    readChannelAllowFromStore.mockResolvedValue([]);
+    upsertChannelPairingRequest.mockResolvedValue({
       code: "PAIRME12",
       created: true,
     });
@@ -604,8 +605,8 @@ describe("createTelegramBot", () => {
     loadConfig.mockReturnValue({
       channels: { telegram: { dmPolicy: "pairing" } },
     });
-    readTelegramAllowFromStore.mockResolvedValue([]);
-    upsertTelegramPairingRequest
+    readChannelAllowFromStore.mockResolvedValue([]);
+    upsertChannelPairingRequest
       .mockResolvedValueOnce({ code: "PAIRME12", created: true })
       .mockResolvedValueOnce({ code: "PAIRME12", created: false });
 
@@ -2333,13 +2334,15 @@ describe("createTelegramBot", () => {
         },
       },
     });
-    readTelegramAllowFromStore.mockResolvedValueOnce(["12345"]);
+    readChannelAllowFromStore.mockResolvedValueOnce(["12345"]);
 
     createTelegramBot({ token: "tok" });
     const handler = commandSpy.mock.calls.find((call) => call[0] === "status")?.[1] as
       | ((ctx: Record<string, unknown>) => Promise<void>)
       | undefined;
-    if (!handler) throw new Error("status command handler missing");
+    if (!handler) {
+      throw new Error("status command handler missing");
+    }
 
     await handler({
       message: {
@@ -2374,13 +2377,15 @@ describe("createTelegramBot", () => {
         },
       },
     });
-    readTelegramAllowFromStore.mockResolvedValueOnce(["12345"]);
+    readChannelAllowFromStore.mockResolvedValueOnce(["12345"]);
 
     createTelegramBot({ token: "tok" });
     const handler = commandSpy.mock.calls.find((call) => call[0] === "status")?.[1] as
       | ((ctx: Record<string, unknown>) => Promise<void>)
       | undefined;
-    if (!handler) throw new Error("status command handler missing");
+    if (!handler) {
+      throw new Error("status command handler missing");
+    }
 
     await handler({
       message: {
@@ -2416,13 +2421,15 @@ describe("createTelegramBot", () => {
         },
       },
     });
-    readTelegramAllowFromStore.mockResolvedValueOnce([]);
+    readChannelAllowFromStore.mockResolvedValueOnce([]);
 
     createTelegramBot({ token: "tok" });
     const handler = commandSpy.mock.calls.find((call) => call[0] === "status")?.[1] as
       | ((ctx: Record<string, unknown>) => Promise<void>)
       | undefined;
-    if (!handler) throw new Error("status command handler missing");
+    if (!handler) {
+      throw new Error("status command handler missing");
+    }
 
     await handler({
       message: {
@@ -2467,7 +2474,9 @@ describe("createTelegramBot", () => {
     const verboseHandler = commandSpy.mock.calls.find((call) => call[0] === "verbose")?.[1] as
       | ((ctx: Record<string, unknown>) => Promise<void>)
       | undefined;
-    if (!verboseHandler) throw new Error("verbose command handler missing");
+    if (!verboseHandler) {
+      throw new Error("verbose command handler missing");
+    }
 
     await verboseHandler({
       message: {
@@ -2867,7 +2876,7 @@ describe("createTelegramBot", () => {
     expect(enqueueSystemEvent).not.toHaveBeenCalled();
   });
 
-  it("uses correct session key for forum group reactions with topic", async () => {
+  it("routes forum group reactions to the general topic (thread id not available on reactions)", async () => {
     onSpy.mockReset();
     enqueueSystemEvent.mockReset();
 
@@ -2882,12 +2891,13 @@ describe("createTelegramBot", () => {
       ctx: Record<string, unknown>,
     ) => Promise<void>;
 
+    // MessageReactionUpdated does not include message_thread_id in the Bot API,
+    // so forum reactions always route to the general topic (1).
     await handler({
       update: { update_id: 505 },
       messageReaction: {
         chat: { id: 5678, type: "supergroup", is_forum: true },
         message_id: 100,
-        message_thread_id: 42,
         user: { id: 10, first_name: "Bob", username: "bob_user" },
         date: 1736380800,
         old_reaction: [],
@@ -2899,7 +2909,7 @@ describe("createTelegramBot", () => {
     expect(enqueueSystemEvent).toHaveBeenCalledWith(
       "Telegram reaction added: 🔥 by Bob (@bob_user) on msg 100",
       expect.objectContaining({
-        sessionKey: expect.stringContaining("telegram:group:5678:topic:42"),
+        sessionKey: expect.stringContaining("telegram:group:5678:topic:1"),
         contextKey: expect.stringContaining("telegram:reaction:add:5678:100:10"),
       }),
     );
@@ -2981,42 +2991,5 @@ describe("createTelegramBot", () => {
     // Verify session key does NOT contain :topic:
     const sessionKey = enqueueSystemEvent.mock.calls[0][1].sessionKey;
     expect(sessionKey).not.toContain(":topic:");
-  });
-  it("uses thread session key for dm reactions with topic id", async () => {
-    onSpy.mockReset();
-    enqueueSystemEvent.mockReset();
-
-    loadConfig.mockReturnValue({
-      channels: {
-        telegram: { dmPolicy: "open", reactionNotifications: "all" },
-      },
-    });
-
-    createTelegramBot({ token: "tok" });
-    const handler = getOnHandler("message_reaction") as (
-      ctx: Record<string, unknown>,
-    ) => Promise<void>;
-
-    await handler({
-      update: { update_id: 508 },
-      messageReaction: {
-        chat: { id: 1234, type: "private" },
-        message_id: 300,
-        message_thread_id: 42,
-        user: { id: 12, first_name: "Dana" },
-        date: 1736380800,
-        old_reaction: [],
-        new_reaction: [{ type: "emoji", emoji: "🔥" }],
-      },
-    });
-
-    expect(enqueueSystemEvent).toHaveBeenCalledTimes(1);
-    expect(enqueueSystemEvent).toHaveBeenCalledWith(
-      "Telegram reaction added: 🔥 by Dana on msg 300",
-      expect.objectContaining({
-        sessionKey: expect.stringContaining(":thread:42"),
-        contextKey: expect.stringContaining("telegram:reaction:add:1234:300:12"),
-      }),
-    );
   });
 });
