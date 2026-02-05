@@ -1,5 +1,6 @@
 import type { Command } from "commander";
 import type { OpenClawConfig } from "../../config/config.js";
+import { t } from "../../i18n/index.js";
 import { isTruthyEnvValue } from "../../infra/env.js";
 import { buildParseArgv, getPrimaryCommand, hasHelpOrVersion } from "../argv.js";
 import { resolveActionArgs } from "./helpers.js";
@@ -34,7 +35,7 @@ const loadConfig = async (): Promise<OpenClawConfig> => {
 const entries: SubCliEntry[] = [
   {
     name: "acp",
-    description: "Agent Control Protocol tools",
+    description: t("cli", "cmd.acp", "Agent Control Protocol tools"),
     register: async (program) => {
       const mod = await import("../acp-cli.js");
       mod.registerAcpCli(program);
@@ -42,7 +43,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "gateway",
-    description: "Gateway control",
+    description: t("cli", "cmd.gateway", "Gateway control"),
     register: async (program) => {
       const mod = await import("../gateway-cli.js");
       mod.registerGatewayCli(program);
@@ -50,7 +51,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "daemon",
-    description: "Gateway service (legacy alias)",
+    description: t("cli", "cmd.daemon", "Gateway service (legacy alias)"),
     register: async (program) => {
       const mod = await import("../daemon-cli.js");
       mod.registerDaemonCli(program);
@@ -58,7 +59,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "logs",
-    description: "Gateway logs",
+    description: t("cli", "cmd.logs", "Gateway logs"),
     register: async (program) => {
       const mod = await import("../logs-cli.js");
       mod.registerLogsCli(program);
@@ -66,7 +67,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "system",
-    description: "System events, heartbeat, and presence",
+    description: t("cli", "cmd.system", "System events, heartbeat, and presence"),
     register: async (program) => {
       const mod = await import("../system-cli.js");
       mod.registerSystemCli(program);
@@ -74,7 +75,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "models",
-    description: "Model configuration",
+    description: t("cli", "cmd.models", "Model configuration"),
     register: async (program) => {
       const mod = await import("../models-cli.js");
       mod.registerModelsCli(program);
@@ -82,7 +83,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "approvals",
-    description: "Exec approvals",
+    description: t("cli", "cmd.approvals", "Exec approvals"),
     register: async (program) => {
       const mod = await import("../exec-approvals-cli.js");
       mod.registerExecApprovalsCli(program);
@@ -90,7 +91,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "nodes",
-    description: "Node commands",
+    description: t("cli", "cmd.nodes", "Node commands"),
     register: async (program) => {
       const mod = await import("../nodes-cli.js");
       mod.registerNodesCli(program);
@@ -98,7 +99,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "devices",
-    description: "Device pairing + token management",
+    description: t("cli", "cmd.devices", "Device pairing + token management"),
     register: async (program) => {
       const mod = await import("../devices-cli.js");
       mod.registerDevicesCli(program);
@@ -106,7 +107,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "node",
-    description: "Node control",
+    description: t("cli", "cmd.node", "Node control"),
     register: async (program) => {
       const mod = await import("../node-cli.js");
       mod.registerNodeCli(program);
@@ -114,7 +115,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "sandbox",
-    description: "Sandbox tools",
+    description: t("cli", "cmd.sandbox", "Sandbox tools"),
     register: async (program) => {
       const mod = await import("../sandbox-cli.js");
       mod.registerSandboxCli(program);
@@ -122,7 +123,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "tui",
-    description: "Terminal UI",
+    description: t("cli", "cmd.tui", "Terminal UI"),
     register: async (program) => {
       const mod = await import("../tui-cli.js");
       mod.registerTuiCli(program);
@@ -130,7 +131,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "cron",
-    description: "Cron scheduler",
+    description: t("cli", "cmd.cron", "Cron scheduler"),
     register: async (program) => {
       const mod = await import("../cron-cli.js");
       mod.registerCronCli(program);
@@ -138,7 +139,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "dns",
-    description: "DNS helpers",
+    description: t("cli", "cmd.dns", "DNS helpers"),
     register: async (program) => {
       const mod = await import("../dns-cli.js");
       mod.registerDnsCli(program);
@@ -146,7 +147,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "docs",
-    description: "Docs helpers",
+    description: t("cli", "cmd.docs", "Docs helpers"),
     register: async (program) => {
       const mod = await import("../docs-cli.js");
       mod.registerDocsCli(program);
@@ -154,7 +155,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "hooks",
-    description: "Hooks tooling",
+    description: t("cli", "cmd.hooks", "Hooks tooling"),
     register: async (program) => {
       const mod = await import("../hooks-cli.js");
       mod.registerHooksCli(program);
@@ -162,7 +163,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "webhooks",
-    description: "Webhook helpers",
+    description: t("cli", "cmd.webhooks", "Webhook helpers"),
     register: async (program) => {
       const mod = await import("../webhooks-cli.js");
       mod.registerWebhooksCli(program);
@@ -170,7 +171,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "pairing",
-    description: "Pairing helpers",
+    description: t("cli", "cmd.pairing", "Pairing helpers"),
     register: async (program) => {
       // Initialize plugins before registering pairing CLI.
       // The pairing CLI calls listPairingChannels() at registration time,
@@ -183,7 +184,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "plugins",
-    description: "Plugin management",
+    description: t("cli", "cmd.plugins", "Plugin management"),
     register: async (program) => {
       const mod = await import("../plugins-cli.js");
       mod.registerPluginsCli(program);
@@ -193,7 +194,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "channels",
-    description: "Channel management",
+    description: t("cli", "cmd.channels", "Channel management"),
     register: async (program) => {
       const mod = await import("../channels-cli.js");
       mod.registerChannelsCli(program);
@@ -201,7 +202,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "directory",
-    description: "Directory commands",
+    description: t("cli", "cmd.directory", "Directory commands"),
     register: async (program) => {
       const mod = await import("../directory-cli.js");
       mod.registerDirectoryCli(program);
@@ -209,7 +210,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "security",
-    description: "Security helpers",
+    description: t("cli", "cmd.security", "Security helpers"),
     register: async (program) => {
       const mod = await import("../security-cli.js");
       mod.registerSecurityCli(program);
@@ -217,7 +218,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "skills",
-    description: "Skills management",
+    description: t("cli", "cmd.skills", "Skills management"),
     register: async (program) => {
       const mod = await import("../skills-cli.js");
       mod.registerSkillsCli(program);
@@ -225,7 +226,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "update",
-    description: "CLI update helpers",
+    description: t("cli", "cmd.update", "CLI update helpers"),
     register: async (program) => {
       const mod = await import("../update-cli.js");
       mod.registerUpdateCli(program);
@@ -233,7 +234,7 @@ const entries: SubCliEntry[] = [
   },
   {
     name: "completion",
-    description: "Generate shell completion script",
+    description: t("cli", "cmd.completion", "Generate shell completion script"),
     register: async (program) => {
       const mod = await import("../completion-cli.js");
       mod.registerCompletionCli(program);

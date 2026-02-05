@@ -27,12 +27,20 @@ function loadNamespace(ns: string): TranslationData {
   const cacheKey = `${locale}:${ns}`;
   if (cache[cacheKey]) return cache[cacheKey];
 
-  const filePath = path.join(__dirname, "../../locales", locale, `${ns}.json`);
-  try {
-    cache[cacheKey] = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-  } catch {
-    cache[cacheKey] = {};
+  // 优先尝试 dist 扁平结构路径 (../locales)，再尝试 src 嵌套结构路径 (../../locales)
+  const candidates = [
+    path.join(__dirname, "../locales", locale, `${ns}.json`),
+    path.join(__dirname, "../../locales", locale, `${ns}.json`),
+  ];
+  for (const filePath of candidates) {
+    try {
+      cache[cacheKey] = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+      return cache[cacheKey];
+    } catch {
+      // 尝试下一个路径
+    }
   }
+  cache[cacheKey] = {};
   return cache[cacheKey];
 }
 

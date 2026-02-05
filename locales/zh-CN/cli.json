@@ -90,6 +90,7 @@
   "cmd.sessions": "列出存储的会话",
   "cmd.browser": "管理 clawd 的专用浏览器（Chrome/Chromium）",
   "cmd.help": "显示命令帮助",
+  "cmd.completion": "生成 Shell 自动补全脚本",
 
   "cmd.daemon.manage": "管理网关服务（launchd/systemd/schtasks）",
   "cmd.daemon.status": "显示服务安装状态并探测网关",
