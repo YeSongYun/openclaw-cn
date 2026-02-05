@@ -8,6 +8,7 @@ import {
   agentsSetIdentityCommand,
 } from "../../commands/agents.js";
 import { setVerbose } from "../../globals.js";
+import { t } from "../../i18n/index.js";
 import { defaultRuntime } from "../../runtime.js";
 import { formatDocsLink } from "../../terminal/links.js";
 import { theme } from "../../terminal/theme.js";
@@ -20,7 +21,9 @@ import { collectOption } from "./helpers.js";
 export function registerAgentCommands(program: Command, args: { agentChannelOptions: string }) {
   program
     .command("agent")
-    .description("Run an agent turn via the Gateway (use --local for embedded)")
+    .description(
+      t("cli", "cmd.agent", "Run an agent turn via the Gateway (use --local for embedded)"),
+    )
     .requiredOption("-m, --message <text>", "Message body for the agent")
     .option("-t, --to <number>", "Recipient number in E.164 used to derive the session key")
     .option("--session-id <id>", "Use an explicit session id")
@@ -82,7 +85,7 @@ ${theme.muted("Docs:")} ${formatDocsLink("/cli/agent", "docs.openclaw.ai/cli/age
 
   const agents = program
     .command("agents")
-    .description("Manage isolated agents (workspaces + auth + routing)")
+    .description(t("cli", "cmd.agents", "Manage isolated agents (workspaces + auth + routing)"))
     .addHelpText(
       "after",
       () =>

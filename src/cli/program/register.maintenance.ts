@@ -3,6 +3,7 @@ import { dashboardCommand } from "../../commands/dashboard.js";
 import { doctorCommand } from "../../commands/doctor.js";
 import { resetCommand } from "../../commands/reset.js";
 import { uninstallCommand } from "../../commands/uninstall.js";
+import { t } from "../../i18n/index.js";
 import { defaultRuntime } from "../../runtime.js";
 import { formatDocsLink } from "../../terminal/links.js";
 import { theme } from "../../terminal/theme.js";
@@ -11,7 +12,7 @@ import { runCommandWithRuntime } from "../cli-utils.js";
 export function registerMaintenanceCommands(program: Command) {
   program
     .command("doctor")
-    .description("Health checks + quick fixes for the gateway and channels")
+    .description(t("cli", "cmd.doctor", "Health checks + quick fixes for the gateway and channels"))
     .addHelpText(
       "after",
       () =>
@@ -41,7 +42,7 @@ export function registerMaintenanceCommands(program: Command) {
 
   program
     .command("dashboard")
-    .description("Open the Control UI with your current token")
+    .description(t("cli", "cmd.dashboard", "Open the Control UI with your current token"))
     .addHelpText(
       "after",
       () =>
@@ -58,7 +59,7 @@ export function registerMaintenanceCommands(program: Command) {
 
   program
     .command("reset")
-    .description("Reset local config/state (keeps the CLI installed)")
+    .description(t("cli", "cmd.reset", "Reset local config/state (keeps the CLI installed)"))
     .addHelpText(
       "after",
       () =>
@@ -81,7 +82,9 @@ export function registerMaintenanceCommands(program: Command) {
 
   program
     .command("uninstall")
-    .description("Uninstall the gateway service + local data (CLI remains)")
+    .description(
+      t("cli", "cmd.uninstall", "Uninstall the gateway service + local data (CLI remains)"),
+    )
     .addHelpText(
       "after",
       () =>

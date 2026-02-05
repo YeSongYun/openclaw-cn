@@ -4,6 +4,7 @@ import {
   configureCommand,
   configureCommandWithSections,
 } from "../../commands/configure.js";
+import { t } from "../../i18n/index.js";
 import { defaultRuntime } from "../../runtime.js";
 import { formatDocsLink } from "../../terminal/links.js";
 import { theme } from "../../terminal/theme.js";
@@ -12,7 +13,13 @@ import { runCommandWithRuntime } from "../cli-utils.js";
 export function registerConfigureCommand(program: Command) {
   program
     .command("configure")
-    .description("Interactive prompt to set up credentials, devices, and agent defaults")
+    .description(
+      t(
+        "cli",
+        "cmd.configure",
+        "Interactive prompt to set up credentials, devices, and agent defaults",
+      ),
+    )
     .addHelpText(
       "after",
       () =>
