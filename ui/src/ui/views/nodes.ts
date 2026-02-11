@@ -10,7 +10,7 @@ import type {
   ExecApprovalsFile,
   ExecApprovalsSnapshot,
 } from "../controllers/exec-approvals.ts";
-import { t } from "../../i18n/index.ts";
+import { t, ti } from "../../i18n/index.ts";
 import { clampText, formatRelativeTimestamp, formatList } from "../format.ts";
 
 export type NodesProps = {
@@ -131,7 +131,7 @@ function renderPendingDevice(req: PendingDevice, props: NodesProps) {
   const name = req.displayName?.trim() || req.deviceId;
   const age = typeof req.ts === "number" ? formatRelativeTimestamp(req.ts) : "n/a";
   const role = req.role?.trim() ? `role: ${req.role}` : "role: -";
-  const repair = req.isRepair ? " · repair" : "";
+  const repair = req.isRepair ? " · " + t("nodes.repair", "repair") : "";
   const ip = req.remoteIp ? ` · ${req.remoteIp}` : "";
   return html`
     <div class="list-item">
@@ -139,7 +139,7 @@ function renderPendingDevice(req: PendingDevice, props: NodesProps) {
         <div class="list-title">${name}</div>
         <div class="list-sub">${req.deviceId}${ip}</div>
         <div class="muted" style="margin-top: 6px;">
-          ${role} · requested ${age}${repair}
+          ${role} · ${t("nodes.requested", "requested")} ${age}${repair}
         </div>
       </div>
       <div class="list-meta">
@@ -807,7 +807,7 @@ function renderExecApprovalsPolicy(state: ExecApprovalsState) {
         </div>
         <div class="list-meta">
           <label class="field">
-            <span>Fallback</span>
+            <span>${t("nodes.askFallback", "Fallback")}</span>
             <select
               ?disabled=${state.disabled}
               @change=${(event: Event) => {
@@ -848,8 +848,12 @@ function renderExecApprovalsPolicy(state: ExecApprovalsState) {
               isDefaults
                 ? t("nodes.autoAllowSkills.sub", "Allow skill executables listed by the Gateway.")
                 : autoIsDefault
-                  ? `Using default (${defaults.autoAllowSkills ? "on" : "off"}).`
-                  : `Override (${autoEffective ? "on" : "off"}).`
+                  ? ti("nodes.usingDefault", "Using default ({value}).", {
+                      value: defaults.autoAllowSkills ? t("nodes.on", "on") : t("nodes.off", "off"),
+                    })
+                  : ti("nodes.overrideValue", "Override ({value}).", {
+                      value: autoEffective ? t("nodes.on", "on") : t("nodes.off", "off"),
+                    })
             }
           </div>
         </div>
@@ -918,7 +922,9 @@ function renderAllowlistEntry(
   entry: ExecApprovalsAllowlistEntry,
   index: number,
 ) {
-  const lastUsed = entry.lastUsedAt ? formatRelativeTimestamp(entry.lastUsedAt) : "never";
+  const lastUsed = entry.lastUsedAt
+    ? formatRelativeTimestamp(entry.lastUsedAt)
+    : t("nodes.never", "never");
   const lastCommand = entry.lastUsedCommand ? clampText(entry.lastUsedCommand, 120) : null;
   const lastPath = entry.lastResolvedPath ? clampText(entry.lastResolvedPath, 120) : null;
   return html`
@@ -974,8 +980,10 @@ function renderAgentBinding(agent: BindingAgent, state: BindingState) {
           ${agent.isDefault ? t("nodes.defaultAgent", "default agent") : t("nodes.agent", "agent")} ·
           ${
             bindingValue === "__default__"
-              ? `uses default (${state.defaultBinding ?? "any"})`
-              : `override: ${agent.binding}`
+              ? ti("nodes.usesDefault", "uses default ({value})", {
+                  value: state.defaultBinding ?? t("nodes.anyNode", "any"),
+                })
+              : ti("nodes.overrideBinding", "override: {value}", { value: agent.binding ?? "" })
           }
         </div>
       </div>
@@ -1137,9 +1145,9 @@ function renderNode(node: Record<string, unknown>) {
           ${typeof node.version === "string" ? ` · ${node.version}` : ""}
         </div>
         <div class="chip-row" style="margin-top: 6px;">
-          <span class="chip">${paired ? "paired" : "unpaired"}</span>
+          <span class="chip">${paired ? t("nodes.paired", "paired") : t("nodes.unpaired", "unpaired")}</span>
           <span class="chip ${connected ? "chip-ok" : "chip-warn"}">
-            ${connected ? "connected" : "offline"}
+            ${connected ? t("nodes.connected", "connected") : t("nodes.offline", "offline")}
           </span>
           ${caps.slice(0, 12).map((c) => html`<span class="chip">${String(c)}</span>`)}
           ${commands.slice(0, 8).map((c) => html`<span class="chip">${String(c)}</span>`)}

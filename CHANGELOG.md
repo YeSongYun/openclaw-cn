@@ -2,6 +2,17 @@
 
 Docs: https://docs.openclaw.ai
 
+## 1.1.6
+
+### Added
+
+- i18n: 完成前端 UI 和扩展模块全面汉化（845 个翻译 key，51 个文件）
+- DMXAPI: 更新默认内置模型为 claude-opus-4-6-cc
+
+### Fixes
+
+- 更新 Twitch/IRC onboarding 测试期望值以匹配 i18n 汉化字符串
+
 ## 2026.2.9
 
 ### Added

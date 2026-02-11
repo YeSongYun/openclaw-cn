@@ -174,7 +174,7 @@ function renderSkill(skill: SkillStatusEntry, props: SkillsProps) {
           ${
             showBundledBadge
               ? html`
-                  <span class="chip">bundled</span>
+                  <span class="chip">${t("skills.bundled", "bundled")}</span>
                 `
               : nothing
           }
