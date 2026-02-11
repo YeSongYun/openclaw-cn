@@ -89,7 +89,7 @@ describe("memory plugin e2e", () => {
         embedding: {},
         dbPath,
       });
-    }).toThrow("embedding.apiKey is required");
+    }).toThrow("embedding.apiKey 为必填项");
   });
 
   test("shouldCapture applies real capture rules", async () => {

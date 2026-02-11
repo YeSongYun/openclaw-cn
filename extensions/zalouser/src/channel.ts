@@ -301,7 +301,7 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
     self: async ({ cfg, accountId, runtime }) => {
       const ok = await checkZcaInstalled();
       if (!ok) {
-        throw new Error("Missing dependency: `zca` not found in PATH");
+        throw new Error("缺少依赖: 在 PATH 中未找到 `zca`");
       }
       const account = resolveZalouserAccountSync({ cfg: cfg, accountId });
       const result = await runZca(["me", "info", "-j"], {
@@ -309,7 +309,7 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
         timeout: 10000,
       });
       if (!result.ok) {
-        runtime.error(result.stderr || "Failed to fetch profile");
+        runtime.error(result.stderr || "获取个人资料失败");
         return null;
       }
       const parsed = parseJsonOutput<ZcaUserInfo>(result.stdout);
@@ -326,13 +326,13 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
     listPeers: async ({ cfg, accountId, query, limit }) => {
       const ok = await checkZcaInstalled();
       if (!ok) {
-        throw new Error("Missing dependency: `zca` not found in PATH");
+        throw new Error("缺少依赖: 在 PATH 中未找到 `zca`");
       }
       const account = resolveZalouserAccountSync({ cfg: cfg, accountId });
       const args = query?.trim() ? ["friend", "find", query.trim()] : ["friend", "list", "-j"];
       const result = await runZca(args, { profile: account.profile, timeout: 15000 });
       if (!result.ok) {
-        throw new Error(result.stderr || "Failed to list peers");
+        throw new Error(result.stderr || "获取好友列表失败");
       }
       const parsed = parseJsonOutput<ZcaFriend[]>(result.stdout);
       const rows = Array.isArray(parsed)
@@ -350,7 +350,7 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
     listGroups: async ({ cfg, accountId, query, limit }) => {
       const ok = await checkZcaInstalled();
       if (!ok) {
-        throw new Error("Missing dependency: `zca` not found in PATH");
+        throw new Error("缺少依赖: 在 PATH 中未找到 `zca`");
       }
       const account = resolveZalouserAccountSync({ cfg: cfg, accountId });
       const result = await runZca(["group", "list", "-j"], {
@@ -358,7 +358,7 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
         timeout: 15000,
       });
       if (!result.ok) {
-        throw new Error(result.stderr || "Failed to list groups");
+        throw new Error(result.stderr || "获取群组列表失败");
       }
       const parsed = parseJsonOutput<ZcaGroup[]>(result.stdout);
       let rows = Array.isArray(parsed)
@@ -379,7 +379,7 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
     listGroupMembers: async ({ cfg, accountId, groupId, limit }) => {
       const ok = await checkZcaInstalled();
       if (!ok) {
-        throw new Error("Missing dependency: `zca` not found in PATH");
+        throw new Error("缺少依赖: 在 PATH 中未找到 `zca`");
       }
       const account = resolveZalouserAccountSync({ cfg: cfg, accountId });
       const result = await runZca(["group", "members", groupId, "-j"], {
@@ -387,7 +387,7 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
         timeout: 20000,
       });
       if (!result.ok) {
-        throw new Error(result.stderr || "Failed to list group members");
+        throw new Error(result.stderr || "获取群成员列表失败");
       }
       const parsed = parseJsonOutput<Array<Partial<ZcaFriend> & { userId?: string | number }>>(
         result.stdout,
@@ -489,7 +489,7 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
       const account = resolveZalouserAccountSync({ cfg: cfg });
       const authenticated = await checkZcaAuthenticated(account.profile);
       if (!authenticated) {
-        throw new Error("Zalouser not authenticated");
+        throw new Error("Zalouser 未认证");
       }
       await sendMessageZalouser(id, "Your pairing request has been approved.", {
         profile: account.profile,
@@ -505,7 +505,7 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
       const ok = await checkZcaInstalled();
       if (!ok) {
         throw new Error(
-          "Missing dependency: `zca` not found in PATH. See docs.openclaw.ai/channels/zalouser",
+          "缺少依赖: 在 PATH 中未找到 `zca`。请参阅 docs.openclaw.ai/channels/zalouser",
         );
       }
       runtime.log(
@@ -513,7 +513,7 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
       );
       const result = await runZcaInteractive(["auth", "login"], { profile: account.profile });
       if (!result.ok) {
-        throw new Error(result.stderr || "Zalouser login failed");
+        throw new Error(result.stderr || "Zalouser 登录失败");
       }
     },
   },
@@ -598,7 +598,7 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
     buildAccountSnapshot: async ({ account, runtime }) => {
       const zcaInstalled = await checkZcaInstalled();
       const configured = zcaInstalled ? await checkZcaAuthenticated(account.profile) : false;
-      const configError = zcaInstalled ? "not authenticated" : "zca CLI not found in PATH";
+      const configError = zcaInstalled ? "未认证" : "在 PATH 中未找到 zca CLI";
       return {
         accountId: account.accountId,
         name: account.name,
@@ -648,14 +648,14 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
         timeout: params.timeoutMs ?? 30000,
       });
       if (!result.ok) {
-        return { message: result.stderr || "Failed to start QR login" };
+        return { message: result.stderr || "启动二维码登录失败" };
       }
       // The stdout should contain the base64 QR data URL
       const qrMatch = result.stdout.match(/data:image\/png;base64,[A-Za-z0-9+/=]+/);
       if (qrMatch) {
-        return { qrDataUrl: qrMatch[0], message: "Scan QR code with Zalo app" };
+        return { qrDataUrl: qrMatch[0], message: "请使用 Zalo 应用扫描二维码" };
       }
-      return { message: result.stdout || "QR login started" };
+      return { message: result.stdout || "二维码登录已启动" };
     },
     loginWithQrWait: async (params) => {
       const profile = resolveZalouserQrProfile(params.accountId);
@@ -666,7 +666,7 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
       });
       return {
         connected: statusResult.ok,
-        message: statusResult.ok ? "Login successful" : statusResult.stderr || "Login pending",
+        message: statusResult.ok ? "登录成功" : statusResult.stderr || "登录等待中",
       };
     },
     logoutAccount: async (ctx) => {
@@ -677,7 +677,7 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
       return {
         cleared: result.ok,
         loggedOut: result.ok,
-        message: result.ok ? "Logged out" : result.stderr,
+        message: result.ok ? "已登出" : result.stderr,
       };
     },
   },

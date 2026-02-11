@@ -13,7 +13,7 @@ describe("collectZalouserStatusIssues", () => {
     ]);
     expect(issues).toHaveLength(1);
     expect(issues[0]?.kind).toBe("runtime");
-    expect(issues[0]?.message).toMatch(/zca CLI not found/i);
+    expect(issues[0]?.message).toMatch(/zca CLI/i);
   });
 
   it("flags missing auth when configured is false", () => {
@@ -27,7 +27,7 @@ describe("collectZalouserStatusIssues", () => {
     ]);
     expect(issues).toHaveLength(1);
     expect(issues[0]?.kind).toBe("auth");
-    expect(issues[0]?.message).toMatch(/Not authenticated/i);
+    expect(issues[0]?.message).toMatch(/未认证/i);
   });
 
   it("warns when dmPolicy is open", () => {

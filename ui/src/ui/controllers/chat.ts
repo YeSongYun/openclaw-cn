@@ -1,5 +1,6 @@
 import type { GatewayBrowserClient } from "../gateway.ts";
 import type { ChatAttachment } from "../ui-types.ts";
+import { t } from "../../i18n/index.ts";
 import { extractText } from "../chat/message-extract.ts";
 import { generateUUID } from "../uuid.ts";
 
@@ -141,7 +142,7 @@ export async function sendChatMessage(
       ...state.chatMessages,
       {
         role: "assistant",
-        content: [{ type: "text", text: "Error: " + error }],
+        content: [{ type: "text", text: t("common.error", "Error") + ": " + error }],
         timestamp: Date.now(),
       },
     ];
@@ -205,7 +206,7 @@ export function handleChatEvent(state: ChatState, payload?: ChatEventPayload) {
     state.chatStream = null;
     state.chatRunId = null;
     state.chatStreamStartedAt = null;
-    state.lastError = payload.errorMessage ?? "chat error";
+    state.lastError = payload.errorMessage ?? t("chat.error", "chat error");
   }
   return payload.state;
 }

@@ -55,13 +55,13 @@ export const zaloMessageActions: ChannelMessageActionAdapter = {
       if (!result.ok) {
         return jsonResult({
           ok: false,
-          error: result.error ?? "Failed to send Zalo message",
+          error: result.error ?? "发送 Zalo 消息失败",
         });
       }
 
       return jsonResult({ ok: true, to, messageId: result.messageId });
     }
 
-    throw new Error(`Action ${action} is not supported for provider ${providerId}.`);
+    throw new Error(`操作 ${action} 不支持提供者 ${providerId}。`);
   },
 };

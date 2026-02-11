@@ -13,7 +13,7 @@ export async function probeZalo(
   fetcher?: ZaloFetch,
 ): Promise<ZaloProbeResult> {
   if (!token?.trim()) {
-    return { ok: false, error: "No token provided", elapsedMs: 0 };
+    return { ok: false, error: "未提供令牌", elapsedMs: 0 };
   }
 
   const startTime = Date.now();
@@ -26,7 +26,7 @@ export async function probeZalo(
       return { ok: true, bot: response.result, elapsedMs };
     }
 
-    return { ok: false, error: "Invalid response from Zalo API", elapsedMs };
+    return { ok: false, error: "Zalo API 返回无效响应", elapsedMs };
   } catch (err) {
     const elapsedMs = Date.now() - startTime;
 
@@ -36,7 +36,7 @@ export async function probeZalo(
 
     if (err instanceof Error) {
       if (err.name === "AbortError") {
-        return { ok: false, error: `Request timed out after ${timeoutMs}ms`, elapsedMs };
+        return { ok: false, error: `请求超时（${timeoutMs}ms）`, elapsedMs };
       }
       return { ok: false, error: err.message, elapsedMs };
     }

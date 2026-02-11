@@ -17,12 +17,12 @@ export async function probeZalouser(
   });
 
   if (!result.ok) {
-    return { ok: false, error: result.stderr || "Failed to probe" };
+    return { ok: false, error: result.stderr || "探测失败" };
   }
 
   const user = parseJsonOutput<ZcaUserInfo>(result.stdout);
   if (!user) {
-    return { ok: false, error: "Failed to parse user info" };
+    return { ok: false, error: "解析用户信息失败" };
   }
   return { ok: true, user };
 }

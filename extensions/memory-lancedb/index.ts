@@ -32,7 +32,7 @@ const loadLanceDB = async (): Promise<typeof import("@lancedb/lancedb")> => {
     return await lancedbImportPromise;
   } catch (err) {
     // Common on macOS today: upstream package may not ship darwin native bindings.
-    throw new Error(`memory-lancedb: failed to load LanceDB. ${String(err)}`, { cause: err });
+    throw new Error(`memory-lancedb: 加载 LanceDB 失败。${String(err)}`, { cause: err });
   }
 };
 
@@ -144,7 +144,7 @@ class MemoryDB {
     // Validate UUID format to prevent injection
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {
-      throw new Error(`Invalid memory ID format: ${id}`);
+      throw new Error(`无效的记忆 ID 格式: ${id}`);
     }
     await this.table!.delete(`id = '${id}'`);
     return true;
@@ -264,8 +264,7 @@ const memoryPlugin = {
       {
         name: "memory_recall",
         label: "记忆回忆",
-        description:
-          "搜索长期记忆。当需要了解用户偏好、过去的决策或之前讨论过的话题时使用。",
+        description: "搜索长期记忆。当需要了解用户偏好、过去的决策或之前讨论过的话题时使用。",
         parameters: Type.Object({
           query: Type.String({ description: "搜索查询" }),
           limit: Type.Optional(Type.Number({ description: "最大结果数（默认：5）" })),
@@ -278,7 +277,7 @@ const memoryPlugin = {
 
           if (results.length === 0) {
             return {
-              content: [{ type: "text", text: "No relevant memories found." }],
+              content: [{ type: "text", text: "未找到相关记忆。" }],
               details: { count: 0 },
             };
           }
@@ -300,7 +299,7 @@ const memoryPlugin = {
           }));
 
           return {
-            content: [{ type: "text", text: `Found ${results.length} memories:\n\n${text}` }],
+            content: [{ type: "text", text: `找到 ${results.length} 条记忆:\n\n${text}` }],
             details: { count: results.length, memories: sanitizedResults },
           };
         },
@@ -312,8 +311,7 @@ const memoryPlugin = {
       {
         name: "memory_store",
         label: "记忆存储",
-        description:
-          "将重要信息保存到长期记忆中。用于偏好、事实、决策。",
+        description: "将重要信息保存到长期记忆中。用于偏好、事实、决策。",
         parameters: Type.Object({
           text: Type.String({ description: "要记住的信息" }),
           importance: Type.Optional(Type.Number({ description: "重要性 0-1（默认：0.7）" })),
@@ -339,7 +337,7 @@ const memoryPlugin = {
               content: [
                 {
                   type: "text",
-                  text: `Similar memory already exists: "${existing[0].entry.text}"`,
+                  text: `已存在相似记忆: "${existing[0].entry.text}"`,
                 },
               ],
               details: {
@@ -358,7 +356,7 @@ const memoryPlugin = {
           });
 
           return {
-            content: [{ type: "text", text: `Stored: "${text.slice(0, 100)}..."` }],
+            content: [{ type: "text", text: `已存储: "${text.slice(0, 100)}..."` }],
             details: { action: "created", id: entry.id },
           };
         },
@@ -381,7 +379,7 @@ const memoryPlugin = {
           if (memoryId) {
             await db.delete(memoryId);
             return {
-              content: [{ type: "text", text: `Memory ${memoryId} forgotten.` }],
+              content: [{ type: "text", text: `记忆 ${memoryId} 已删除。` }],
               details: { action: "deleted", id: memoryId },
             };
           }
@@ -392,7 +390,7 @@ const memoryPlugin = {
 
             if (results.length === 0) {
               return {
-                content: [{ type: "text", text: "No matching memories found." }],
+                content: [{ type: "text", text: "未找到匹配的记忆。" }],
                 details: { found: 0 },
               };
             }
@@ -400,7 +398,7 @@ const memoryPlugin = {
             if (results.length === 1 && results[0].score > 0.9) {
               await db.delete(results[0].entry.id);
               return {
-                content: [{ type: "text", text: `Forgotten: "${results[0].entry.text}"` }],
+                content: [{ type: "text", text: `已遗忘: "${results[0].entry.text}"` }],
                 details: { action: "deleted", id: results[0].entry.id },
               };
             }
@@ -421,7 +419,7 @@ const memoryPlugin = {
               content: [
                 {
                   type: "text",
-                  text: `Found ${results.length} candidates. Specify memoryId:\n${list}`,
+                  text: `找到 ${results.length} 个候选项。请指定 memoryId:\n${list}`,
                 },
               ],
               details: { action: "candidates", candidates: sanitizedCandidates },
@@ -429,7 +427,7 @@ const memoryPlugin = {
           }
 
           return {
-            content: [{ type: "text", text: "Provide query or memoryId." }],
+            content: [{ type: "text", text: "请提供 query 或 memoryId。" }],
             details: { error: "missing_param" },
           };
         },

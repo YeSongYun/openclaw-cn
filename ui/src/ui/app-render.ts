@@ -2,6 +2,7 @@ import { html, nothing } from "lit";
 import type { AppViewState } from "./app-view-state.ts";
 import type { UsageState } from "./controllers/usage.ts";
 import { parseAgentSessionKey } from "../../../src/routing/session-key.js";
+import { t } from "../i18n/index.ts";
 import { refreshChatAvatar } from "./app-chat.ts";
 import { renderChatControls, renderTab, renderThemeToggle } from "./app-render.helpers.ts";
 import { loadAgentFileContent, loadAgentFiles, saveAgentFile } from "./controllers/agent-files.ts";
@@ -127,8 +128,8 @@ export function renderApp(state: AppViewState) {
                 ...state.settings,
                 navCollapsed: !state.settings.navCollapsed,
               })}
-            title="${state.settings.navCollapsed ? "Expand sidebar" : "Collapse sidebar"}"
-            aria-label="${state.settings.navCollapsed ? "Expand sidebar" : "Collapse sidebar"}"
+            title="${state.settings.navCollapsed ? t("nav.expandSidebar", "Expand sidebar") : t("nav.collapseSidebar", "Collapse sidebar")}"
+            aria-label="${state.settings.navCollapsed ? t("nav.expandSidebar", "Expand sidebar") : t("nav.collapseSidebar", "Collapse sidebar")}"
           >
             <span class="nav-collapse-toggle__icon">${icons.menu}</span>
           </button>
@@ -138,15 +139,15 @@ export function renderApp(state: AppViewState) {
             </div>
             <div class="brand-text">
               <div class="brand-title">OPENCLAW</div>
-              <div class="brand-sub">Gateway Dashboard</div>
+              <div class="brand-sub">${t("nav.gatewayDashboard", "Gateway Dashboard")}</div>
             </div>
           </div>
         </div>
         <div class="topbar-status">
           <div class="pill">
             <span class="statusDot ${state.connected ? "ok" : ""}"></span>
-            <span>Health</span>
-            <span class="mono">${state.connected ? "OK" : "Offline"}</span>
+            <span>${t("common.health", "Health")}</span>
+            <span class="mono">${state.connected ? t("common.ok", "OK") : t("common.offline", "Offline")}</span>
           </div>
           ${renderThemeToggle(state)}
         </div>
@@ -169,7 +170,7 @@ export function renderApp(state: AppViewState) {
                 }}
                 aria-expanded=${!isGroupCollapsed}
               >
-                <span class="nav-label__text">${group.label}</span>
+                <span class="nav-label__text">${t("nav.group." + group.label.toLowerCase(), group.label)}</span>
                 <span class="nav-label__chevron">${isGroupCollapsed ? "+" : "−"}</span>
               </button>
               <div class="nav-group__items">
@@ -180,7 +181,7 @@ export function renderApp(state: AppViewState) {
         })}
         <div class="nav-group nav-group--links">
           <div class="nav-label nav-label--static">
-            <span class="nav-label__text">Resources</span>
+            <span class="nav-label__text">${t("nav.group.resources", "Resources")}</span>
           </div>
           <div class="nav-group__items">
             <a
@@ -188,10 +189,10 @@ export function renderApp(state: AppViewState) {
               href="https://docs.openclaw.ai"
               target="_blank"
               rel="noreferrer"
-              title="Docs (opens in new tab)"
+              title="${t("nav.docs", "Docs (opens in new tab)")}"
             >
               <span class="nav-item__icon" aria-hidden="true">${icons.book}</span>
-              <span class="nav-item__text">Docs</span>
+              <span class="nav-item__text">${t("nav.docsLabel", "Docs")}</span>
             </a>
           </div>
         </div>

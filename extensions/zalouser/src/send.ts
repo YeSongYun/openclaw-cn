@@ -21,7 +21,7 @@ export async function sendMessageZalouser(
   const profile = options.profile || process.env.ZCA_PROFILE || "default";
 
   if (!threadId?.trim()) {
-    return { ok: false, error: "No threadId provided" };
+    return { ok: false, error: "未提供 threadId" };
   }
 
   // Handle media sending
@@ -45,7 +45,7 @@ export async function sendMessageZalouser(
       return { ok: true, messageId: extractMessageId(result.stdout) };
     }
 
-    return { ok: false, error: result.stderr || "Failed to send message" };
+    return { ok: false, error: result.stderr || "发送消息失败" };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
@@ -59,11 +59,11 @@ async function sendMediaZalouser(
   const profile = options.profile || process.env.ZCA_PROFILE || "default";
 
   if (!threadId?.trim()) {
-    return { ok: false, error: "No threadId provided" };
+    return { ok: false, error: "未提供 threadId" };
   }
 
   if (!mediaUrl?.trim()) {
-    return { ok: false, error: "No media URL provided" };
+    return { ok: false, error: "未提供媒体 URL" };
   }
 
   // Determine media type from URL
@@ -92,7 +92,7 @@ async function sendMediaZalouser(
       return { ok: true, messageId: extractMessageId(result.stdout) };
     }
 
-    return { ok: false, error: result.stderr || `Failed to send ${command}` };
+    return { ok: false, error: result.stderr || `发送${command}失败` };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
@@ -117,7 +117,7 @@ export async function sendImageZalouser(
     if (result.ok) {
       return { ok: true, messageId: extractMessageId(result.stdout) };
     }
-    return { ok: false, error: result.stderr || "Failed to send image" };
+    return { ok: false, error: result.stderr || "发送图片失败" };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
@@ -139,7 +139,7 @@ export async function sendLinkZalouser(
     if (result.ok) {
       return { ok: true, messageId: extractMessageId(result.stdout) };
     }
-    return { ok: false, error: result.stderr || "Failed to send link" };
+    return { ok: false, error: result.stderr || "发送链接失败" };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }

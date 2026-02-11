@@ -1,5 +1,6 @@
 import { html, nothing } from "lit";
 import type { GatewaySessionRow, SessionsListResult } from "../types.ts";
+import { t } from "../../i18n/index.ts";
 import { formatRelativeTimestamp } from "../format.ts";
 import { pathForTab } from "../navigation.ts";
 import { formatSessionTokens } from "../presenter.ts";
@@ -113,17 +114,17 @@ export function renderSessions(props: SessionsProps) {
     <section class="card">
       <div class="row" style="justify-content: space-between;">
         <div>
-          <div class="card-title">Sessions</div>
-          <div class="card-sub">Active session keys and per-session overrides.</div>
+          <div class="card-title">${t("sessions.title", "Sessions")}</div>
+          <div class="card-sub">${t("sessions.activeSessions.sub", "Active session keys and per-session overrides.")}</div>
         </div>
         <button class="btn" ?disabled=${props.loading} @click=${props.onRefresh}>
-          ${props.loading ? "Loading…" : "Refresh"}
+          ${props.loading ? t("common.loading", "Loading…") : t("common.refresh", "Refresh")}
         </button>
       </div>
 
       <div class="filters" style="margin-top: 14px;">
         <label class="field">
-          <span>Active within (minutes)</span>
+          <span>${t("sessions.activeWithin", "Active within (minutes)")}</span>
           <input
             .value=${props.activeMinutes}
             @input=${(e: Event) =>
@@ -136,7 +137,7 @@ export function renderSessions(props: SessionsProps) {
           />
         </label>
         <label class="field">
-          <span>Limit</span>
+          <span>${t("sessions.limit", "Limit")}</span>
           <input
             .value=${props.limit}
             @input=${(e: Event) =>
@@ -149,7 +150,7 @@ export function renderSessions(props: SessionsProps) {
           />
         </label>
         <label class="field checkbox">
-          <span>Include global</span>
+          <span>${t("sessions.includeGlobal", "Include global")}</span>
           <input
             type="checkbox"
             .checked=${props.includeGlobal}
@@ -163,7 +164,7 @@ export function renderSessions(props: SessionsProps) {
           />
         </label>
         <label class="field checkbox">
-          <span>Include unknown</span>
+          <span>${t("sessions.includeUnknown", "Include unknown")}</span>
           <input
             type="checkbox"
             .checked=${props.includeUnknown}
@@ -185,25 +186,25 @@ export function renderSessions(props: SessionsProps) {
       }
 
       <div class="muted" style="margin-top: 12px;">
-        ${props.result ? `Store: ${props.result.path}` : ""}
+        ${props.result ? `${t("sessions.store", "Store")}: ${props.result.path}` : ""}
       </div>
 
       <div class="table" style="margin-top: 16px;">
         <div class="table-head">
-          <div>Key</div>
-          <div>Label</div>
-          <div>Kind</div>
-          <div>Updated</div>
-          <div>Tokens</div>
-          <div>Thinking</div>
-          <div>Verbose</div>
-          <div>Reasoning</div>
-          <div>Actions</div>
+          <div>${t("sessions.col.key", "Key")}</div>
+          <div>${t("sessions.col.label", "Label")}</div>
+          <div>${t("sessions.col.kind", "Kind")}</div>
+          <div>${t("sessions.col.updated", "Updated")}</div>
+          <div>${t("sessions.col.tokens", "Tokens")}</div>
+          <div>${t("sessions.col.thinking", "Thinking")}</div>
+          <div>${t("sessions.col.verbose", "Verbose")}</div>
+          <div>${t("sessions.col.reasoning", "Reasoning")}</div>
+          <div>${t("common.actions", "Actions")}</div>
         </div>
         ${
           rows.length === 0
             ? html`
-                <div class="muted">No sessions found.</div>
+                <div class="muted">${t("sessions.noSessions", "No sessions found.")}</div>
               `
             : rows.map((row) =>
                 renderRow(row, props.basePath, props.onPatch, props.onDelete, props.loading),
@@ -313,7 +314,7 @@ function renderRow(
       </div>
       <div>
         <button class="btn danger" ?disabled=${disabled} @click=${() => onDelete(row.key)}>
-          Delete
+          ${t("sessions.delete", "Delete")}
         </button>
       </div>
     </div>

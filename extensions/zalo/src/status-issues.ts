@@ -44,8 +44,8 @@ export function collectZaloStatusIssues(accounts: ChannelAccountSnapshot[]): Cha
         channel: "zalo",
         accountId,
         kind: "config",
-        message: 'Zalo dmPolicy is "open", allowing any user to message the bot without pairing.',
-        fix: 'Set channels.zalo.dmPolicy to "pairing" or "allowlist" to restrict access.',
+        message: 'Zalo dmPolicy 为 "open"，允许任何用户无需配对即可向机器人发送消息。',
+        fix: '将 channels.zalo.dmPolicy 设置为 "pairing" 或 "allowlist" 以限制访问。',
       });
     }
   }

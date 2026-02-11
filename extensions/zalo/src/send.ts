@@ -48,11 +48,11 @@ export async function sendMessageZalo(
   const { token, fetcher } = resolveSendContext(options);
 
   if (!token) {
-    return { ok: false, error: "No Zalo bot token configured" };
+    return { ok: false, error: "未配置 Zalo 机器人令牌" };
   }
 
   if (!chatId?.trim()) {
-    return { ok: false, error: "No chat_id provided" };
+    return { ok: false, error: "未提供 chat_id" };
   }
 
   if (options.mediaUrl) {
@@ -77,7 +77,7 @@ export async function sendMessageZalo(
       return { ok: true, messageId: response.result.message_id };
     }
 
-    return { ok: false, error: "Failed to send message" };
+    return { ok: false, error: "发送消息失败" };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
@@ -91,15 +91,15 @@ export async function sendPhotoZalo(
   const { token, fetcher } = resolveSendContext(options);
 
   if (!token) {
-    return { ok: false, error: "No Zalo bot token configured" };
+    return { ok: false, error: "未配置 Zalo 机器人令牌" };
   }
 
   if (!chatId?.trim()) {
-    return { ok: false, error: "No chat_id provided" };
+    return { ok: false, error: "未提供 chat_id" };
   }
 
   if (!photoUrl?.trim()) {
-    return { ok: false, error: "No photo URL provided" };
+    return { ok: false, error: "未提供图片 URL" };
   }
 
   try {
@@ -117,7 +117,7 @@ export async function sendPhotoZalo(
       return { ok: true, messageId: response.result.message_id };
     }
 
-    return { ok: false, error: "Failed to send photo" };
+    return { ok: false, error: "发送图片失败" };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }

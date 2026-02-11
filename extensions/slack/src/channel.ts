@@ -158,11 +158,11 @@ export const slackPlugin: ChannelPlugin<ResolvedSlackAccount> = {
       if (groupPolicy === "open") {
         if (channelAllowlistConfigured) {
           warnings.push(
-            `- Slack channels: groupPolicy="open" allows any channel not explicitly denied to trigger (mention-gated). Set channels.slack.groupPolicy="allowlist" and configure channels.slack.channels.`,
+            `- Slack 频道: groupPolicy="open" 允许任何未明确拒绝的频道触发（需要提及）。请设置 channels.slack.groupPolicy="allowlist" 并配置 channels.slack.channels。`,
           );
         } else {
           warnings.push(
-            `- Slack channels: groupPolicy="open" with no channel allowlist; any channel can trigger (mention-gated). Set channels.slack.groupPolicy="allowlist" and configure channels.slack.channels.`,
+            `- Slack 频道: groupPolicy="open" 且无频道白名单；任何频道都可以触发（需要提及）。请设置 channels.slack.groupPolicy="allowlist" 并配置 channels.slack.channels。`,
           );
         }
       }
@@ -203,7 +203,7 @@ export const slackPlugin: ChannelPlugin<ResolvedSlackAccount> = {
         return inputs.map((input) => ({
           input,
           resolved: false,
-          note: "missing Slack token",
+          note: "缺少 Slack 令牌",
         }));
       }
       if (kind === "group") {
@@ -432,7 +432,7 @@ export const slackPlugin: ChannelPlugin<ResolvedSlackAccount> = {
         );
       }
 
-      throw new Error(`Action ${action} is not supported for provider ${meta.id}.`);
+      throw new Error(`操作 ${action} 不支持提供者 ${meta.id}。`);
     },
   },
   setup: {
@@ -446,10 +446,10 @@ export const slackPlugin: ChannelPlugin<ResolvedSlackAccount> = {
       }),
     validateInput: ({ accountId, input }) => {
       if (input.useEnv && accountId !== DEFAULT_ACCOUNT_ID) {
-        return "Slack env tokens can only be used for the default account.";
+        return "Slack 环境变量令牌只能用于默认账户。";
       }
       if (!input.useEnv && (!input.botToken || !input.appToken)) {
-        return "Slack requires --bot-token and --app-token (or --use-env).";
+        return "Slack 需要 --bot-token 和 --app-token（或 --use-env）。";
       }
       return null;
     },
@@ -560,7 +560,7 @@ export const slackPlugin: ChannelPlugin<ResolvedSlackAccount> = {
     probeAccount: async ({ account, timeoutMs }) => {
       const token = account.botToken?.trim();
       if (!token) {
-        return { ok: false, error: "missing token" };
+        return { ok: false, error: "缺少令牌" };
       }
       return await getSlackRuntime().channel.slack.probeSlack(token, timeoutMs);
     },

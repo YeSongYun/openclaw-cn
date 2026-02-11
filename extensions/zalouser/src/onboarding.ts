@@ -251,7 +251,7 @@ async function resolveZalouserGroups(params: {
     timeout: 15000,
   });
   if (!result.ok) {
-    throw new Error(result.stderr || "Failed to list groups");
+    throw new Error(result.stderr || "获取群组列表失败");
   }
   const groups = (parseJsonOutput<ZcaGroup[]>(result.stdout) ?? []).filter((group) =>
     Boolean(group.groupId),
@@ -488,10 +488,7 @@ export const zalouserOnboardingAdapter: ChannelOnboardingAdapter = {
               );
             }
           } catch (err) {
-            await prompter.note(
-              `群组查找失败；保留原始输入。${String(err)}`,
-              "Zalo 群组",
-            );
+            await prompter.note(`群组查找失败；保留原始输入。${String(err)}`, "Zalo 群组");
           }
         }
         next = setZalouserGroupPolicy(next, accountId, "allowlist");

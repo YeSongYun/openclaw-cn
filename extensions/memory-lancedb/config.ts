@@ -56,13 +56,13 @@ function assertAllowedKeys(value: Record<string, unknown>, allowed: string[], la
   if (unknown.length === 0) {
     return;
   }
-  throw new Error(`${label} has unknown keys: ${unknown.join(", ")}`);
+  throw new Error(`${label} 包含未知键: ${unknown.join(", ")}`);
 }
 
 export function vectorDimsForModel(model: string): number {
   const dims = EMBEDDING_DIMENSIONS[model];
   if (!dims) {
-    throw new Error(`Unsupported embedding model: ${model}`);
+    throw new Error(`不支持的嵌入模型: ${model}`);
   }
   return dims;
 }
@@ -71,7 +71,7 @@ function resolveEnvVars(value: string): string {
   return value.replace(/\$\{([^}]+)\}/g, (_, envVar) => {
     const envValue = process.env[envVar];
     if (!envValue) {
-      throw new Error(`Environment variable ${envVar} is not set`);
+      throw new Error(`环境变量 ${envVar} 未设置`);
     }
     return envValue;
   });
@@ -86,16 +86,16 @@ function resolveEmbeddingModel(embedding: Record<string, unknown>): string {
 export const memoryConfigSchema = {
   parse(value: unknown): MemoryConfig {
     if (!value || typeof value !== "object" || Array.isArray(value)) {
-      throw new Error("memory config required");
+      throw new Error("需要 memory 配置");
     }
     const cfg = value as Record<string, unknown>;
-    assertAllowedKeys(cfg, ["embedding", "dbPath", "autoCapture", "autoRecall"], "memory config");
+    assertAllowedKeys(cfg, ["embedding", "dbPath", "autoCapture", "autoRecall"], "memory 配置");
 
     const embedding = cfg.embedding as Record<string, unknown> | undefined;
     if (!embedding || typeof embedding.apiKey !== "string") {
-      throw new Error("embedding.apiKey is required");
+      throw new Error("embedding.apiKey 为必填项");
     }
-    assertAllowedKeys(embedding, ["apiKey", "model"], "embedding config");
+    assertAllowedKeys(embedding, ["apiKey", "model"], "embedding 配置");
 
     const model = resolveEmbeddingModel(embedding);
 

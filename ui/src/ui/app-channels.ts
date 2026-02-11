@@ -1,5 +1,6 @@
 import type { OpenClawApp } from "./app.ts";
 import type { NostrProfile } from "./types.ts";
+import { t } from "../i18n/index.ts";
 import {
   loadChannels,
   logoutWhatsApp,
@@ -144,7 +145,9 @@ export async function handleNostrProfileSave(host: OpenClawApp) {
     } | null;
 
     if (!response.ok || data?.ok === false || !data) {
-      const errorMessage = data?.error ?? `Profile update failed (${response.status})`;
+      const errorMessage =
+        data?.error ??
+        t("channels.nostr.profileUpdateFailed", `Profile update failed (${response.status})`);
       host.nostrProfileFormState = {
         ...state,
         saving: false,
@@ -159,7 +162,7 @@ export async function handleNostrProfileSave(host: OpenClawApp) {
       host.nostrProfileFormState = {
         ...state,
         saving: false,
-        error: "Profile publish failed on all relays.",
+        error: t("channels.nostr.publishFailed", "Profile publish failed on all relays."),
         success: null,
       };
       return;
@@ -169,7 +172,7 @@ export async function handleNostrProfileSave(host: OpenClawApp) {
       ...state,
       saving: false,
       error: null,
-      success: "Profile published to relays.",
+      success: t("channels.nostr.profilePublished", "Profile published to relays."),
       fieldErrors: {},
       original: { ...state.values },
     };
@@ -178,7 +181,7 @@ export async function handleNostrProfileSave(host: OpenClawApp) {
     host.nostrProfileFormState = {
       ...state,
       saving: false,
-      error: `Profile update failed: ${String(err)}`,
+      error: `${t("channels.nostr.profileUpdateError", "Profile update failed")}: ${String(err)}`,
       success: null,
     };
   }
@@ -215,7 +218,9 @@ export async function handleNostrProfileImport(host: OpenClawApp) {
     } | null;
 
     if (!response.ok || data?.ok === false || !data) {
-      const errorMessage = data?.error ?? `Profile import failed (${response.status})`;
+      const errorMessage =
+        data?.error ??
+        t("channels.nostr.profileImportFailed", `Profile import failed (${response.status})`);
       host.nostrProfileFormState = {
         ...state,
         importing: false,
@@ -237,8 +242,11 @@ export async function handleNostrProfileImport(host: OpenClawApp) {
       values: nextValues,
       error: null,
       success: data.saved
-        ? "Profile imported from relays. Review and publish."
-        : "Profile imported. Review and publish.",
+        ? t(
+            "channels.nostr.importedFromRelays",
+            "Profile imported from relays. Review and publish.",
+          )
+        : t("channels.nostr.imported", "Profile imported. Review and publish."),
       showAdvanced,
     };
 
@@ -249,7 +257,7 @@ export async function handleNostrProfileImport(host: OpenClawApp) {
     host.nostrProfileFormState = {
       ...state,
       importing: false,
-      error: `Profile import failed: ${String(err)}`,
+      error: `${t("channels.nostr.profileImportError", "Profile import failed")}: ${String(err)}`,
       success: null,
     };
   }

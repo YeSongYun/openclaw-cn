@@ -1,5 +1,6 @@
 import { html, nothing } from "lit";
 import type { ConfigUiHints } from "../types.ts";
+import { t } from "../../i18n/index.ts";
 import { icons } from "../icons.ts";
 import { renderNode } from "./config-form.node.ts";
 import { hintForPath, humanize, schemaType, type JsonSchema } from "./config-form.shared.ts";
@@ -290,12 +291,20 @@ function matchesSearch(key: string, schema: JsonSchema, query: string): boolean 
     return true;
   }
 
-  // Check label and description
+  // Check label and description (both original and translated)
   if (meta) {
     if (meta.label.toLowerCase().includes(q)) {
       return true;
     }
     if (meta.description.toLowerCase().includes(q)) {
+      return true;
+    }
+    const translatedLabel = t("config.section." + key + ".label", meta.label);
+    const translatedDesc = t("config.section." + key + ".desc", meta.description);
+    if (translatedLabel.toLowerCase().includes(q)) {
+      return true;
+    }
+    if (translatedDesc.toLowerCase().includes(q)) {
       return true;
     }
   }
@@ -355,14 +364,14 @@ function schemaMatches(schema: JsonSchema, query: string): boolean {
 export function renderConfigForm(props: ConfigFormProps) {
   if (!props.schema) {
     return html`
-      <div class="muted">Schema unavailable.</div>
+      <div class="muted">${t("config.schemaUnavailable", "Schema unavailable.")}</div>
     `;
   }
   const schema = props.schema;
   const value = props.value ?? {};
   if (schemaType(schema) !== "object" || !schema.properties) {
     return html`
-      <div class="callout danger">Unsupported schema. Use Raw.</div>
+      <div class="callout danger">${t("config.unsupportedSchema", "Unsupported schema. Use Raw.")}</div>
     `;
   }
   const unsupported = new Set(props.unsupportedPaths ?? []);
@@ -413,7 +422,7 @@ export function renderConfigForm(props: ConfigFormProps) {
       <div class="config-empty">
         <div class="config-empty__icon">${icons.search}</div>
         <div class="config-empty__text">
-          ${searchQuery ? `No settings match "${searchQuery}"` : "No settings in this section"}
+          ${searchQuery ? t("config.noMatch", 'No settings match "{{query}}"').replace("{{query}}", searchQuery) : t("config.noSettingsInSection", "No settings in this section")}
         </div>
       </div>
     `;
@@ -467,16 +476,18 @@ export function renderConfigForm(props: ConfigFormProps) {
                 label: key.charAt(0).toUpperCase() + key.slice(1),
                 description: node.description ?? "",
               };
+              const translatedLabel = t("config.section." + key + ".label", meta.label);
+              const translatedDesc = t("config.section." + key + ".desc", meta.description);
 
               return html`
               <section class="config-section-card" id="config-section-${key}">
                 <div class="config-section-card__header">
                   <span class="config-section-card__icon">${getSectionIcon(key)}</span>
                   <div class="config-section-card__titles">
-                    <h3 class="config-section-card__title">${meta.label}</h3>
+                    <h3 class="config-section-card__title">${translatedLabel}</h3>
                     ${
-                      meta.description
-                        ? html`<p class="config-section-card__desc">${meta.description}</p>`
+                      translatedDesc
+                        ? html`<p class="config-section-card__desc">${translatedDesc}</p>`
                         : nothing
                     }
                   </div>

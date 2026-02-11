@@ -1,5 +1,6 @@
 import type { GatewayBrowserClient } from "../gateway.ts";
 import type { SkillStatusReport } from "../types.ts";
+import { t } from "../../i18n/index.ts";
 
 export type SkillsState = {
   client: GatewayBrowserClient | null;
@@ -82,7 +83,9 @@ export async function updateSkillEnabled(state: SkillsState, skillKey: string, e
     await loadSkills(state);
     setSkillMessage(state, skillKey, {
       kind: "success",
-      message: enabled ? "Skill enabled" : "Skill disabled",
+      message: enabled
+        ? t("skills.enabled", "Skill enabled")
+        : t("skills.disabled", "Skill disabled"),
     });
   } catch (err) {
     const message = getErrorMessage(err);
@@ -108,7 +111,7 @@ export async function saveSkillApiKey(state: SkillsState, skillKey: string) {
     await loadSkills(state);
     setSkillMessage(state, skillKey, {
       kind: "success",
-      message: "API key saved",
+      message: t("skills.apiKeySaved", "API key saved"),
     });
   } catch (err) {
     const message = getErrorMessage(err);
@@ -142,7 +145,7 @@ export async function installSkill(
     await loadSkills(state);
     setSkillMessage(state, skillKey, {
       kind: "success",
-      message: result?.message ?? "Installed",
+      message: result?.message ?? t("skills.installed", "Installed"),
     });
   } catch (err) {
     const message = getErrorMessage(err);

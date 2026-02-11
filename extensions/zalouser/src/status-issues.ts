@@ -59,16 +59,16 @@ export function collectZalouserStatusIssues(
           channel: "zalouser",
           accountId,
           kind: "runtime",
-          message: "zca CLI not found in PATH.",
-          fix: "Install zca-cli and ensure it is on PATH for the Gateway process.",
+          message: "在 PATH 中未找到 zca CLI。",
+          fix: "安装 zca-cli 并确保其在网关进程的 PATH 中。",
         });
       } else {
         issues.push({
           channel: "zalouser",
           accountId,
           kind: "auth",
-          message: "Not authenticated (no zca session).",
-          fix: "Run: openclaw channels login --channel zalouser",
+          message: "未认证（无 zca 会话）。",
+          fix: "运行: openclaw channels login --channel zalouser",
         });
       }
       continue;
@@ -79,9 +79,8 @@ export function collectZalouserStatusIssues(
         channel: "zalouser",
         accountId,
         kind: "config",
-        message:
-          'Zalo Personal dmPolicy is "open", allowing any user to message the bot without pairing.',
-        fix: 'Set channels.zalouser.dmPolicy to "pairing" or "allowlist" to restrict access.',
+        message: 'Zalo Personal dmPolicy 为 "open"，允许任何用户无需配对即可向机器人发送消息。',
+        fix: '将 channels.zalouser.dmPolicy 设置为 "pairing" 或 "allowlist" 以限制访问。',
       });
     }
   }

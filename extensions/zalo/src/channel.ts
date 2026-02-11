@@ -198,10 +198,10 @@ export const zaloPlugin: ChannelPlugin<ResolvedZaloAccount> = {
       }),
     validateInput: ({ accountId, input }) => {
       if (input.useEnv && accountId !== DEFAULT_ACCOUNT_ID) {
-        return "ZALO_BOT_TOKEN can only be used for the default account.";
+        return "ZALO_BOT_TOKEN 只能用于默认账户。";
       }
       if (!input.useEnv && !input.token && !input.tokenFile) {
-        return "Zalo requires token or --token-file (or --use-env).";
+        return "Zalo 需要 token 或 --token-file（或 --use-env）。";
       }
       return null;
     },
@@ -268,7 +268,7 @@ export const zaloPlugin: ChannelPlugin<ResolvedZaloAccount> = {
     notifyApproval: async ({ cfg, id }) => {
       const account = resolveZaloAccount({ cfg: cfg });
       if (!account.token) {
-        throw new Error("Zalo token not configured");
+        throw new Error("Zalo 令牌未配置");
       }
       await sendMessageZalo(id, PAIRING_APPROVED_MESSAGE, { token: account.token });
     },

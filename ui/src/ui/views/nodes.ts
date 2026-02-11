@@ -10,6 +10,7 @@ import type {
   ExecApprovalsFile,
   ExecApprovalsSnapshot,
 } from "../controllers/exec-approvals.ts";
+import { t } from "../../i18n/index.ts";
 import { clampText, formatRelativeTimestamp, formatList } from "../format.ts";
 
 export type NodesProps = {
@@ -48,7 +49,6 @@ export type NodesProps = {
   onExecApprovalsRemove: (path: Array<string | number>) => void;
   onSaveExecApprovals: () => void;
 };
-
 export function renderNodes(props: NodesProps) {
   const bindingState = resolveBindingsState(props);
   const approvalsState = resolveExecApprovalsState(props);
@@ -59,18 +59,18 @@ export function renderNodes(props: NodesProps) {
     <section class="card">
       <div class="row" style="justify-content: space-between;">
         <div>
-          <div class="card-title">Nodes</div>
-          <div class="card-sub">Paired devices and live links.</div>
+          <div class="card-title">${t("nodes.title", "Nodes")}</div>
+          <div class="card-sub">${t("nodes.sub", "Paired devices and live links.")}</div>
         </div>
         <button class="btn" ?disabled=${props.loading} @click=${props.onRefresh}>
-          ${props.loading ? "Loading…" : "Refresh"}
+          ${props.loading ? t("nodes.loading", "Loading…") : t("nodes.refresh", "Refresh")}
         </button>
       </div>
       <div class="list" style="margin-top: 16px;">
         ${
           props.nodes.length === 0
             ? html`
-                <div class="muted">No nodes found.</div>
+                <div class="muted">${t("nodes.noNodes", "No nodes found.")}</div>
               `
             : props.nodes.map((n) => renderNode(n))
         }
@@ -87,11 +87,11 @@ function renderDevices(props: NodesProps) {
     <section class="card">
       <div class="row" style="justify-content: space-between;">
         <div>
-          <div class="card-title">Devices</div>
-          <div class="card-sub">Pairing requests + role tokens.</div>
+          <div class="card-title">${t("nodes.devices", "Devices")}</div>
+          <div class="card-sub">${t("nodes.devices.sub", "Pairing requests + role tokens.")}</div>
         </div>
         <button class="btn" ?disabled=${props.devicesLoading} @click=${props.onDevicesRefresh}>
-          ${props.devicesLoading ? "Loading…" : "Refresh"}
+          ${props.devicesLoading ? t("nodes.loading", "Loading…") : t("nodes.refresh", "Refresh")}
         </button>
       </div>
       ${
@@ -103,7 +103,7 @@ function renderDevices(props: NodesProps) {
         ${
           pending.length > 0
             ? html`
-              <div class="muted" style="margin-bottom: 8px;">Pending</div>
+              <div class="muted" style="margin-bottom: 8px;">${t("nodes.pending", "Pending")}</div>
               ${pending.map((req) => renderPendingDevice(req, props))}
             `
             : nothing
@@ -111,7 +111,7 @@ function renderDevices(props: NodesProps) {
         ${
           paired.length > 0
             ? html`
-              <div class="muted" style="margin-top: 12px; margin-bottom: 8px;">Paired</div>
+              <div class="muted" style="margin-top: 12px; margin-bottom: 8px;">${t("nodes.paired", "Paired")}</div>
               ${paired.map((device) => renderPairedDevice(device, props))}
             `
             : nothing
@@ -119,7 +119,7 @@ function renderDevices(props: NodesProps) {
         ${
           pending.length === 0 && paired.length === 0
             ? html`
-                <div class="muted">No paired devices.</div>
+                <div class="muted">${t("nodes.noPairedDevices", "No paired devices.")}</div>
               `
             : nothing
         }
@@ -127,7 +127,6 @@ function renderDevices(props: NodesProps) {
     </section>
   `;
 }
-
 function renderPendingDevice(req: PendingDevice, props: NodesProps) {
   const name = req.displayName?.trim() || req.deviceId;
   const age = typeof req.ts === "number" ? formatRelativeTimestamp(req.ts) : "n/a";
@@ -146,10 +145,10 @@ function renderPendingDevice(req: PendingDevice, props: NodesProps) {
       <div class="list-meta">
         <div class="row" style="justify-content: flex-end; gap: 8px; flex-wrap: wrap;">
           <button class="btn btn--sm primary" @click=${() => props.onDeviceApprove(req.requestId)}>
-            Approve
+            ${t("nodes.approve", "Approve")}
           </button>
           <button class="btn btn--sm" @click=${() => props.onDeviceReject(req.requestId)}>
-            Reject
+            ${t("nodes.reject", "Reject")}
           </button>
         </div>
       </div>
@@ -172,10 +171,10 @@ function renderPairedDevice(device: PairedDevice, props: NodesProps) {
         ${
           tokens.length === 0
             ? html`
-                <div class="muted" style="margin-top: 6px">Tokens: none</div>
+                <div class="muted" style="margin-top: 6px">${t("nodes.tokensNone", "Tokens: none")}</div>
               `
             : html`
-              <div class="muted" style="margin-top: 10px;">Tokens</div>
+              <div class="muted" style="margin-top: 10px;">${t("nodes.tokens", "Tokens")}</div>
               <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
                 ${tokens.map((token) => renderTokenRow(device.deviceId, token, props))}
               </div>
@@ -185,7 +184,6 @@ function renderPairedDevice(device: PairedDevice, props: NodesProps) {
     </div>
   `;
 }
-
 function renderTokenRow(deviceId: string, token: DeviceTokenSummary, props: NodesProps) {
   const status = token.revokedAtMs ? "revoked" : "active";
   const scopes = `scopes: ${formatList(token.scopes)}`;
@@ -200,7 +198,7 @@ function renderTokenRow(deviceId: string, token: DeviceTokenSummary, props: Node
           class="btn btn--sm"
           @click=${() => props.onDeviceRotate(deviceId, token.role, token.scopes)}
         >
-          Rotate
+          ${t("nodes.rotate", "Rotate")}
         </button>
         ${
           token.revokedAtMs
@@ -210,7 +208,7 @@ function renderTokenRow(deviceId: string, token: DeviceTokenSummary, props: Node
                 class="btn btn--sm danger"
                 @click=${() => props.onDeviceRevoke(deviceId, token.role)}
               >
-                Revoke
+                ${t("nodes.revoke", "Revoke")}
               </button>
             `
         }
@@ -218,7 +216,6 @@ function renderTokenRow(deviceId: string, token: DeviceTokenSummary, props: Node
     </div>
   `;
 }
-
 type BindingAgent = {
   id: string;
   name?: string;
@@ -291,7 +288,6 @@ type ExecApprovalsState = {
   onLoad: () => void;
   onSave: () => void;
 };
-
 const EXEC_APPROVALS_DEFAULT_SCOPE = "__defaults__";
 
 const SECURITY_OPTIONS: Array<{ value: ExecSecurity; label: string }> = [
@@ -342,7 +338,6 @@ function normalizeAsk(value?: string): ExecAsk {
   }
   return "on-miss";
 }
-
 function resolveExecApprovalsDefaults(
   form: ExecApprovalsFile | null,
 ): ExecApprovalsResolvedDefaults {
@@ -406,7 +401,6 @@ function resolveExecApprovalsAgents(
   });
   return agents;
 }
-
 function resolveExecApprovalsScope(
   selected: string | null,
   agents: ExecApprovalsAgentOption[],
@@ -463,7 +457,6 @@ function resolveExecApprovalsState(props: NodesProps): ExecApprovalsState {
     onSave: props.onSaveExecApprovals,
   };
 }
-
 function renderBindings(state: BindingState) {
   const supportsBinding = state.nodes.length > 0;
   const defaultValue = state.defaultBinding ?? "";
@@ -471,9 +464,9 @@ function renderBindings(state: BindingState) {
     <section class="card">
       <div class="row" style="justify-content: space-between; align-items: center;">
         <div>
-          <div class="card-title">Exec node binding</div>
+          <div class="card-title">${t("nodes.execBinding", "Exec node binding")}</div>
           <div class="card-sub">
-            Pin agents to a specific node when using <span class="mono">exec host=node</span>.
+            ${t("nodes.execBinding.sub", "Pin agents to a specific node when using")} <span class="mono">exec host=node</span>.
           </div>
         </div>
         <button
@@ -481,7 +474,7 @@ function renderBindings(state: BindingState) {
           ?disabled=${state.disabled || !state.configDirty}
           @click=${state.onSave}
         >
-          ${state.configSaving ? "Saving…" : "Save"}
+          ${state.configSaving ? t("nodes.saving", "Saving…") : t("nodes.save", "Save")}
         </button>
       </div>
 
@@ -489,7 +482,7 @@ function renderBindings(state: BindingState) {
         state.formMode === "raw"
           ? html`
               <div class="callout warn" style="margin-top: 12px">
-                Switch the Config tab to <strong>Form</strong> mode to edit bindings here.
+                ${t("nodes.switchFormMode", "Switch the Config tab to Form mode to edit bindings here.")}
               </div>
             `
           : nothing
@@ -498,21 +491,21 @@ function renderBindings(state: BindingState) {
       ${
         !state.ready
           ? html`<div class="row" style="margin-top: 12px; gap: 12px;">
-            <div class="muted">Load config to edit bindings.</div>
+            <div class="muted">${t("nodes.loadConfig", "Load config to edit bindings.")}</div>
             <button class="btn" ?disabled=${state.configLoading} @click=${state.onLoadConfig}>
-              ${state.configLoading ? "Loading…" : "Load config"}
+              ${state.configLoading ? t("nodes.loading", "Loading…") : t("nodes.loadConfigBtn", "Load config")}
             </button>
           </div>`
           : html`
             <div class="list" style="margin-top: 16px;">
               <div class="list-item">
                 <div class="list-main">
-                  <div class="list-title">Default binding</div>
-                  <div class="list-sub">Used when agents do not override a node binding.</div>
+                  <div class="list-title">${t("nodes.defaultBinding", "Default binding")}</div>
+                  <div class="list-sub">${t("nodes.defaultBinding.sub", "Used when agents do not override a node binding.")}</div>
                 </div>
                 <div class="list-meta">
                   <label class="field">
-                    <span>Node</span>
+                    <span>${t("nodes.node", "Node")}</span>
                     <select
                       ?disabled=${state.disabled || !supportsBinding}
                       @change=${(event: Event) => {
@@ -521,7 +514,7 @@ function renderBindings(state: BindingState) {
                         state.onBindDefault(value ? value : null);
                       }}
                     >
-                      <option value="" ?selected=${defaultValue === ""}>Any node</option>
+                      <option value="" ?selected=${defaultValue === ""}>${t("nodes.anyNode", "Any node")}</option>
                       ${state.nodes.map(
                         (node) =>
                           html`<option
@@ -536,7 +529,7 @@ function renderBindings(state: BindingState) {
                   ${
                     !supportsBinding
                       ? html`
-                          <div class="muted">No nodes with system.run available.</div>
+                          <div class="muted">${t("nodes.noExecNodes", "No nodes with system.run available.")}</div>
                         `
                       : nothing
                   }
@@ -546,7 +539,7 @@ function renderBindings(state: BindingState) {
               ${
                 state.agents.length === 0
                   ? html`
-                      <div class="muted">No agents found.</div>
+                      <div class="muted">${t("nodes.noAgents", "No agents found.")}</div>
                     `
                   : state.agents.map((agent) => renderAgentBinding(agent, state))
               }
@@ -556,7 +549,6 @@ function renderBindings(state: BindingState) {
     </section>
   `;
 }
-
 function renderExecApprovals(state: ExecApprovalsState) {
   const ready = state.ready;
   const targetReady = state.target !== "node" || Boolean(state.targetNodeId);
@@ -564,9 +556,9 @@ function renderExecApprovals(state: ExecApprovalsState) {
     <section class="card">
       <div class="row" style="justify-content: space-between; align-items: center;">
         <div>
-          <div class="card-title">Exec approvals</div>
+          <div class="card-title">${t("nodes.execApprovals", "Exec approvals")}</div>
           <div class="card-sub">
-            Allowlist and approval policy for <span class="mono">exec host=gateway/node</span>.
+            ${t("nodes.execApprovals.sub", "Allowlist and approval policy for")} <span class="mono">exec host=gateway/node</span>.
           </div>
         </div>
         <button
@@ -574,7 +566,7 @@ function renderExecApprovals(state: ExecApprovalsState) {
           ?disabled=${state.disabled || !state.dirty || !targetReady}
           @click=${state.onSave}
         >
-          ${state.saving ? "Saving…" : "Save"}
+          ${state.saving ? t("nodes.saving", "Saving…") : t("nodes.save", "Save")}
         </button>
       </div>
 
@@ -583,9 +575,9 @@ function renderExecApprovals(state: ExecApprovalsState) {
       ${
         !ready
           ? html`<div class="row" style="margin-top: 12px; gap: 12px;">
-            <div class="muted">Load exec approvals to edit allowlists.</div>
+            <div class="muted">${t("nodes.loadApprovalsHint", "Load exec approvals to edit allowlists.")}</div>
             <button class="btn" ?disabled=${state.loading || !targetReady} @click=${state.onLoad}>
-              ${state.loading ? "Loading…" : "Load approvals"}
+              ${state.loading ? t("nodes.loading", "Loading…") : t("nodes.loadApprovals", "Load approvals")}
             </button>
           </div>`
           : html`
@@ -601,7 +593,6 @@ function renderExecApprovals(state: ExecApprovalsState) {
     </section>
   `;
 }
-
 function renderExecApprovalsTarget(state: ExecApprovalsState) {
   const hasNodes = state.targetNodes.length > 0;
   const nodeValue = state.targetNodeId ?? "";
@@ -609,14 +600,14 @@ function renderExecApprovalsTarget(state: ExecApprovalsState) {
     <div class="list" style="margin-top: 12px;">
       <div class="list-item">
         <div class="list-main">
-          <div class="list-title">Target</div>
+          <div class="list-title">${t("nodes.target", "Target")}</div>
           <div class="list-sub">
-            Gateway edits local approvals; node edits the selected node.
+            ${t("nodes.target.sub", "Gateway edits local approvals; node edits the selected node.")}
           </div>
         </div>
         <div class="list-meta">
           <label class="field">
-            <span>Host</span>
+            <span>${t("nodes.host", "Host")}</span>
             <select
               ?disabled=${state.disabled}
               @change=${(event: Event) => {
@@ -630,15 +621,15 @@ function renderExecApprovalsTarget(state: ExecApprovalsState) {
                 }
               }}
             >
-              <option value="gateway" ?selected=${state.target === "gateway"}>Gateway</option>
-              <option value="node" ?selected=${state.target === "node"}>Node</option>
+              <option value="gateway" ?selected=${state.target === "gateway"}>${t("nodes.gateway", "Gateway")}</option>
+              <option value="node" ?selected=${state.target === "node"}>${t("nodes.node", "Node")}</option>
             </select>
           </label>
           ${
             state.target === "node"
               ? html`
                 <label class="field">
-                  <span>Node</span>
+                  <span>${t("nodes.node", "Node")}</span>
                   <select
                     ?disabled=${state.disabled || !hasNodes}
                     @change=${(event: Event) => {
@@ -647,7 +638,7 @@ function renderExecApprovalsTarget(state: ExecApprovalsState) {
                       state.onSelectTarget("node", value ? value : null);
                     }}
                   >
-                    <option value="" ?selected=${nodeValue === ""}>Select node</option>
+                    <option value="" ?selected=${nodeValue === ""}>${t("nodes.selectNode", "Select node")}</option>
                     ${state.targetNodes.map(
                       (node) =>
                         html`<option
@@ -667,24 +658,23 @@ function renderExecApprovalsTarget(state: ExecApprovalsState) {
       ${
         state.target === "node" && !hasNodes
           ? html`
-              <div class="muted">No nodes advertise exec approvals yet.</div>
+              <div class="muted">${t("nodes.noExecApprovalsNodes", "No nodes advertise exec approvals yet.")}</div>
             `
           : nothing
       }
     </div>
   `;
 }
-
 function renderExecApprovalsTabs(state: ExecApprovalsState) {
   return html`
     <div class="row" style="margin-top: 12px; gap: 8px; flex-wrap: wrap;">
-      <span class="label">Scope</span>
+      <span class="label">${t("nodes.scope", "Scope")}</span>
       <div class="row" style="gap: 8px; flex-wrap: wrap;">
         <button
           class="btn btn--sm ${state.selectedScope === EXEC_APPROVALS_DEFAULT_SCOPE ? "active" : ""}"
           @click=${() => state.onSelectScope(EXEC_APPROVALS_DEFAULT_SCOPE)}
         >
-          Defaults
+          ${t("nodes.defaults", "Defaults")}
         </button>
         ${state.agents.map((agent) => {
           const label = agent.name?.trim() ? `${agent.name} (${agent.id})` : agent.id;
@@ -701,7 +691,6 @@ function renderExecApprovalsTabs(state: ExecApprovalsState) {
     </div>
   `;
 }
-
 function renderExecApprovalsPolicy(state: ExecApprovalsState) {
   const isDefaults = state.selectedScope === EXEC_APPROVALS_DEFAULT_SCOPE;
   const defaults = state.defaults;
@@ -722,14 +711,14 @@ function renderExecApprovalsPolicy(state: ExecApprovalsState) {
     <div class="list" style="margin-top: 16px;">
       <div class="list-item">
         <div class="list-main">
-          <div class="list-title">Security</div>
+          <div class="list-title">${t("nodes.security", "Security")}</div>
           <div class="list-sub">
-            ${isDefaults ? "Default security mode." : `Default: ${defaults.security}.`}
+            ${isDefaults ? t("nodes.defaultSecurityMode", "Default security mode.") : `Default: ${defaults.security}.`}
           </div>
         </div>
         <div class="list-meta">
           <label class="field">
-            <span>Mode</span>
+            <span>${t("nodes.securityMode", "Mode")}</span>
             <select
               ?disabled=${state.disabled}
               @change=${(event: Event) => {
@@ -745,7 +734,7 @@ function renderExecApprovalsPolicy(state: ExecApprovalsState) {
               ${
                 !isDefaults
                   ? html`<option value="__default__" ?selected=${securityValue === "__default__"}>
-                    Use default (${defaults.security})
+                    ${t("nodes.useDefault", "Use default")} (${defaults.security})
                   </option>`
                   : nothing
               }
@@ -755,24 +744,23 @@ function renderExecApprovalsPolicy(state: ExecApprovalsState) {
                     value=${option.value}
                     ?selected=${securityValue === option.value}
                   >
-                    ${option.label}
+                    ${option.value === "deny" ? t("nodes.deny", "Deny") : option.value === "allowlist" ? t("nodes.allowlistMode", "Allowlist") : t("nodes.full", "Full")}
                   </option>`,
               )}
             </select>
           </label>
         </div>
       </div>
-
       <div class="list-item">
         <div class="list-main">
-          <div class="list-title">Ask</div>
+          <div class="list-title">${t("nodes.ask", "Ask")}</div>
           <div class="list-sub">
-            ${isDefaults ? "Default prompt policy." : `Default: ${defaults.ask}.`}
+            ${isDefaults ? t("nodes.defaultPromptPolicy", "Default prompt policy.") : `Default: ${defaults.ask}.`}
           </div>
         </div>
         <div class="list-meta">
           <label class="field">
-            <span>Mode</span>
+            <span>${t("nodes.askMode", "Mode")}</span>
             <select
               ?disabled=${state.disabled}
               @change=${(event: Event) => {
@@ -788,7 +776,7 @@ function renderExecApprovalsPolicy(state: ExecApprovalsState) {
               ${
                 !isDefaults
                   ? html`<option value="__default__" ?selected=${askValue === "__default__"}>
-                    Use default (${defaults.ask})
+                    ${t("nodes.useDefault", "Use default")} (${defaults.ask})
                   </option>`
                   : nothing
               }
@@ -798,7 +786,7 @@ function renderExecApprovalsPolicy(state: ExecApprovalsState) {
                     value=${option.value}
                     ?selected=${askValue === option.value}
                   >
-                    ${option.label}
+                    ${option.value === "off" ? t("nodes.off", "Off") : option.value === "on-miss" ? t("nodes.onMiss", "On miss") : t("nodes.always", "Always")}
                   </option>`,
               )}
             </select>
@@ -808,11 +796,11 @@ function renderExecApprovalsPolicy(state: ExecApprovalsState) {
 
       <div class="list-item">
         <div class="list-main">
-          <div class="list-title">Ask fallback</div>
+          <div class="list-title">${t("nodes.askFallback", "Ask fallback")}</div>
           <div class="list-sub">
             ${
               isDefaults
-                ? "Applied when the UI prompt is unavailable."
+                ? t("nodes.askFallback.sub", "Applied when the UI prompt is unavailable.")
                 : `Default: ${defaults.askFallback}.`
             }
           </div>
@@ -835,7 +823,7 @@ function renderExecApprovalsPolicy(state: ExecApprovalsState) {
               ${
                 !isDefaults
                   ? html`<option value="__default__" ?selected=${askFallbackValue === "__default__"}>
-                    Use default (${defaults.askFallback})
+                    ${t("nodes.useDefault", "Use default")} (${defaults.askFallback})
                   </option>`
                   : nothing
               }
@@ -845,21 +833,20 @@ function renderExecApprovalsPolicy(state: ExecApprovalsState) {
                     value=${option.value}
                     ?selected=${askFallbackValue === option.value}
                   >
-                    ${option.label}
+                    ${option.value === "deny" ? t("nodes.deny", "Deny") : option.value === "allowlist" ? t("nodes.allowlistMode", "Allowlist") : t("nodes.full", "Full")}
                   </option>`,
               )}
             </select>
           </label>
         </div>
       </div>
-
       <div class="list-item">
         <div class="list-main">
-          <div class="list-title">Auto-allow skill CLIs</div>
+          <div class="list-title">${t("nodes.autoAllowSkills", "Auto-allow skill CLIs")}</div>
           <div class="list-sub">
             ${
               isDefaults
-                ? "Allow skill executables listed by the Gateway."
+                ? t("nodes.autoAllowSkills.sub", "Allow skill executables listed by the Gateway.")
                 : autoIsDefault
                   ? `Using default (${defaults.autoAllowSkills ? "on" : "off"}).`
                   : `Override (${autoEffective ? "on" : "off"}).`
@@ -868,7 +855,7 @@ function renderExecApprovalsPolicy(state: ExecApprovalsState) {
         </div>
         <div class="list-meta">
           <label class="field">
-            <span>Enabled</span>
+            <span>${t("nodes.enabled", "Enabled")}</span>
             <input
               type="checkbox"
               ?disabled=${state.disabled}
@@ -886,7 +873,7 @@ function renderExecApprovalsPolicy(state: ExecApprovalsState) {
                 ?disabled=${state.disabled}
                 @click=${() => state.onRemove([...basePath, "autoAllowSkills"])}
               >
-                Use default
+                ${t("nodes.useDefault", "Use default")}
               </button>`
               : nothing
           }
@@ -895,15 +882,14 @@ function renderExecApprovalsPolicy(state: ExecApprovalsState) {
     </div>
   `;
 }
-
 function renderExecApprovalsAllowlist(state: ExecApprovalsState) {
   const allowlistPath = ["agents", state.selectedScope, "allowlist"];
   const entries = state.allowlist;
   return html`
     <div class="row" style="margin-top: 18px; justify-content: space-between;">
       <div>
-        <div class="card-title">Allowlist</div>
-        <div class="card-sub">Case-insensitive glob patterns.</div>
+        <div class="card-title">${t("nodes.allowlist", "Allowlist")}</div>
+        <div class="card-sub">${t("nodes.allowlist.sub", "Case-insensitive glob patterns.")}</div>
       </div>
       <button
         class="btn btn--sm"
@@ -913,21 +899,20 @@ function renderExecApprovalsAllowlist(state: ExecApprovalsState) {
           state.onPatch(allowlistPath, next);
         }}
       >
-        Add pattern
+        ${t("nodes.addPattern", "Add pattern")}
       </button>
     </div>
     <div class="list" style="margin-top: 12px;">
       ${
         entries.length === 0
           ? html`
-              <div class="muted">No allowlist entries yet.</div>
+              <div class="muted">${t("nodes.noAllowlistEntries", "No allowlist entries yet.")}</div>
             `
           : entries.map((entry, index) => renderAllowlistEntry(state, entry, index))
       }
     </div>
   `;
 }
-
 function renderAllowlistEntry(
   state: ExecApprovalsState,
   entry: ExecApprovalsAllowlistEntry,
@@ -939,14 +924,14 @@ function renderAllowlistEntry(
   return html`
     <div class="list-item">
       <div class="list-main">
-        <div class="list-title">${entry.pattern?.trim() ? entry.pattern : "New pattern"}</div>
-        <div class="list-sub">Last used: ${lastUsed}</div>
+        <div class="list-title">${entry.pattern?.trim() ? entry.pattern : t("nodes.newPattern", "New pattern")}</div>
+        <div class="list-sub">${t("nodes.lastUsed", "Last used")}: ${lastUsed}</div>
         ${lastCommand ? html`<div class="list-sub mono">${lastCommand}</div>` : nothing}
         ${lastPath ? html`<div class="list-sub mono">${lastPath}</div>` : nothing}
       </div>
       <div class="list-meta">
         <label class="field">
-          <span>Pattern</span>
+          <span>${t("nodes.pattern", "Pattern")}</span>
           <input
             type="text"
             .value=${entry.pattern ?? ""}
@@ -971,13 +956,12 @@ function renderAllowlistEntry(
             state.onRemove(["agents", state.selectedScope, "allowlist", index]);
           }}
         >
-          Remove
+          ${t("nodes.remove", "Remove")}
         </button>
       </div>
     </div>
   `;
 }
-
 function renderAgentBinding(agent: BindingAgent, state: BindingState) {
   const bindingValue = agent.binding ?? "__default__";
   const label = agent.name?.trim() ? `${agent.name} (${agent.id})` : agent.id;
@@ -987,7 +971,7 @@ function renderAgentBinding(agent: BindingAgent, state: BindingState) {
       <div class="list-main">
         <div class="list-title">${label}</div>
         <div class="list-sub">
-          ${agent.isDefault ? "default agent" : "agent"} ·
+          ${agent.isDefault ? t("nodes.defaultAgent", "default agent") : t("nodes.agent", "agent")} ·
           ${
             bindingValue === "__default__"
               ? `uses default (${state.defaultBinding ?? "any"})`
@@ -997,7 +981,7 @@ function renderAgentBinding(agent: BindingAgent, state: BindingState) {
       </div>
       <div class="list-meta">
         <label class="field">
-          <span>Binding</span>
+          <span>${t("nodes.binding", "Binding")}</span>
           <select
             ?disabled=${state.disabled || !supportsBinding}
             @change=${(event: Event) => {
@@ -1007,7 +991,7 @@ function renderAgentBinding(agent: BindingAgent, state: BindingState) {
             }}
           >
             <option value="__default__" ?selected=${bindingValue === "__default__"}>
-              Use default
+              ${t("nodes.useDefault", "Use default")}
             </option>
             ${state.nodes.map(
               (node) =>
@@ -1024,7 +1008,6 @@ function renderAgentBinding(agent: BindingAgent, state: BindingState) {
     </div>
   `;
 }
-
 function resolveExecNodes(nodes: Array<Record<string, unknown>>): BindingNode[] {
   const list: BindingNode[] = [];
   for (const node of nodes) {
@@ -1079,7 +1062,6 @@ function resolveExecApprovalsNodes(
   list.sort((a, b) => a.label.localeCompare(b.label));
   return list;
 }
-
 function resolveAgentBindings(config: Record<string, unknown> | null): {
   defaultBinding?: string | null;
   agents: BindingAgent[];

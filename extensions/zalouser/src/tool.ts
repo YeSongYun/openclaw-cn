@@ -60,7 +60,7 @@ export async function executeZalouserTool(
     switch (params.action) {
       case "send": {
         if (!params.threadId || !params.message) {
-          throw new Error("threadId and message required for send action");
+          throw new Error("send 操作需要 threadId 和 message");
         }
         const args = ["msg", "send", params.threadId, params.message];
         if (params.isGroup) {
@@ -68,17 +68,17 @@ export async function executeZalouserTool(
         }
         const result = await runZca(args, { profile: params.profile });
         if (!result.ok) {
-          throw new Error(result.stderr || "Failed to send message");
+          throw new Error(result.stderr || "发送消息失败");
         }
         return json({ success: true, output: result.stdout });
       }
 
       case "image": {
         if (!params.threadId) {
-          throw new Error("threadId required for image action");
+          throw new Error("image 操作需要 threadId");
         }
         if (!params.url) {
-          throw new Error("url required for image action");
+          throw new Error("image 操作需要 url");
         }
         const args = ["msg", "image", params.threadId, "-u", params.url];
         if (params.message) {
@@ -89,14 +89,14 @@ export async function executeZalouserTool(
         }
         const result = await runZca(args, { profile: params.profile });
         if (!result.ok) {
-          throw new Error(result.stderr || "Failed to send image");
+          throw new Error(result.stderr || "发送图片失败");
         }
         return json({ success: true, output: result.stdout });
       }
 
       case "link": {
         if (!params.threadId || !params.url) {
-          throw new Error("threadId and url required for link action");
+          throw new Error("link 操作需要 threadId 和 url");
         }
         const args = ["msg", "link", params.threadId, params.url];
         if (params.isGroup) {
@@ -104,7 +104,7 @@ export async function executeZalouserTool(
         }
         const result = await runZca(args, { profile: params.profile });
         if (!result.ok) {
-          throw new Error(result.stderr || "Failed to send link");
+          throw new Error(result.stderr || "发送链接失败");
         }
         return json({ success: true, output: result.stdout });
       }
@@ -113,7 +113,7 @@ export async function executeZalouserTool(
         const args = params.query ? ["friend", "find", params.query] : ["friend", "list", "-j"];
         const result = await runZca(args, { profile: params.profile });
         if (!result.ok) {
-          throw new Error(result.stderr || "Failed to get friends");
+          throw new Error(result.stderr || "获取好友列表失败");
         }
         const parsed = parseJsonOutput(result.stdout);
         return json(parsed ?? { raw: result.stdout });
@@ -124,7 +124,7 @@ export async function executeZalouserTool(
           profile: params.profile,
         });
         if (!result.ok) {
-          throw new Error(result.stderr || "Failed to get groups");
+          throw new Error(result.stderr || "获取群组列表失败");
         }
         const parsed = parseJsonOutput(result.stdout);
         return json(parsed ?? { raw: result.stdout });
@@ -135,7 +135,7 @@ export async function executeZalouserTool(
           profile: params.profile,
         });
         if (!result.ok) {
-          throw new Error(result.stderr || "Failed to get profile");
+          throw new Error(result.stderr || "获取个人资料失败");
         }
         const parsed = parseJsonOutput(result.stdout);
         return json(parsed ?? { raw: result.stdout });
@@ -154,7 +154,7 @@ export async function executeZalouserTool(
       default: {
         params.action satisfies never;
         throw new Error(
-          `Unknown action: ${String(params.action)}. Valid actions: send, image, link, friends, groups, me, status`,
+          `未知操作: ${String(params.action)}。有效操作: send, image, link, friends, groups, me, status`,
         );
       }
     }
