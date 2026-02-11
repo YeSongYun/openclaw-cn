@@ -50,7 +50,7 @@ describe("setupChannels", () => {
       if (message.includes("Enter Telegram bot token")) {
         throw new Error("unexpected Telegram token prompt");
       }
-      if (message.includes("Your personal WhatsApp number")) {
+      if (message.includes("你的个人 WhatsApp 号码")) {
         return "+15555550123";
       }
       throw new Error(`unexpected text prompt: ${message}`);

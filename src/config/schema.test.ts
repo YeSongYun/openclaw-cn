@@ -7,7 +7,7 @@ describe("config schema", () => {
     const schema = res.schema as { properties?: Record<string, unknown> };
     expect(schema.properties?.gateway).toBeTruthy();
     expect(schema.properties?.agents).toBeTruthy();
-    expect(res.uiHints.gateway?.label).toBe("Gateway");
+    expect(res.uiHints.gateway?.label).toBe("网关");
     expect(res.uiHints["gateway.auth.token"]?.sensitive).toBe(true);
     expect(res.version).toBeTruthy();
     expect(res.generatedAt).toBeTruthy();
@@ -22,16 +22,16 @@ describe("config schema", () => {
           description: "Outbound voice calls",
           configUiHints: {
             provider: { label: "Provider" },
-            "twilio.authToken": { label: "Auth Token", sensitive: true },
+            "twilio.authToken": { label: "Twilio 认证令牌", sensitive: true },
           },
         },
       ],
     });
 
     expect(res.uiHints["plugins.entries.voice-call"]?.label).toBe("Voice Call");
-    expect(res.uiHints["plugins.entries.voice-call.config"]?.label).toBe("Voice Call Config");
+    expect(res.uiHints["plugins.entries.voice-call.config"]?.label).toBe("Voice Call 配置");
     expect(res.uiHints["plugins.entries.voice-call.config.twilio.authToken"]?.label).toBe(
-      "Auth Token",
+      "Twilio 认证令牌",
     );
     expect(res.uiHints["plugins.entries.voice-call.config.twilio.authToken"]?.sensitive).toBe(true);
   });
