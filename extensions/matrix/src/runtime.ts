@@ -8,7 +8,7 @@ export function setMatrixRuntime(next: PluginRuntime) {
 
 export function getMatrixRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("Matrix runtime not initialized");
+    throw new Error("Matrix 运行时未初始化");
   }
   return runtime;
 }

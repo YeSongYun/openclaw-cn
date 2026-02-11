@@ -6,7 +6,7 @@ import { setTelegramRuntime } from "./src/runtime.js";
 const plugin = {
   id: "telegram",
   name: "Telegram",
-  description: "Telegram channel plugin",
+  description: "Telegram 频道插件",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     setTelegramRuntime(api.runtime);

@@ -192,9 +192,9 @@ export function registerFeishuDriveTools(api: OpenClawPluginApi) {
   api.registerTool(
     {
       name: "feishu_drive",
-      label: "Feishu Drive",
+      label: "飞书云盘",
       description:
-        "Feishu cloud storage operations. Actions: list, info, create_folder, move, delete",
+        "飞书云盘操作。操作：list、info、create_folder、move、delete",
       parameters: FeishuDriveSchema,
       async execute(_toolCallId, params) {
         const p = params as FeishuDriveParams;

@@ -6,7 +6,7 @@ import { setTlonRuntime } from "./src/runtime.js";
 const plugin = {
   id: "tlon",
   name: "Tlon",
-  description: "Tlon/Urbit channel plugin",
+  description: "Tlon/Urbit 频道插件",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     setTlonRuntime(api.runtime);

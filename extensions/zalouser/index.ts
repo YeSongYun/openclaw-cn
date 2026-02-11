@@ -6,8 +6,8 @@ import { ZalouserToolSchema, executeZalouserTool } from "./src/tool.js";
 
 const plugin = {
   id: "zalouser",
-  name: "Zalo Personal",
-  description: "Zalo personal account messaging via zca-cli",
+  name: "Zalo 个人",
+  description: "Zalo 个人账号消息（基于 zca-cli）",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     setZalouserRuntime(api.runtime);
@@ -17,11 +17,11 @@ const plugin = {
     // Register agent tool
     api.registerTool({
       name: "zalouser",
-      label: "Zalo Personal",
+      label: "Zalo 个人",
       description:
-        "Send messages and access data via Zalo personal account. " +
-        "Actions: send (text message), image (send image URL), link (send link), " +
-        "friends (list/search friends), groups (list groups), me (profile info), status (auth check).",
+        "通过 Zalo 个人账号发送消息和访问数据。" +
+        "操作：send（发送文本消息）、image（发送图片 URL）、link（发送链接）、" +
+        "friends（列出/搜索好友）、groups（列出群组）、me（个人资料）、status（认证检查）。",
       parameters: ZalouserToolSchema,
       execute: executeZalouserTool,
     } as AnyAgentTool);

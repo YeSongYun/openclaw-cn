@@ -8,7 +8,7 @@ export function setZalouserRuntime(next: PluginRuntime): void {
 
 export function getZalouserRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("Zalouser runtime not initialized");
+    throw new Error("Zalouser 运行时未初始化");
   }
   return runtime;
 }

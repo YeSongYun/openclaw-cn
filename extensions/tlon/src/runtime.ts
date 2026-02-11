@@ -8,7 +8,7 @@ export function setTlonRuntime(next: PluginRuntime) {
 
 export function getTlonRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("Tlon runtime not initialized");
+    throw new Error("Tlon 运行时未初始化");
   }
   return runtime;
 }

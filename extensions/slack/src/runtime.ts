@@ -8,7 +8,7 @@ export function setSlackRuntime(next: PluginRuntime) {
 
 export function getSlackRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("Slack runtime not initialized");
+    throw new Error("Slack 运行时未初始化");
   }
   return runtime;
 }

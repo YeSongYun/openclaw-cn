@@ -6,7 +6,7 @@ import { setDiscordRuntime } from "./src/runtime.js";
 const plugin = {
   id: "discord",
   name: "Discord",
-  description: "Discord channel plugin",
+  description: "Discord 频道插件",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     setDiscordRuntime(api.runtime);

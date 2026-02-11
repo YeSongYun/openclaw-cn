@@ -18,7 +18,7 @@ const ENV_VARS = [
 const geminiCliPlugin = {
   id: "google-gemini-cli-auth",
   name: "Google Gemini CLI Auth",
-  description: "OAuth flow for Gemini CLI (Google Code Assist)",
+  description: "Gemini CLI（Google Code Assist）OAuth 认证流程",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     api.registerProvider({

@@ -74,7 +74,7 @@ function buildModelDefinition(modelId: string) {
 const copilotProxyPlugin = {
   id: "copilot-proxy",
   name: "Copilot Proxy",
-  description: "Local Copilot Proxy (VS Code LM) provider plugin",
+  description: "本地 Copilot 代理（VS Code LM）提供商插件",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     api.registerProvider({

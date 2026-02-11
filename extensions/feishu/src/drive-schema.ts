@@ -15,30 +15,30 @@ export const FeishuDriveSchema = Type.Union([
   Type.Object({
     action: Type.Literal("list"),
     folder_token: Type.Optional(
-      Type.String({ description: "Folder token (optional, omit for root directory)" }),
+      Type.String({ description: "文件夹令牌（可选，省略则为根目录）" }),
     ),
   }),
   Type.Object({
     action: Type.Literal("info"),
-    file_token: Type.String({ description: "File or folder token" }),
+    file_token: Type.String({ description: "文件或文件夹令牌" }),
     type: FileType,
   }),
   Type.Object({
     action: Type.Literal("create_folder"),
-    name: Type.String({ description: "Folder name" }),
+    name: Type.String({ description: "文件夹名称" }),
     folder_token: Type.Optional(
-      Type.String({ description: "Parent folder token (optional, omit for root)" }),
+      Type.String({ description: "父文件夹令牌（可选，省略则为根目录）" }),
     ),
   }),
   Type.Object({
     action: Type.Literal("move"),
-    file_token: Type.String({ description: "File token to move" }),
+    file_token: Type.String({ description: "要移动的文件令牌" }),
     type: FileType,
-    folder_token: Type.String({ description: "Target folder token" }),
+    folder_token: Type.String({ description: "目标文件夹令牌" }),
   }),
   Type.Object({
     action: Type.Literal("delete"),
-    file_token: Type.String({ description: "File token to delete" }),
+    file_token: Type.String({ description: "要删除的文件令牌" }),
     type: FileType,
   }),
 ]);

@@ -8,7 +8,7 @@ export function setDiscordRuntime(next: PluginRuntime) {
 
 export function getDiscordRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("Discord runtime not initialized");
+    throw new Error("Discord 运行时未初始化");
   }
   return runtime;
 }

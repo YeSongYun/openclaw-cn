@@ -8,7 +8,7 @@ export function setWhatsAppRuntime(next: PluginRuntime) {
 
 export function getWhatsAppRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("WhatsApp runtime not initialized");
+    throw new Error("WhatsApp 运行时未初始化");
   }
   return runtime;
 }

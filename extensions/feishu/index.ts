@@ -47,7 +47,7 @@ export { feishuPlugin } from "./src/channel.js";
 const plugin = {
   id: "feishu",
   name: "Feishu",
-  description: "Feishu/Lark channel plugin",
+  description: "飞书/Lark 频道插件",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     setFeishuRuntime(api.runtime);

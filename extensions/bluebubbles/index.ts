@@ -7,7 +7,7 @@ import { setBlueBubblesRuntime } from "./src/runtime.js";
 const plugin = {
   id: "bluebubbles",
   name: "BlueBubbles",
-  description: "BlueBubbles channel plugin (macOS app)",
+  description: "BlueBubbles 频道插件（macOS 应用）",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     setBlueBubblesRuntime(api.runtime);

@@ -109,18 +109,18 @@ async function noteSlackTokenHelp(prompter: WizardPrompter, botName: string): Pr
   const manifest = buildSlackManifest(botName);
   await prompter.note(
     [
-      "1) Slack API → Create App → From scratch",
-      "2) Add Socket Mode + enable it to get the app-level token (xapp-...)",
-      "3) OAuth & Permissions → install app to workspace (xoxb- bot token)",
-      "4) Enable Event Subscriptions (socket) for message events",
-      "5) App Home → enable the Messages tab for DMs",
-      "Tip: set SLACK_BOT_TOKEN + SLACK_APP_TOKEN in your env.",
-      `Docs: ${formatDocsLink("/slack", "slack")}`,
+      "1) Slack API → 创建应用 → 从头开始",
+      "2) 添加 Socket Mode 并启用以获取应用级令牌（xapp-...）",
+      "3) OAuth & Permissions → 将应用安装到工作区（xoxb- 机器人令牌）",
+      "4) 启用 Event Subscriptions（socket）以接收消息事件",
+      "5) App Home → 启用 Messages 标签页以支持私信",
+      "提示：在环境变量中设置 SLACK_BOT_TOKEN + SLACK_APP_TOKEN。",
+      `文档：${formatDocsLink("/slack", "slack")}`,
       "",
-      "Manifest (JSON):",
+      "Manifest（JSON）：",
       manifest,
     ].join("\n"),
-    "Slack socket mode tokens",
+    "Slack socket mode 令牌",
   );
 }
 
@@ -239,14 +239,14 @@ async function promptSlackAllowFrom(params: {
   const existing = params.cfg.channels?.slack?.dm?.allowFrom ?? [];
   await params.prompter.note(
     [
-      "Allowlist Slack DMs by username (we resolve to user ids).",
-      "Examples:",
+      "通过用户名将 Slack 私信加入白名单（我们会解析为用户 ID）。",
+      "示例：",
       "- U12345678",
       "- @alice",
-      "Multiple entries: comma-separated.",
-      `Docs: ${formatDocsLink("/slack", "slack")}`,
+      "多个条目：逗号分隔。",
+      `文档：${formatDocsLink("/slack", "slack")}`,
     ].join("\n"),
-    "Slack allowlist",
+    "Slack 白名单",
   );
   const parseInputs = (value: string) => parseSlackAllowFromInput(value);
   const parseId = (value: string) => {
@@ -267,18 +267,18 @@ async function promptSlackAllowFrom(params: {
 
   while (true) {
     const entry = await params.prompter.text({
-      message: "Slack allowFrom (usernames or ids)",
+      message: "Slack 白名单（用户名或 ID）",
       placeholder: "@alice, U12345678",
       initialValue: existing[0] ? String(existing[0]) : undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+      validate: (value) => (String(value ?? "").trim() ? undefined : "必填"),
     });
     const parts = parseInputs(String(entry));
     if (!token) {
       const ids = parts.map(parseId).filter(Boolean) as string[];
       if (ids.length !== parts.length) {
         await params.prompter.note(
-          "Slack token missing; use user ids (or mention form) only.",
-          "Slack allowlist",
+          "Slack 令牌缺失；请仅使用用户 ID（或提及格式）。",
+          "Slack 白名单",
         );
         continue;
       }
@@ -293,14 +293,14 @@ async function promptSlackAllowFrom(params: {
       entries: parts,
     }).catch(() => null);
     if (!results) {
-      await params.prompter.note("Failed to resolve usernames. Try again.", "Slack allowlist");
+      await params.prompter.note("解析用户名失败。请重试。", "Slack 白名单");
       continue;
     }
     const unresolved = results.filter((res) => !res.resolved || !res.id);
     if (unresolved.length > 0) {
       await params.prompter.note(
-        `Could not resolve: ${unresolved.map((res) => res.input).join(", ")}`,
-        "Slack allowlist",
+        `无法解析：${unresolved.map((res) => res.input).join(", ")}`,
+        "Slack 白名单",
       );
       continue;
     }
@@ -330,8 +330,8 @@ export const slackOnboardingAdapter: ChannelOnboardingAdapter = {
     return {
       channel,
       configured,
-      statusLines: [`Slack: ${configured ? "configured" : "needs tokens"}`],
-      selectionHint: configured ? "configured" : "needs tokens",
+      statusLines: [`Slack：${configured ? "已配置" : "需要令牌"}`],
+      selectionHint: configured ? "已配置" : "需要令牌",
       quickstartScore: configured ? 2 : 1,
     };
   },
@@ -369,7 +369,7 @@ export const slackOnboardingAdapter: ChannelOnboardingAdapter = {
     let appToken: string | null = null;
     const slackBotName = String(
       await prompter.text({
-        message: "Slack bot display name (used for manifest)",
+        message: "Slack 机器人显示名称（用于 manifest）",
         initialValue: "OpenClaw",
       }),
     ).trim();
@@ -378,7 +378,7 @@ export const slackOnboardingAdapter: ChannelOnboardingAdapter = {
     }
     if (canUseEnv && (!resolvedAccount.config.botToken || !resolvedAccount.config.appToken)) {
       const keepEnv = await prompter.confirm({
-        message: "SLACK_BOT_TOKEN + SLACK_APP_TOKEN detected. Use env vars?",
+        message: "检测到 SLACK_BOT_TOKEN + SLACK_APP_TOKEN。使用环境变量？",
         initialValue: true,
       });
       if (keepEnv) {
@@ -392,33 +392,33 @@ export const slackOnboardingAdapter: ChannelOnboardingAdapter = {
       } else {
         botToken = String(
           await prompter.text({
-            message: "Enter Slack bot token (xoxb-...)",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 Slack 机器人令牌（xoxb-...）",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
         appToken = String(
           await prompter.text({
-            message: "Enter Slack app token (xapp-...)",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 Slack 应用令牌（xapp-...）",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
       }
     } else if (hasConfigTokens) {
       const keep = await prompter.confirm({
-        message: "Slack tokens already configured. Keep them?",
+        message: "Slack 令牌已配置。保留吗？",
         initialValue: true,
       });
       if (!keep) {
         botToken = String(
           await prompter.text({
-            message: "Enter Slack bot token (xoxb-...)",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 Slack 机器人令牌（xoxb-...）",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
         appToken = String(
           await prompter.text({
-            message: "Enter Slack app token (xapp-...)",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 Slack 应用令牌（xapp-...）",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
       }
@@ -476,7 +476,7 @@ export const slackOnboardingAdapter: ChannelOnboardingAdapter = {
 
     const accessConfig = await promptChannelAccessConfig({
       prompter,
-      label: "Slack channels",
+      label: "Slack 频道",
       currentPolicy: resolvedAccount.config.groupPolicy ?? "allowlist",
       currentEntries: Object.entries(resolvedAccount.config.channels ?? {})
         .filter(([, value]) => value?.allow !== false && value?.enabled !== false)
@@ -509,20 +509,20 @@ export const slackOnboardingAdapter: ChannelOnboardingAdapter = {
             if (resolvedKeys.length > 0 || unresolved.length > 0) {
               await prompter.note(
                 [
-                  resolvedKeys.length > 0 ? `Resolved: ${resolvedKeys.join(", ")}` : undefined,
+                  resolvedKeys.length > 0 ? `已解析：${resolvedKeys.join(", ")}` : undefined,
                   unresolved.length > 0
-                    ? `Unresolved (kept as typed): ${unresolved.join(", ")}`
+                    ? `未解析（保留原样）：${unresolved.join(", ")}`
                     : undefined,
                 ]
                   .filter(Boolean)
                   .join("\n"),
-                "Slack channels",
+                "Slack 频道",
               );
             }
           } catch (err) {
             await prompter.note(
-              `Channel lookup failed; keeping entries as typed. ${String(err)}`,
-              "Slack channels",
+              `频道查找失败；保留原始输入。${String(err)}`,
+              "Slack 频道",
             );
           }
         }

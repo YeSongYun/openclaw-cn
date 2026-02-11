@@ -8,7 +8,7 @@ export function setLineRuntime(r: PluginRuntime): void {
 
 export function getLineRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("LINE runtime not initialized - plugin not registered");
+    throw new Error("LINE 运行时未初始化 - 插件未注册");
   }
   return runtime;
 }

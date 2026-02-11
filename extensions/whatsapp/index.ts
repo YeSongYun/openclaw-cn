@@ -6,7 +6,7 @@ import { setWhatsAppRuntime } from "./src/runtime.js";
 const plugin = {
   id: "whatsapp",
   name: "WhatsApp",
-  description: "WhatsApp channel plugin",
+  description: "WhatsApp 频道插件",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     setWhatsAppRuntime(api.runtime);

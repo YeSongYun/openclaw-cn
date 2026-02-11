@@ -243,7 +243,7 @@ export function detectCategory(text: string): MemoryCategory {
 const memoryPlugin = {
   id: "memory-lancedb",
   name: "Memory (LanceDB)",
-  description: "LanceDB-backed long-term memory with auto-recall/capture",
+  description: "基于 LanceDB 的长期记忆，支持自动回忆/捕获",
   kind: "memory" as const,
   configSchema: memoryConfigSchema,
 
@@ -263,12 +263,12 @@ const memoryPlugin = {
     api.registerTool(
       {
         name: "memory_recall",
-        label: "Memory Recall",
+        label: "记忆回忆",
         description:
-          "Search through long-term memories. Use when you need context about user preferences, past decisions, or previously discussed topics.",
+          "搜索长期记忆。当需要了解用户偏好、过去的决策或之前讨论过的话题时使用。",
         parameters: Type.Object({
-          query: Type.String({ description: "Search query" }),
-          limit: Type.Optional(Type.Number({ description: "Max results (default: 5)" })),
+          query: Type.String({ description: "搜索查询" }),
+          limit: Type.Optional(Type.Number({ description: "最大结果数（默认：5）" })),
         }),
         async execute(_toolCallId, params) {
           const { query, limit = 5 } = params as { query: string; limit?: number };
@@ -311,12 +311,12 @@ const memoryPlugin = {
     api.registerTool(
       {
         name: "memory_store",
-        label: "Memory Store",
+        label: "记忆存储",
         description:
-          "Save important information in long-term memory. Use for preferences, facts, decisions.",
+          "将重要信息保存到长期记忆中。用于偏好、事实、决策。",
         parameters: Type.Object({
-          text: Type.String({ description: "Information to remember" }),
-          importance: Type.Optional(Type.Number({ description: "Importance 0-1 (default: 0.7)" })),
+          text: Type.String({ description: "要记住的信息" }),
+          importance: Type.Optional(Type.Number({ description: "重要性 0-1（默认：0.7）" })),
           category: Type.Optional(stringEnum(MEMORY_CATEGORIES)),
         }),
         async execute(_toolCallId, params) {
@@ -369,11 +369,11 @@ const memoryPlugin = {
     api.registerTool(
       {
         name: "memory_forget",
-        label: "Memory Forget",
-        description: "Delete specific memories. GDPR-compliant.",
+        label: "记忆删除",
+        description: "删除特定记忆。符合 GDPR 规范。",
         parameters: Type.Object({
-          query: Type.Optional(Type.String({ description: "Search to find memory" })),
-          memoryId: Type.Optional(Type.String({ description: "Specific memory ID" })),
+          query: Type.Optional(Type.String({ description: "搜索以查找记忆" })),
+          memoryId: Type.Optional(Type.String({ description: "特定记忆 ID" })),
         }),
         async execute(_toolCallId, params) {
           const { query, memoryId } = params as { query?: string; memoryId?: string };

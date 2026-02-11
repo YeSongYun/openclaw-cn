@@ -1,26 +1,26 @@
 export const IRC_FIELD_LABELS: Record<string, string> = {
   "channels.irc": "IRC",
-  "channels.irc.dmPolicy": "IRC DM Policy",
-  "channels.irc.nickserv.enabled": "IRC NickServ Enabled",
-  "channels.irc.nickserv.service": "IRC NickServ Service",
-  "channels.irc.nickserv.password": "IRC NickServ Password",
-  "channels.irc.nickserv.passwordFile": "IRC NickServ Password File",
-  "channels.irc.nickserv.register": "IRC NickServ Register",
-  "channels.irc.nickserv.registerEmail": "IRC NickServ Register Email",
+  "channels.irc.dmPolicy": "IRC 私信策略",
+  "channels.irc.nickserv.enabled": "IRC NickServ 已启用",
+  "channels.irc.nickserv.service": "IRC NickServ 服务",
+  "channels.irc.nickserv.password": "IRC NickServ 密码",
+  "channels.irc.nickserv.passwordFile": "IRC NickServ 密码文件",
+  "channels.irc.nickserv.register": "IRC NickServ 注册",
+  "channels.irc.nickserv.registerEmail": "IRC NickServ 注册邮箱",
 };
 
 export const IRC_FIELD_HELP: Record<string, string> = {
   "channels.irc.configWrites":
-    "Allow IRC to write config in response to channel events/commands (default: true).",
+    "允许 IRC 在响应频道事件/命令时写入配置（默认：true）。",
   "channels.irc.dmPolicy":
-    'Direct message access control ("pairing" recommended). "open" requires channels.irc.allowFrom=["*"].',
+    '私信访问控制（推荐 "pairing"）。"open" 需要设置 channels.irc.allowFrom=["*"]。',
   "channels.irc.nickserv.enabled":
-    "Enable NickServ identify/register after connect (defaults to enabled when password is configured).",
-  "channels.irc.nickserv.service": "NickServ service nick (default: NickServ).",
-  "channels.irc.nickserv.password": "NickServ password used for IDENTIFY/REGISTER (sensitive).",
-  "channels.irc.nickserv.passwordFile": "Optional file path containing NickServ password.",
+    "连接后启用 NickServ 认证/注册（配置密码后默认启用）。",
+  "channels.irc.nickserv.service": "NickServ 服务昵称（默认：NickServ）。",
+  "channels.irc.nickserv.password": "用于 IDENTIFY/REGISTER 的 NickServ 密码（敏感信息）。",
+  "channels.irc.nickserv.passwordFile": "包含 NickServ 密码的可选文件路径。",
   "channels.irc.nickserv.register":
-    "If true, send NickServ REGISTER on every connect. Use once for initial registration, then disable.",
+    "如果为 true，每次连接时发送 NickServ REGISTER。首次注册时使用一次，然后禁用。",
   "channels.irc.nickserv.registerEmail":
-    "Email used with NickServ REGISTER (required when register=true).",
+    "用于 NickServ REGISTER 的邮箱（register=true 时必填）。",
 };

@@ -102,17 +102,17 @@ function applyPluginHints(hints: ConfigUiHints, plugins: PluginUiMetadata[]): Co
       ...next[basePath],
       label: name,
       help: plugin.description
-        ? `${plugin.description} (plugin: ${id})`
-        : `Plugin entry for ${id}.`,
+        ? `${plugin.description}（插件：${id}）`
+        : `插件 ${id} 的配置项。`,
     };
     next[`${basePath}.enabled`] = {
       ...next[`${basePath}.enabled`],
-      label: `Enable ${name}`,
+      label: `启用 ${name}`,
     };
     next[`${basePath}.config`] = {
       ...next[`${basePath}.config`],
-      label: `${name} Config`,
-      help: `Plugin-defined config payload for ${id}.`,
+      label: `${name} 配置`,
+      help: `插件 ${id} 的自定义配置。`,
     };
 
     const uiHints = plugin.configUiHints ?? {};
@@ -192,8 +192,8 @@ function applyHeartbeatTargetHints(
 ): ConfigUiHints {
   const next: ConfigUiHints = { ...hints };
   const channelList = listHeartbeatTargetChannels(channels);
-  const channelHelp = channelList.length ? ` Known channels: ${channelList.join(", ")}.` : "";
-  const help = `Delivery target ("last", "none", or a channel id).${channelHelp}`;
+  const channelHelp = channelList.length ? ` 已知频道：${channelList.join(", ")}。` : "";
+  const help = `投递目标（"last"、"none" 或频道 ID）。${channelHelp}`;
   const paths = ["agents.defaults.heartbeat.target", "agents.list.*.heartbeat.target"];
   for (const path of paths) {
     const current = next[path] ?? {};

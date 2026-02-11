@@ -128,7 +128,7 @@ function createOAuthHandler(region: MiniMaxRegion) {
 const minimaxPortalPlugin = {
   id: "minimax-portal-auth",
   name: "MiniMax OAuth",
-  description: "OAuth flow for MiniMax models",
+  description: "MiniMax 模型 OAuth 认证流程",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     api.registerProvider({

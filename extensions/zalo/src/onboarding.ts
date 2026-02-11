@@ -113,13 +113,13 @@ function setZaloUpdateMode(
 async function noteZaloTokenHelp(prompter: WizardPrompter): Promise<void> {
   await prompter.note(
     [
-      "1) Open Zalo Bot Platform: https://bot.zaloplatforms.com",
-      "2) Create a bot and get the token",
-      "3) Token looks like 12345689:abc-xyz",
-      "Tip: you can also set ZALO_BOT_TOKEN in your env.",
-      "Docs: https://docs.openclaw.ai/channels/zalo",
+      "1) 打开 Zalo Bot 平台：https://bot.zaloplatforms.com",
+      "2) 创建一个机器人并获取令牌",
+      "3) 令牌格式类似 12345689:abc-xyz",
+      "提示：你也可以在环境变量中设置 ZALO_BOT_TOKEN。",
+      "文档：https://docs.openclaw.ai/channels/zalo",
     ].join("\n"),
-    "Zalo bot token",
+    "Zalo 机器人令牌",
   );
 }
 
@@ -132,16 +132,16 @@ async function promptZaloAllowFrom(params: {
   const resolved = resolveZaloAccount({ cfg, accountId });
   const existingAllowFrom = resolved.config.allowFrom ?? [];
   const entry = await prompter.text({
-    message: "Zalo allowFrom (user id)",
+    message: "Zalo 白名单（用户 ID）",
     placeholder: "123456789",
     initialValue: existingAllowFrom[0] ? String(existingAllowFrom[0]) : undefined,
     validate: (value) => {
       const raw = String(value ?? "").trim();
       if (!raw) {
-        return "Required";
+        return "必填";
       }
       if (!/^\d+$/.test(raw)) {
-        return "Use a numeric Zalo user id";
+        return "请使用数字格式的 Zalo 用户 ID";
       }
       return undefined;
     },
@@ -219,8 +219,8 @@ export const zaloOnboardingAdapter: ChannelOnboardingAdapter = {
     return {
       channel,
       configured,
-      statusLines: [`Zalo: ${configured ? "configured" : "needs token"}`],
-      selectionHint: configured ? "recommended · configured" : "recommended · newcomer-friendly",
+      statusLines: [`Zalo：${configured ? "已配置" : "需要令牌"}`],
+      selectionHint: configured ? "推荐 · 已配置" : "推荐 · 新手友好",
       quickstartScore: configured ? 1 : 10,
     };
   },
@@ -260,7 +260,7 @@ export const zaloOnboardingAdapter: ChannelOnboardingAdapter = {
     }
     if (canUseEnv && !resolvedAccount.config.botToken) {
       const keepEnv = await prompter.confirm({
-        message: "ZALO_BOT_TOKEN detected. Use env var?",
+        message: "检测到 ZALO_BOT_TOKEN。是否使用环境变量？",
         initialValue: true,
       });
       if (keepEnv) {
@@ -277,29 +277,29 @@ export const zaloOnboardingAdapter: ChannelOnboardingAdapter = {
       } else {
         token = String(
           await prompter.text({
-            message: "Enter Zalo bot token",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 Zalo 机器人令牌",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
       }
     } else if (hasConfigToken) {
       const keep = await prompter.confirm({
-        message: "Zalo token already configured. Keep it?",
+        message: "Zalo 令牌已配置。是否保留？",
         initialValue: true,
       });
       if (!keep) {
         token = String(
           await prompter.text({
-            message: "Enter Zalo bot token",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 Zalo 机器人令牌",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
       }
     } else {
       token = String(
         await prompter.text({
-          message: "Enter Zalo bot token",
-          validate: (value) => (value?.trim() ? undefined : "Required"),
+          message: "输入 Zalo 机器人令牌",
+          validate: (value) => (value?.trim() ? undefined : "必填"),
         }),
       ).trim();
     }
@@ -340,15 +340,15 @@ export const zaloOnboardingAdapter: ChannelOnboardingAdapter = {
     }
 
     const wantsWebhook = await prompter.confirm({
-      message: "Use webhook mode for Zalo?",
+      message: "是否为 Zalo 使用 Webhook 模式？",
       initialValue: false,
     });
     if (wantsWebhook) {
       const webhookUrl = String(
         await prompter.text({
-          message: "Webhook URL (https://...) ",
+          message: "Webhook URL（https://...）",
           validate: (value) =>
-            value?.trim()?.startsWith("https://") ? undefined : "HTTPS URL required",
+            value?.trim()?.startsWith("https://") ? undefined : "需要 HTTPS URL",
         }),
       ).trim();
       const defaultPath = (() => {
@@ -360,11 +360,11 @@ export const zaloOnboardingAdapter: ChannelOnboardingAdapter = {
       })();
       const webhookSecret = String(
         await prompter.text({
-          message: "Webhook secret (8-256 chars)",
+          message: "Webhook 密钥（8-256 个字符）",
           validate: (value) => {
             const raw = String(value ?? "");
             if (raw.length < 8 || raw.length > 256) {
-              return "8-256 chars";
+              return "需要 8-256 个字符";
             }
             return undefined;
           },
@@ -372,7 +372,7 @@ export const zaloOnboardingAdapter: ChannelOnboardingAdapter = {
       ).trim();
       const webhookPath = String(
         await prompter.text({
-          message: "Webhook path (optional)",
+          message: "Webhook 路径（可选）",
           initialValue: defaultPath,
         }),
       ).trim();

@@ -8,7 +8,7 @@ export function setGoogleChatRuntime(next: PluginRuntime) {
 
 export function getGoogleChatRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("Google Chat runtime not initialized");
+    throw new Error("Google Chat 运行时未初始化");
   }
   return runtime;
 }

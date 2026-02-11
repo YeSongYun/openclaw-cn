@@ -12,13 +12,13 @@ const channel = "mattermost" as const;
 async function noteMattermostSetup(prompter: WizardPrompter): Promise<void> {
   await prompter.note(
     [
-      "1) Mattermost System Console -> Integrations -> Bot Accounts",
-      "2) Create a bot + copy its token",
-      "3) Use your server base URL (e.g., https://chat.example.com)",
-      "Tip: the bot must be a member of any channel you want it to monitor.",
-      "Docs: https://docs.openclaw.ai/channels/mattermost",
+      "1) Mattermost 系统控制台 -> 集成 -> Bot 账户",
+      "2) 创建一个 Bot 并复制其令牌",
+      "3) 使用你的服务器基础 URL（例如 https://chat.example.com）",
+      "提示：Bot 必须是你希望它监控的频道的成员。",
+      "文档：https://docs.openclaw.ai/channels/mattermost",
     ].join("\n"),
-    "Mattermost bot token",
+    "Mattermost Bot 令牌",
   );
 }
 
@@ -32,8 +32,8 @@ export const mattermostOnboardingAdapter: ChannelOnboardingAdapter = {
     return {
       channel,
       configured,
-      statusLines: [`Mattermost: ${configured ? "configured" : "needs token + url"}`],
-      selectionHint: configured ? "configured" : "needs setup",
+      statusLines: [`Mattermost：${configured ? "已配置" : "需要令牌 + URL"}`],
+      selectionHint: configured ? "已配置" : "需要设置",
       quickstartScore: configured ? 2 : 1,
     };
   },
@@ -75,7 +75,7 @@ export const mattermostOnboardingAdapter: ChannelOnboardingAdapter = {
 
     if (canUseEnv && !hasConfigValues) {
       const keepEnv = await prompter.confirm({
-        message: "MATTERMOST_BOT_TOKEN + MATTERMOST_URL detected. Use env vars?",
+        message: "检测到 MATTERMOST_BOT_TOKEN + MATTERMOST_URL，是否使用环境变量？",
         initialValue: true,
       });
       if (keepEnv) {
@@ -92,33 +92,33 @@ export const mattermostOnboardingAdapter: ChannelOnboardingAdapter = {
       } else {
         botToken = String(
           await prompter.text({
-            message: "Enter Mattermost bot token",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 Mattermost Bot 令牌",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
         baseUrl = String(
           await prompter.text({
-            message: "Enter Mattermost base URL",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 Mattermost 基础 URL",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
       }
     } else if (accountConfigured) {
       const keep = await prompter.confirm({
-        message: "Mattermost credentials already configured. Keep them?",
+        message: "Mattermost 凭据已配置，是否保留？",
         initialValue: true,
       });
       if (!keep) {
         botToken = String(
           await prompter.text({
-            message: "Enter Mattermost bot token",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 Mattermost Bot 令牌",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
         baseUrl = String(
           await prompter.text({
-            message: "Enter Mattermost base URL",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 Mattermost 基础 URL",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
       }

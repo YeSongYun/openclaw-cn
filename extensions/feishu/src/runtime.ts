@@ -8,7 +8,7 @@ export function setFeishuRuntime(next: PluginRuntime) {
 
 export function getFeishuRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("Feishu runtime not initialized");
+    throw new Error("飞书运行时未初始化");
   }
   return runtime;
 }

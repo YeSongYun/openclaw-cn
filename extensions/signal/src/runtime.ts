@@ -8,7 +8,7 @@ export function setSignalRuntime(next: PluginRuntime) {
 
 export function getSignalRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("Signal runtime not initialized");
+    throw new Error("Signal 运行时未初始化");
   }
   return runtime;
 }

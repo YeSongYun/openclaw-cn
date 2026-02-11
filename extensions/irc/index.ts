@@ -6,7 +6,7 @@ import { setIrcRuntime } from "./src/runtime.js";
 const plugin = {
   id: "irc",
   name: "IRC",
-  description: "IRC channel plugin",
+  description: "IRC 频道插件",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     setIrcRuntime(api.runtime);

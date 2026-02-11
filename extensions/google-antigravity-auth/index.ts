@@ -370,7 +370,7 @@ async function loginAntigravity(params: {
 const antigravityPlugin = {
   id: "google-antigravity-auth",
   name: "Google Antigravity Auth",
-  description: "OAuth flow for Google Antigravity (Cloud Code Assist)",
+  description: "Google Antigravity（Cloud Code Assist）OAuth 认证流程",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     api.registerProvider({

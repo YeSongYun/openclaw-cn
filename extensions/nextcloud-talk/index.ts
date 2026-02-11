@@ -6,7 +6,7 @@ import { setNextcloudTalkRuntime } from "./src/runtime.js";
 const plugin = {
   id: "nextcloud-talk",
   name: "Nextcloud Talk",
-  description: "Nextcloud Talk channel plugin",
+  description: "Nextcloud Talk 频道插件",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     setNextcloudTalkRuntime(api.runtime);

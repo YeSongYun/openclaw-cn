@@ -5,13 +5,13 @@ export const promptAccountId: PromptAccountId = async (params: PromptAccountIdPa
   const existingIds = params.listAccountIds(params.cfg);
   const initial = params.currentId?.trim() || params.defaultAccountId || DEFAULT_ACCOUNT_ID;
   const choice = await params.prompter.select({
-    message: `${params.label} account`,
+    message: `${params.label} 账户`,
     options: [
       ...existingIds.map((id) => ({
         value: id,
-        label: id === DEFAULT_ACCOUNT_ID ? "default (primary)" : id,
+        label: id === DEFAULT_ACCOUNT_ID ? "默认（主要）" : id,
       })),
-      { value: "__new__", label: "Add a new account" },
+      { value: "__new__", label: "添加新账户" },
     ],
     initialValue: initial,
   });
@@ -21,14 +21,14 @@ export const promptAccountId: PromptAccountId = async (params: PromptAccountIdPa
   }
 
   const entered = await params.prompter.text({
-    message: `New ${params.label} account id`,
-    validate: (value) => (value?.trim() ? undefined : "Required"),
+    message: `新的 ${params.label} 账户 ID`,
+    validate: (value) => (value?.trim() ? undefined : "必填"),
   });
   const normalized = normalizeAccountId(String(entered));
   if (String(entered).trim() !== normalized) {
     await params.prompter.note(
-      `Normalized account id to "${normalized}".`,
-      `${params.label} account`,
+      `账户 ID 已规范化为 "${normalized}"。`,
+      `${params.label} 账户`,
     );
   }
   return normalized;

@@ -8,7 +8,7 @@ export function setZaloRuntime(next: PluginRuntime): void {
 
 export function getZaloRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("Zalo runtime not initialized");
+    throw new Error("Zalo 运行时未初始化");
   }
   return runtime;
 }

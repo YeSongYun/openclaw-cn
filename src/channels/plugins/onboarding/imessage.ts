@@ -86,25 +86,25 @@ async function promptIMessageAllowFrom(params: {
   const existing = resolved.config.allowFrom ?? [];
   await params.prompter.note(
     [
-      "Allowlist iMessage DMs by handle or chat target.",
-      "Examples:",
+      "通过句柄或聊天目标将 iMessage 私信加入白名单。",
+      "示例：",
       "- +15555550123",
       "- user@example.com",
       "- chat_id:123",
-      "- chat_guid:... or chat_identifier:...",
-      "Multiple entries: comma-separated.",
-      `Docs: ${formatDocsLink("/imessage", "imessage")}`,
+      "- chat_guid:... 或 chat_identifier:...",
+      "多个条目：逗号分隔。",
+      `文档：${formatDocsLink("/imessage", "imessage")}`,
     ].join("\n"),
-    "iMessage allowlist",
+    "iMessage 白名单",
   );
   const entry = await params.prompter.text({
-    message: "iMessage allowFrom (handle or chat_id)",
+    message: "iMessage 白名单（句柄或 chat_id）",
     placeholder: "+15555550123, user@example.com, chat_id:123",
     initialValue: existing[0] ? String(existing[0]) : undefined,
     validate: (value) => {
       const raw = String(value ?? "").trim();
       if (!raw) {
-        return "Required";
+        return "必填";
       }
       const parts = parseIMessageAllowFromInput(raw);
       for (const part of parts) {
@@ -114,24 +114,24 @@ async function promptIMessageAllowFrom(params: {
         if (part.toLowerCase().startsWith("chat_id:")) {
           const id = part.slice("chat_id:".length).trim();
           if (!/^\d+$/.test(id)) {
-            return `Invalid chat_id: ${part}`;
+            return `无效的 chat_id：${part}`;
           }
           continue;
         }
         if (part.toLowerCase().startsWith("chat_guid:")) {
           if (!part.slice("chat_guid:".length).trim()) {
-            return "Invalid chat_guid entry";
+            return "无效的 chat_guid 条目";
           }
           continue;
         }
         if (part.toLowerCase().startsWith("chat_identifier:")) {
           if (!part.slice("chat_identifier:".length).trim()) {
-            return "Invalid chat_identifier entry";
+            return "无效的 chat_identifier 条目";
           }
           continue;
         }
         if (!normalizeIMessageHandle(part)) {
-          return `Invalid handle: ${part}`;
+          return `无效的句柄：${part}`;
         }
       }
       return undefined;
@@ -171,10 +171,10 @@ export const imessageOnboardingAdapter: ChannelOnboardingAdapter = {
       channel,
       configured,
       statusLines: [
-        `iMessage: ${configured ? "configured" : "needs setup"}`,
-        `imsg: ${imessageCliDetected ? "found" : "missing"} (${imessageCliPath})`,
+        `iMessage：${configured ? "已配置" : "需要设置"}`,
+        `imsg：${imessageCliDetected ? "已找到" : "缺失"} (${imessageCliPath})`,
       ],
-      selectionHint: imessageCliDetected ? "imsg found" : "imsg missing",
+      selectionHint: imessageCliDetected ? "imsg 已找到" : "imsg 缺失",
       quickstartScore: imessageCliDetected ? 1 : 0,
     };
   },
@@ -204,13 +204,13 @@ export const imessageOnboardingAdapter: ChannelOnboardingAdapter = {
     const cliDetected = await detectBinary(resolvedCliPath);
     if (!cliDetected) {
       const entered = await prompter.text({
-        message: "imsg CLI path",
+        message: "imsg CLI 路径",
         initialValue: resolvedCliPath,
-        validate: (value) => (value?.trim() ? undefined : "Required"),
+        validate: (value) => (value?.trim() ? undefined : "必填"),
       });
       resolvedCliPath = String(entered).trim();
       if (!resolvedCliPath) {
-        await prompter.note("imsg CLI path required to enable iMessage.", "iMessage");
+        await prompter.note("需要 imsg CLI 路径才能启用 iMessage。", "iMessage");
       }
     }
 
@@ -251,13 +251,13 @@ export const imessageOnboardingAdapter: ChannelOnboardingAdapter = {
 
     await prompter.note(
       [
-        "This is still a work in progress.",
-        "Ensure OpenClaw has Full Disk Access to Messages DB.",
-        "Grant Automation permission for Messages when prompted.",
-        "List chats with: imsg chats --limit 20",
-        `Docs: ${formatDocsLink("/imessage", "imessage")}`,
+        "此功能仍在开发中。",
+        "确保 OpenClaw 拥有对消息数据库的完全磁盘访问权限。",
+        "在提示时授予消息的自动化权限。",
+        "使用以下命令列出聊天：imsg chats --limit 20",
+        `文档：${formatDocsLink("/imessage", "imessage")}`,
       ].join("\n"),
-      "iMessage next steps",
+      "iMessage 后续步骤",
     );
 
     return { cfg: next, accountId: imessageAccountId };

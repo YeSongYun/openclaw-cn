@@ -33,27 +33,27 @@ function setTelegramDmPolicy(cfg: OpenClawConfig, dmPolicy: DmPolicy) {
 async function noteTelegramTokenHelp(prompter: WizardPrompter): Promise<void> {
   await prompter.note(
     [
-      "1) Open Telegram and chat with @BotFather",
-      "2) Run /newbot (or /mybots)",
-      "3) Copy the token (looks like 123456:ABC...)",
-      "Tip: you can also set TELEGRAM_BOT_TOKEN in your env.",
-      `Docs: ${formatDocsLink("/telegram")}`,
-      "Website: https://openclaw.ai",
+      "1) 打开 Telegram 并与 @BotFather 对话",
+      "2) 运行 /newbot（或 /mybots）",
+      "3) 复制令牌（格式如 123456:ABC...）",
+      "提示：你也可以在环境变量中设置 TELEGRAM_BOT_TOKEN。",
+      `文档：${formatDocsLink("/telegram")}`,
+      "网站：https://openclaw.ai",
     ].join("\n"),
-    "Telegram bot token",
+    "Telegram 机器人令牌",
   );
 }
 
 async function noteTelegramUserIdHelp(prompter: WizardPrompter): Promise<void> {
   await prompter.note(
     [
-      `1) DM your bot, then read from.id in \`${formatCliCommand("openclaw logs --follow")}\` (safest)`,
-      "2) Or call https://api.telegram.org/bot<bot_token>/getUpdates and read message.from.id",
-      "3) Third-party: DM @userinfobot or @getidsbot",
-      `Docs: ${formatDocsLink("/telegram")}`,
-      "Website: https://openclaw.ai",
+      `1) 私信你的机器人，然后在 \`${formatCliCommand("openclaw logs --follow")}\` 中查看 from.id（最安全）`,
+      "2) 或者调用 https://api.telegram.org/bot<bot_token>/getUpdates 并查看 message.from.id",
+      "3) 第三方方式：私信 @userinfobot 或 @getidsbot",
+      `文档：${formatDocsLink("/telegram")}`,
+      "网站：https://openclaw.ai",
     ].join("\n"),
-    "Telegram user id",
+    "Telegram 用户 ID",
   );
 }
 
@@ -69,7 +69,7 @@ async function promptTelegramAllowFrom(params: {
 
   const token = resolved.token;
   if (!token) {
-    await prompter.note("Telegram token missing; username lookup is unavailable.", "Telegram");
+    await prompter.note("Telegram 令牌缺失；用户名查找不可用。", "Telegram");
   }
 
   const resolveTelegramUserId = async (raw: string): Promise<string | null> => {
@@ -115,18 +115,18 @@ async function promptTelegramAllowFrom(params: {
   let resolvedIds: string[] = [];
   while (resolvedIds.length === 0) {
     const entry = await prompter.text({
-      message: "Telegram allowFrom (username or user id)",
+      message: "Telegram 白名单（用户名或用户 ID）",
       placeholder: "@username",
       initialValue: existingAllowFrom[0] ? String(existingAllowFrom[0]) : undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+      validate: (value) => (String(value ?? "").trim() ? undefined : "必填"),
     });
     const parts = parseInput(String(entry));
     const results = await Promise.all(parts.map((part) => resolveTelegramUserId(part)));
     const unresolved = parts.filter((_, idx) => !results[idx]);
     if (unresolved.length > 0) {
       await prompter.note(
-        `Could not resolve: ${unresolved.join(", ")}. Use @username or numeric id.`,
-        "Telegram allowlist",
+        `无法解析：${unresolved.join(", ")}。请使用 @username 或数字 ID。`,
+        "Telegram 白名单",
       );
       continue;
     }
@@ -210,8 +210,8 @@ export const telegramOnboardingAdapter: ChannelOnboardingAdapter = {
     return {
       channel,
       configured,
-      statusLines: [`Telegram: ${configured ? "configured" : "needs token"}`],
-      selectionHint: configured ? "recommended · configured" : "recommended · newcomer-friendly",
+      statusLines: [`Telegram：${configured ? "已配置" : "需要令牌"}`],
+      selectionHint: configured ? "推荐 · 已配置" : "推荐 · 新手友好",
       quickstartScore: configured ? 1 : 10,
     };
   },
@@ -256,7 +256,7 @@ export const telegramOnboardingAdapter: ChannelOnboardingAdapter = {
     }
     if (canUseEnv && !resolvedAccount.config.botToken) {
       const keepEnv = await prompter.confirm({
-        message: "TELEGRAM_BOT_TOKEN detected. Use env var?",
+        message: "检测到 TELEGRAM_BOT_TOKEN。使用环境变量？",
         initialValue: true,
       });
       if (keepEnv) {
@@ -273,21 +273,21 @@ export const telegramOnboardingAdapter: ChannelOnboardingAdapter = {
       } else {
         token = String(
           await prompter.text({
-            message: "Enter Telegram bot token",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 Telegram 机器人令牌",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
       }
     } else if (hasConfigToken) {
       const keep = await prompter.confirm({
-        message: "Telegram token already configured. Keep it?",
+        message: "Telegram 令牌已配置。保留吗？",
         initialValue: true,
       });
       if (!keep) {
         token = String(
           await prompter.text({
-            message: "Enter Telegram bot token",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 Telegram 机器人令牌",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
       }

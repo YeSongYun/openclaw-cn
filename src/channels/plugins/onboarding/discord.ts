@@ -44,13 +44,13 @@ function setDiscordDmPolicy(cfg: OpenClawConfig, dmPolicy: DmPolicy) {
 async function noteDiscordTokenHelp(prompter: WizardPrompter): Promise<void> {
   await prompter.note(
     [
-      "1) Discord Developer Portal → Applications → New Application",
-      "2) Bot → Add Bot → Reset Token → copy token",
-      "3) OAuth2 → URL Generator → scope 'bot' → invite to your server",
-      "Tip: enable Message Content Intent if you need message text. (Bot → Privileged Gateway Intents → Message Content Intent)",
-      `Docs: ${formatDocsLink("/discord", "discord")}`,
+      "1) Discord 开发者门户 → 应用 → 新建应用",
+      "2) 机器人 → 添加机器人 → 重置令牌 → 复制令牌",
+      "3) OAuth2 → URL 生成器 → 范围选择 'bot' → 邀请到你的服务器",
+      "提示：如果需要消息文本，请启用 Message Content Intent。（机器人 → 特权网关 Intents → Message Content Intent）",
+      `文档：${formatDocsLink("/discord", "discord")}`,
     ].join("\n"),
-    "Discord bot token",
+    "Discord 机器人令牌",
   );
 }
 
@@ -187,15 +187,15 @@ async function promptDiscordAllowFrom(params: {
   const existing = params.cfg.channels?.discord?.dm?.allowFrom ?? [];
   await params.prompter.note(
     [
-      "Allowlist Discord DMs by username (we resolve to user ids).",
-      "Examples:",
+      "通过用户名将 Discord 私信加入白名单（我们会解析为用户 ID）。",
+      "示例：",
       "- 123456789012345678",
       "- @alice",
       "- alice#1234",
-      "Multiple entries: comma-separated.",
-      `Docs: ${formatDocsLink("/discord", "discord")}`,
+      "多个条目：逗号分隔。",
+      `文档：${formatDocsLink("/discord", "discord")}`,
     ].join("\n"),
-    "Discord allowlist",
+    "Discord 白名单",
   );
 
   const parseInputs = (value: string) => parseDiscordAllowFromInput(value);
@@ -217,18 +217,18 @@ async function promptDiscordAllowFrom(params: {
 
   while (true) {
     const entry = await params.prompter.text({
-      message: "Discord allowFrom (usernames or ids)",
+      message: "Discord 白名单（用户名或 ID）",
       placeholder: "@alice, 123456789012345678",
       initialValue: existing[0] ? String(existing[0]) : undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+      validate: (value) => (String(value ?? "").trim() ? undefined : "必填"),
     });
     const parts = parseInputs(String(entry));
     if (!token) {
       const ids = parts.map(parseId).filter(Boolean) as string[];
       if (ids.length !== parts.length) {
         await params.prompter.note(
-          "Bot token missing; use numeric user ids (or mention form) only.",
-          "Discord allowlist",
+          "机器人令牌缺失；请仅使用数字用户 ID（或提及格式）。",
+          "Discord 白名单",
         );
         continue;
       }
@@ -243,14 +243,14 @@ async function promptDiscordAllowFrom(params: {
       entries: parts,
     }).catch(() => null);
     if (!results) {
-      await params.prompter.note("Failed to resolve usernames. Try again.", "Discord allowlist");
+      await params.prompter.note("解析用户名失败。请重试。", "Discord 白名单");
       continue;
     }
     const unresolved = results.filter((res) => !res.resolved || !res.id);
     if (unresolved.length > 0) {
       await params.prompter.note(
-        `Could not resolve: ${unresolved.map((res) => res.input).join(", ")}`,
-        "Discord allowlist",
+        `无法解析：${unresolved.map((res) => res.input).join(", ")}`,
+        "Discord 白名单",
       );
       continue;
     }
@@ -279,8 +279,8 @@ export const discordOnboardingAdapter: ChannelOnboardingAdapter = {
     return {
       channel,
       configured,
-      statusLines: [`Discord: ${configured ? "configured" : "needs token"}`],
-      selectionHint: configured ? "configured" : "needs token",
+      statusLines: [`Discord：${configured ? "已配置" : "需要令牌"}`],
+      selectionHint: configured ? "已配置" : "需要令牌",
       quickstartScore: configured ? 2 : 1,
     };
   },
@@ -317,7 +317,7 @@ export const discordOnboardingAdapter: ChannelOnboardingAdapter = {
     }
     if (canUseEnv && !resolvedAccount.config.token) {
       const keepEnv = await prompter.confirm({
-        message: "DISCORD_BOT_TOKEN detected. Use env var?",
+        message: "检测到 DISCORD_BOT_TOKEN。使用环境变量？",
         initialValue: true,
       });
       if (keepEnv) {
@@ -331,21 +331,21 @@ export const discordOnboardingAdapter: ChannelOnboardingAdapter = {
       } else {
         token = String(
           await prompter.text({
-            message: "Enter Discord bot token",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 Discord 机器人令牌",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
       }
     } else if (hasConfigToken) {
       const keep = await prompter.confirm({
-        message: "Discord token already configured. Keep it?",
+        message: "Discord 令牌已配置。保留吗？",
         initialValue: true,
       });
       if (!keep) {
         token = String(
           await prompter.text({
-            message: "Enter Discord bot token",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 Discord 机器人令牌",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
       }
@@ -401,7 +401,7 @@ export const discordOnboardingAdapter: ChannelOnboardingAdapter = {
     );
     const accessConfig = await promptChannelAccessConfig({
       prompter,
-      label: "Discord channels",
+      label: "Discord 频道",
       currentPolicy: resolvedAccount.config.groupPolicy ?? "allowlist",
       currentEntries,
       placeholder: "My Server/#general, guildId/channelId, #support",
@@ -436,7 +436,7 @@ export const discordOnboardingAdapter: ChannelOnboardingAdapter = {
               const summary: string[] = [];
               if (resolvedChannels.length > 0) {
                 summary.push(
-                  `Resolved channels: ${resolvedChannels
+                  `已解析频道：${resolvedChannels
                     .map((entry) => entry.channelId)
                     .filter(Boolean)
                     .join(", ")}`,
@@ -444,21 +444,21 @@ export const discordOnboardingAdapter: ChannelOnboardingAdapter = {
               }
               if (resolvedGuilds.length > 0) {
                 summary.push(
-                  `Resolved guilds: ${resolvedGuilds
+                  `已解析服务器：${resolvedGuilds
                     .map((entry) => entry.guildId)
                     .filter(Boolean)
                     .join(", ")}`,
                 );
               }
               if (unresolved.length > 0) {
-                summary.push(`Unresolved (kept as typed): ${unresolved.join(", ")}`);
+                summary.push(`未解析（保留原样）：${unresolved.join(", ")}`);
               }
-              await prompter.note(summary.join("\n"), "Discord channels");
+              await prompter.note(summary.join("\n"), "Discord 频道");
             }
           } catch (err) {
             await prompter.note(
-              `Channel lookup failed; keeping entries as typed. ${String(err)}`,
-              "Discord channels",
+              `频道查找失败；保留原始输入。${String(err)}`,
+              "Discord 频道",
             );
           }
         }

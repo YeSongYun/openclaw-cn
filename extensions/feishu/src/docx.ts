@@ -453,9 +453,9 @@ export function registerFeishuDocTools(api: OpenClawPluginApi) {
     api.registerTool(
       {
         name: "feishu_doc",
-        label: "Feishu Doc",
+        label: "飞书文档",
         description:
-          "Feishu document operations. Actions: read, write, append, create, list_blocks, get_block, update_block, delete_block",
+          "飞书文档操作。操作：read、write、append、create、list_blocks、get_block、update_block、delete_block",
         parameters: FeishuDocSchema,
         async execute(_toolCallId, params) {
           const p = params as FeishuDocParams;
@@ -497,9 +497,9 @@ export function registerFeishuDocTools(api: OpenClawPluginApi) {
     api.registerTool(
       {
         name: "feishu_app_scopes",
-        label: "Feishu App Scopes",
+        label: "飞书应用权限",
         description:
-          "List current app permissions (scopes). Use to debug permission issues or check available capabilities.",
+          "列出当前应用权限（作用域）。用于调试权限问题或检查可用能力。",
         parameters: Type.Object({}),
         async execute() {
           try {

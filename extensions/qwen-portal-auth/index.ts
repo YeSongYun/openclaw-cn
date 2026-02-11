@@ -38,7 +38,7 @@ function buildModelDefinition(params: {
 const qwenPortalPlugin = {
   id: "qwen-portal-auth",
   name: "Qwen OAuth",
-  description: "OAuth flow for Qwen (free-tier) models",
+  description: "通义千问（免费版）模型 OAuth 认证流程",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     api.registerProvider({

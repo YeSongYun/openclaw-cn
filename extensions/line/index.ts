@@ -7,7 +7,7 @@ import { setLineRuntime } from "./src/runtime.js";
 const plugin = {
   id: "line",
   name: "LINE",
-  description: "LINE Messaging API channel plugin",
+  description: "LINE Messaging API 频道插件",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     setLineRuntime(api.runtime);

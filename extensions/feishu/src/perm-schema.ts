@@ -29,23 +29,23 @@ const Permission = Type.Union([
 export const FeishuPermSchema = Type.Union([
   Type.Object({
     action: Type.Literal("list"),
-    token: Type.String({ description: "File token" }),
+    token: Type.String({ description: "文件令牌" }),
     type: TokenType,
   }),
   Type.Object({
     action: Type.Literal("add"),
-    token: Type.String({ description: "File token" }),
+    token: Type.String({ description: "文件令牌" }),
     type: TokenType,
     member_type: MemberType,
-    member_id: Type.String({ description: "Member ID (email, open_id, user_id, etc.)" }),
+    member_id: Type.String({ description: "成员 ID（email、open_id、user_id 等）" }),
     perm: Permission,
   }),
   Type.Object({
     action: Type.Literal("remove"),
-    token: Type.String({ description: "File token" }),
+    token: Type.String({ description: "文件令牌" }),
     type: TokenType,
     member_type: MemberType,
-    member_id: Type.String({ description: "Member ID to remove" }),
+    member_id: Type.String({ description: "要移除的成员 ID" }),
   }),
 ]);
 

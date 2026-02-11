@@ -5,7 +5,7 @@ import { createDiagnosticsOtelService } from "./src/service.js";
 const plugin = {
   id: "diagnostics-otel",
   name: "Diagnostics OpenTelemetry",
-  description: "Export diagnostics events to OpenTelemetry",
+  description: "将诊断事件导出到 OpenTelemetry",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     api.registerService(createDiagnosticsOtelService());

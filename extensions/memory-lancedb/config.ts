@@ -112,28 +112,28 @@ export const memoryConfigSchema = {
   },
   uiHints: {
     "embedding.apiKey": {
-      label: "OpenAI API Key",
+      label: "OpenAI API 密钥",
       sensitive: true,
       placeholder: "sk-proj-...",
-      help: "API key for OpenAI embeddings (or use ${OPENAI_API_KEY})",
+      help: "用于 OpenAI 嵌入的 API 密钥（或使用 ${OPENAI_API_KEY}）",
     },
     "embedding.model": {
-      label: "Embedding Model",
+      label: "嵌入模型",
       placeholder: DEFAULT_MODEL,
-      help: "OpenAI embedding model to use",
+      help: "使用的 OpenAI 嵌入模型",
     },
     dbPath: {
-      label: "Database Path",
+      label: "数据库路径",
       placeholder: "~/.openclaw/memory/lancedb",
       advanced: true,
     },
     autoCapture: {
-      label: "Auto-Capture",
-      help: "Automatically capture important information from conversations",
+      label: "自动捕获",
+      help: "自动从对话中捕获重要信息",
     },
     autoRecall: {
-      label: "Auto-Recall",
-      help: "Automatically inject relevant memories into context",
+      label: "自动回忆",
+      help: "自动将相关记忆注入上下文",
     },
   },
 };

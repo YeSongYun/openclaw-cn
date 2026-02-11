@@ -49,21 +49,21 @@ async function promptWhatsAppAllowFrom(
 
   if (options?.forceAllowlist) {
     await prompter.note(
-      "We need the sender/owner number so OpenClaw can allowlist you.",
-      "WhatsApp number",
+      "我们需要发送者/所有者号码，以便 OpenClaw 将你加入白名单。",
+      "WhatsApp 号码",
     );
     const entry = await prompter.text({
-      message: "Your personal WhatsApp number (the phone you will message from)",
+      message: "你的个人 WhatsApp 号码（你将用来发送消息的手机）",
       placeholder: "+15555550123",
       initialValue: existingAllowFrom[0],
       validate: (value) => {
         const raw = String(value ?? "").trim();
         if (!raw) {
-          return "Required";
+          return "必填";
         }
         const normalized = normalizeE164(raw);
         if (!normalized) {
-          return `Invalid number: ${raw}`;
+          return `无效号码：${raw}`;
         }
         return undefined;
       },
@@ -81,51 +81,51 @@ async function promptWhatsAppAllowFrom(
     next = setWhatsAppDmPolicy(next, "allowlist");
     next = setWhatsAppAllowFrom(next, unique);
     await prompter.note(
-      ["Allowlist mode enabled.", `- allowFrom includes ${normalized}`].join("\n"),
-      "WhatsApp allowlist",
+      ["白名单模式已启用。", `- allowFrom 包含 ${normalized}`].join("\n"),
+      "WhatsApp 白名单",
     );
     return next;
   }
 
   await prompter.note(
     [
-      "WhatsApp direct chats are gated by `channels.whatsapp.dmPolicy` + `channels.whatsapp.allowFrom`.",
-      "- pairing (default): unknown senders get a pairing code; owner approves",
-      "- allowlist: unknown senders are blocked",
-      '- open: public inbound DMs (requires allowFrom to include "*")',
-      "- disabled: ignore WhatsApp DMs",
+      "WhatsApp 私信由 `channels.whatsapp.dmPolicy` + `channels.whatsapp.allowFrom` 控制。",
+      "- pairing（默认）：未知发送者会收到配对码；所有者审批",
+      "- allowlist：未知发送者被阻止",
+      '- open：公开接收私信（需要 allowFrom 包含 "*"）',
+      "- disabled：忽略 WhatsApp 私信",
       "",
-      `Current: dmPolicy=${existingPolicy}, allowFrom=${existingLabel}`,
-      `Docs: ${formatDocsLink("/whatsapp", "whatsapp")}`,
+      `当前：dmPolicy=${existingPolicy}，allowFrom=${existingLabel}`,
+      `文档：${formatDocsLink("/whatsapp", "whatsapp")}`,
     ].join("\n"),
-    "WhatsApp DM access",
+    "WhatsApp 私信访问",
   );
 
   const phoneMode = await prompter.select({
-    message: "WhatsApp phone setup",
+    message: "WhatsApp 手机设置",
     options: [
-      { value: "personal", label: "This is my personal phone number" },
-      { value: "separate", label: "Separate phone just for OpenClaw" },
+      { value: "personal", label: "这是我的个人手机号码" },
+      { value: "separate", label: "专门用于 OpenClaw 的独立手机" },
     ],
   });
 
   if (phoneMode === "personal") {
     await prompter.note(
-      "We need the sender/owner number so OpenClaw can allowlist you.",
-      "WhatsApp number",
+      "我们需要发送者/所有者号码，以便 OpenClaw 将你加入白名单。",
+      "WhatsApp 号码",
     );
     const entry = await prompter.text({
-      message: "Your personal WhatsApp number (the phone you will message from)",
+      message: "你的个人 WhatsApp 号码（你将用来发送消息的手机）",
       placeholder: "+15555550123",
       initialValue: existingAllowFrom[0],
       validate: (value) => {
         const raw = String(value ?? "").trim();
         if (!raw) {
-          return "Required";
+          return "必填";
         }
         const normalized = normalizeE164(raw);
         if (!normalized) {
-          return `Invalid number: ${raw}`;
+          return `无效号码：${raw}`;
         }
         return undefined;
       },
@@ -144,22 +144,22 @@ async function promptWhatsAppAllowFrom(
     next = setWhatsAppAllowFrom(next, unique);
     await prompter.note(
       [
-        "Personal phone mode enabled.",
-        "- dmPolicy set to allowlist (pairing skipped)",
-        `- allowFrom includes ${normalized}`,
+        "个人手机模式已启用。",
+        "- dmPolicy 设置为 allowlist（跳过配对）",
+        `- allowFrom 包含 ${normalized}`,
       ].join("\n"),
-      "WhatsApp personal phone",
+      "WhatsApp 个人手机",
     );
     return next;
   }
 
   const policy = (await prompter.select({
-    message: "WhatsApp DM policy",
+    message: "WhatsApp 私信策略",
     options: [
-      { value: "pairing", label: "Pairing (recommended)" },
-      { value: "allowlist", label: "Allowlist only (block unknown senders)" },
-      { value: "open", label: "Open (public inbound DMs)" },
-      { value: "disabled", label: "Disabled (ignore WhatsApp DMs)" },
+      { value: "pairing", label: "配对（推荐）" },
+      { value: "allowlist", label: "仅白名单（阻止未知发送者）" },
+      { value: "open", label: "开放（公开接收私信）" },
+      { value: "disabled", label: "已禁用（忽略 WhatsApp 私信）" },
     ],
   })) as DmPolicy;
 
@@ -175,20 +175,20 @@ async function promptWhatsAppAllowFrom(
   const allowOptions =
     existingAllowFrom.length > 0
       ? ([
-          { value: "keep", label: "Keep current allowFrom" },
+          { value: "keep", label: "保留当前 allowFrom" },
           {
             value: "unset",
-            label: "Unset allowFrom (use pairing approvals only)",
+            label: "取消设置 allowFrom（仅使用配对审批）",
           },
-          { value: "list", label: "Set allowFrom to specific numbers" },
+          { value: "list", label: "将 allowFrom 设置为特定号码" },
         ] as const)
       : ([
-          { value: "unset", label: "Unset allowFrom (default)" },
-          { value: "list", label: "Set allowFrom to specific numbers" },
+          { value: "unset", label: "取消设置 allowFrom（默认）" },
+          { value: "list", label: "将 allowFrom 设置为特定号码" },
         ] as const);
 
   const mode = await prompter.select({
-    message: "WhatsApp allowFrom (optional pre-allowlist)",
+    message: "WhatsApp allowFrom（可选预白名单）",
     options: allowOptions.map((opt) => ({
       value: opt.value,
       label: opt.label,
@@ -201,19 +201,19 @@ async function promptWhatsAppAllowFrom(
     next = setWhatsAppAllowFrom(next, undefined);
   } else {
     const allowRaw = await prompter.text({
-      message: "Allowed sender numbers (comma-separated, E.164)",
+      message: "允许的发送者号码（逗号分隔，E.164 格式）",
       placeholder: "+15555550123, +447700900123",
       validate: (value) => {
         const raw = String(value ?? "").trim();
         if (!raw) {
-          return "Required";
+          return "必填";
         }
         const parts = raw
           .split(/[\n,;]+/g)
           .map((p) => p.trim())
           .filter(Boolean);
         if (parts.length === 0) {
-          return "Required";
+          return "必填";
         }
         for (const part of parts) {
           if (part === "*") {
@@ -221,7 +221,7 @@ async function promptWhatsAppAllowFrom(
           }
           const normalized = normalizeE164(part);
           if (!normalized) {
-            return `Invalid number: ${part}`;
+            return `无效号码：${part}`;
           }
         }
         return undefined;
@@ -251,8 +251,8 @@ export const whatsappOnboardingAdapter: ChannelOnboardingAdapter = {
     return {
       channel,
       configured: linked,
-      statusLines: [`WhatsApp (${accountLabel}): ${linked ? "linked" : "not linked"}`],
-      selectionHint: linked ? "linked" : "not linked",
+      statusLines: [`WhatsApp (${accountLabel})：${linked ? "已关联" : "未关联"}`],
+      selectionHint: linked ? "已关联" : "未关联",
       quickstartScore: linked ? 5 : 4,
     };
   },
@@ -311,15 +311,15 @@ export const whatsappOnboardingAdapter: ChannelOnboardingAdapter = {
     if (!linked) {
       await prompter.note(
         [
-          "Scan the QR with WhatsApp on your phone.",
-          `Credentials are stored under ${authDir}/ for future runs.`,
-          `Docs: ${formatDocsLink("/whatsapp", "whatsapp")}`,
+          "用手机上的 WhatsApp 扫描二维码。",
+          `凭据存储在 ${authDir}/ 下，供后续运行使用。`,
+          `文档：${formatDocsLink("/whatsapp", "whatsapp")}`,
         ].join("\n"),
-        "WhatsApp linking",
+        "WhatsApp 关联",
       );
     }
     const wantsLink = await prompter.confirm({
-      message: linked ? "WhatsApp already linked. Re-link now?" : "Link WhatsApp now (QR)?",
+      message: linked ? "WhatsApp 已关联。重新关联吗？" : "现在关联 WhatsApp（二维码）？",
       initialValue: !linked,
     });
     if (wantsLink) {
@@ -327,11 +327,11 @@ export const whatsappOnboardingAdapter: ChannelOnboardingAdapter = {
         await loginWeb(false, undefined, runtime, accountId);
       } catch (err) {
         runtime.error(`WhatsApp login failed: ${String(err)}`);
-        await prompter.note(`Docs: ${formatDocsLink("/whatsapp", "whatsapp")}`, "WhatsApp help");
+        await prompter.note(`文档：${formatDocsLink("/whatsapp", "whatsapp")}`, "WhatsApp 帮助");
       }
     } else if (!linked) {
       await prompter.note(
-        `Run \`${formatCliCommand("openclaw channels login")}\` later to link WhatsApp.`,
+        `稍后运行 \`${formatCliCommand("openclaw channels login")}\` 来关联 WhatsApp。`,
         "WhatsApp",
       );
     }

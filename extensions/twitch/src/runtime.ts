@@ -8,7 +8,7 @@ export function setTwitchRuntime(next: PluginRuntime) {
 
 export function getTwitchRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("Twitch runtime not initialized");
+    throw new Error("Twitch 运行时未初始化");
   }
   return runtime;
 }

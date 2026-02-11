@@ -65,15 +65,15 @@ function setTwitchAccount(
 async function noteTwitchSetupHelp(prompter: WizardPrompter): Promise<void> {
   await prompter.note(
     [
-      "Twitch requires a bot account with OAuth token.",
-      "1. Create a Twitch application at https://dev.twitch.tv/console",
-      "2. Generate a token with scopes: chat:read and chat:write",
-      "   Use https://twitchtokengenerator.com/ or https://twitchapps.com/tmi/",
-      "3. Copy the token (starts with 'oauth:') and Client ID",
-      "Env vars supported: OPENCLAW_TWITCH_ACCESS_TOKEN",
-      `Docs: ${formatDocsLink("/channels/twitch", "channels/twitch")}`,
+      "Twitch 需要一个带有 OAuth 令牌的 Bot 账户。",
+      "1. 在 https://dev.twitch.tv/console 创建一个 Twitch 应用",
+      "2. 生成一个包含 chat:read 和 chat:write 权限的令牌",
+      "   使用 https://twitchtokengenerator.com/ 或 https://twitchapps.com/tmi/",
+      "3. 复制令牌（以 'oauth:' 开头）和 Client ID",
+      "支持的环境变量：OPENCLAW_TWITCH_ACCESS_TOKEN",
+      `文档：${formatDocsLink("/channels/twitch", "channels/twitch")}`,
     ].join("\n"),
-    "Twitch setup",
+    "Twitch 设置",
   );
 }
 
@@ -90,7 +90,7 @@ async function promptToken(
   // If we have an existing token and no env var, ask if we should keep it
   if (existingToken && !envToken) {
     const keepToken = await prompter.confirm({
-      message: "Access token already configured. Keep it?",
+      message: "访问令牌已配置，是否保留？",
       initialValue: true,
     });
     if (keepToken) {
@@ -101,15 +101,15 @@ async function promptToken(
   // Prompt for new token
   return String(
     await prompter.text({
-      message: "Twitch OAuth token (oauth:...)",
+      message: "Twitch OAuth 令牌（oauth:...）",
       initialValue: envToken ?? "",
       validate: (value) => {
         const raw = String(value ?? "").trim();
         if (!raw) {
-          return "Required";
+          return "必填";
         }
         if (!raw.startsWith("oauth:")) {
-          return "Token should start with 'oauth:'";
+          return "令牌应以 'oauth:' 开头";
         }
         return undefined;
       },
@@ -126,9 +126,9 @@ async function promptUsername(
 ): Promise<string> {
   return String(
     await prompter.text({
-      message: "Twitch bot username",
+      message: "Twitch Bot 用户名",
       initialValue: account?.username ?? "",
-      validate: (value) => (value?.trim() ? undefined : "Required"),
+      validate: (value) => (value?.trim() ? undefined : "必填"),
     }),
   ).trim();
 }
@@ -144,7 +144,7 @@ async function promptClientId(
     await prompter.text({
       message: "Twitch Client ID",
       initialValue: account?.clientId ?? "",
-      validate: (value) => (value?.trim() ? undefined : "Required"),
+      validate: (value) => (value?.trim() ? undefined : "必填"),
     }),
   ).trim();
 }
@@ -158,9 +158,9 @@ async function promptChannelName(
 ): Promise<string> {
   const channelName = String(
     await prompter.text({
-      message: "Channel to join",
+      message: "要加入的频道",
       initialValue: account?.channel ?? "",
-      validate: (value) => (value?.trim() ? undefined : "Required"),
+      validate: (value) => (value?.trim() ? undefined : "必填"),
     }),
   ).trim();
   return channelName;
@@ -174,7 +174,7 @@ async function promptRefreshTokenSetup(
   account: TwitchAccountConfig | null,
 ): Promise<{ clientSecret?: string; refreshToken?: string }> {
   const useRefresh = await prompter.confirm({
-    message: "Enable automatic token refresh (requires client secret and refresh token)?",
+    message: "启用自动令牌刷新（需要 Client Secret 和 Refresh Token）？",
     initialValue: Boolean(account?.clientSecret && account?.refreshToken),
   });
 
@@ -185,9 +185,9 @@ async function promptRefreshTokenSetup(
   const clientSecret =
     String(
       await prompter.text({
-        message: "Twitch Client Secret (for token refresh)",
+        message: "Twitch Client Secret（用于令牌刷新）",
         initialValue: account?.clientSecret ?? "",
-        validate: (value) => (value?.trim() ? undefined : "Required"),
+        validate: (value) => (value?.trim() ? undefined : "必填"),
       }),
     ).trim() || undefined;
 
@@ -196,7 +196,7 @@ async function promptRefreshTokenSetup(
       await prompter.text({
         message: "Twitch Refresh Token",
         initialValue: account?.refreshToken ?? "",
-        validate: (value) => (value?.trim() ? undefined : "Required"),
+        validate: (value) => (value?.trim() ? undefined : "必填"),
       }),
     ).trim() || undefined;
 
@@ -215,7 +215,7 @@ async function configureWithEnvToken(
   dmPolicy: ChannelOnboardingDmPolicy,
 ): Promise<{ cfg: OpenClawConfig } | null> {
   const useEnv = await prompter.confirm({
-    message: "Twitch env var OPENCLAW_TWITCH_ACCESS_TOKEN detected. Use env token?",
+    message: "检测到 Twitch 环境变量 OPENCLAW_TWITCH_ACCESS_TOKEN，是否使用环境变量令牌？",
     initialValue: true,
   });
   if (!useEnv) {
@@ -285,7 +285,7 @@ const dmPolicy: ChannelOnboardingDmPolicy = {
     const existingAllowFrom = account?.allowFrom ?? [];
 
     const entry = await prompter.text({
-      message: "Twitch allowFrom (user IDs, one per line, recommended for security)",
+      message: "Twitch 白名单（用户 ID，每行一个，推荐用于安全控制）",
       placeholder: "123456789",
       initialValue: existingAllowFrom[0] ? String(existingAllowFrom[0]) : undefined,
     });
@@ -311,8 +311,8 @@ export const twitchOnboardingAdapter: ChannelOnboardingAdapter = {
     return {
       channel,
       configured,
-      statusLines: [`Twitch: ${configured ? "configured" : "needs username, token, and clientId"}`],
-      selectionHint: configured ? "configured" : "needs setup",
+      statusLines: [`Twitch：${configured ? "已配置" : "需要用户名、令牌和 Client ID"}`],
+      selectionHint: configured ? "已配置" : "需要设置",
     };
   },
   configure: async ({ cfg, prompter, forceAllowFrom }) => {

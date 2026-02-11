@@ -6,7 +6,7 @@ import { setSlackRuntime } from "./src/runtime.js";
 const plugin = {
   id: "slack",
   name: "Slack",
-  description: "Slack channel plugin",
+  description: "Slack 频道插件",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     setSlackRuntime(api.runtime);

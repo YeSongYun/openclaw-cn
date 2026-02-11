@@ -8,7 +8,7 @@ export function setNextcloudTalkRuntime(next: PluginRuntime) {
 
 export function getNextcloudTalkRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("Nextcloud Talk runtime not initialized");
+    throw new Error("Nextcloud Talk 运行时未初始化");
   }
   return runtime;
 }

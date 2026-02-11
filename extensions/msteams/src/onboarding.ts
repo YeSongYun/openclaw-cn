@@ -70,26 +70,26 @@ async function promptMSTeamsAllowFrom(params: {
   const existing = params.cfg.channels?.msteams?.allowFrom ?? [];
   await params.prompter.note(
     [
-      "Allowlist MS Teams DMs by display name, UPN/email, or user id.",
-      "We resolve names to user IDs via Microsoft Graph when credentials allow.",
-      "Examples:",
+      "通过显示名称、UPN/邮箱或用户 ID 设置 MS Teams 私信白名单。",
+      "当凭据允许时，我们会通过 Microsoft Graph 将名称解析为用户 ID。",
+      "示例：",
       "- alex@example.com",
       "- Alex Johnson",
       "- 00000000-0000-0000-0000-000000000000",
     ].join("\n"),
-    "MS Teams allowlist",
+    "MS Teams 白名单",
   );
 
   while (true) {
     const entry = await params.prompter.text({
-      message: "MS Teams allowFrom (usernames or ids)",
+      message: "MS Teams 白名单（用户名或 ID）",
       placeholder: "alex@example.com, Alex Johnson",
       initialValue: existing[0] ? String(existing[0]) : undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+      validate: (value) => (String(value ?? "").trim() ? undefined : "必填"),
     });
     const parts = parseAllowFromInput(String(entry));
     if (parts.length === 0) {
-      await params.prompter.note("Enter at least one user.", "MS Teams allowlist");
+      await params.prompter.note("请至少输入一个用户。", "MS Teams 白名单");
       continue;
     }
 
@@ -102,8 +102,8 @@ async function promptMSTeamsAllowFrom(params: {
       const ids = parts.filter((part) => looksLikeGuid(part));
       if (ids.length !== parts.length) {
         await params.prompter.note(
-          "Graph lookup unavailable. Use user IDs only.",
-          "MS Teams allowlist",
+          "Graph 查询不可用，请仅使用用户 ID。",
+          "MS Teams 白名单",
         );
         continue;
       }
@@ -116,8 +116,8 @@ async function promptMSTeamsAllowFrom(params: {
     const unresolved = resolved.filter((item) => !item.resolved || !item.id);
     if (unresolved.length > 0) {
       await params.prompter.note(
-        `Could not resolve: ${unresolved.map((item) => item.input).join(", ")}`,
-        "MS Teams allowlist",
+        `无法解析：${unresolved.map((item) => item.input).join(", ")}`,
+        "MS Teams 白名单",
       );
       continue;
     }
@@ -131,13 +131,13 @@ async function promptMSTeamsAllowFrom(params: {
 async function noteMSTeamsCredentialHelp(prompter: WizardPrompter): Promise<void> {
   await prompter.note(
     [
-      "1) Azure Bot registration → get App ID + Tenant ID",
-      "2) Add a client secret (App Password)",
-      "3) Set webhook URL + messaging endpoint",
-      "Tip: you can also set MSTEAMS_APP_ID / MSTEAMS_APP_PASSWORD / MSTEAMS_TENANT_ID.",
-      `Docs: ${formatDocsLink("/channels/msteams", "msteams")}`,
+      "1) Azure Bot 注册 → 获取 App ID + Tenant ID",
+      "2) 添加客户端密钥（App Password）",
+      "3) 设置 Webhook URL + 消息端点",
+      "提示：你也可以设置 MSTEAMS_APP_ID / MSTEAMS_APP_PASSWORD / MSTEAMS_TENANT_ID 环境变量。",
+      `文档：${formatDocsLink("/channels/msteams", "msteams")}`,
     ].join("\n"),
-    "MS Teams credentials",
+    "MS Teams 凭据",
   );
 }
 
@@ -208,8 +208,8 @@ export const msteamsOnboardingAdapter: ChannelOnboardingAdapter = {
     return {
       channel,
       configured,
-      statusLines: [`MS Teams: ${configured ? "configured" : "needs app credentials"}`],
-      selectionHint: configured ? "configured" : "needs app creds",
+      statusLines: [`MS Teams：${configured ? "已配置" : "需要应用凭据"}`],
+      selectionHint: configured ? "已配置" : "需要应用凭据",
       quickstartScore: configured ? 2 : 0,
     };
   },
@@ -239,7 +239,7 @@ export const msteamsOnboardingAdapter: ChannelOnboardingAdapter = {
     if (canUseEnv) {
       const keepEnv = await prompter.confirm({
         message:
-          "MSTEAMS_APP_ID + MSTEAMS_APP_PASSWORD + MSTEAMS_TENANT_ID detected. Use env vars?",
+          "检测到 MSTEAMS_APP_ID + MSTEAMS_APP_PASSWORD + MSTEAMS_TENANT_ID，是否使用环境变量？",
         initialValue: true,
       });
       if (keepEnv) {
@@ -253,45 +253,45 @@ export const msteamsOnboardingAdapter: ChannelOnboardingAdapter = {
       } else {
         appId = String(
           await prompter.text({
-            message: "Enter MS Teams App ID",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 MS Teams App ID",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
         appPassword = String(
           await prompter.text({
-            message: "Enter MS Teams App Password",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 MS Teams App Password",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
         tenantId = String(
           await prompter.text({
-            message: "Enter MS Teams Tenant ID",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 MS Teams Tenant ID",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
       }
     } else if (hasConfigCreds) {
       const keep = await prompter.confirm({
-        message: "MS Teams credentials already configured. Keep them?",
+        message: "MS Teams 凭据已配置，是否保留？",
         initialValue: true,
       });
       if (!keep) {
         appId = String(
           await prompter.text({
-            message: "Enter MS Teams App ID",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 MS Teams App ID",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
         appPassword = String(
           await prompter.text({
-            message: "Enter MS Teams App Password",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 MS Teams App Password",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
         tenantId = String(
           await prompter.text({
-            message: "Enter MS Teams Tenant ID",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            message: "输入 MS Teams Tenant ID",
+            validate: (value) => (value?.trim() ? undefined : "必填"),
           }),
         ).trim();
       }
@@ -388,7 +388,7 @@ export const msteamsOnboardingAdapter: ChannelOnboardingAdapter = {
               const summary: string[] = [];
               if (resolvedChannels.length > 0) {
                 summary.push(
-                  `Resolved channels: ${resolvedChannels
+                  `已解析频道：${resolvedChannels
                     .map((entry) => entry.channelId)
                     .filter(Boolean)
                     .join(", ")}`,
@@ -396,21 +396,21 @@ export const msteamsOnboardingAdapter: ChannelOnboardingAdapter = {
               }
               if (resolvedTeams.length > 0) {
                 summary.push(
-                  `Resolved teams: ${resolvedTeams
+                  `已解析团队：${resolvedTeams
                     .map((entry) => entry.teamId)
                     .filter(Boolean)
                     .join(", ")}`,
                 );
               }
               if (unresolved.length > 0) {
-                summary.push(`Unresolved (kept as typed): ${unresolved.join(", ")}`);
+                summary.push(`未解析（保留原始输入）：${unresolved.join(", ")}`);
               }
-              await prompter.note(summary.join("\n"), "MS Teams channels");
+              await prompter.note(summary.join("\n"), "MS Teams 频道");
             }
           } catch (err) {
             await prompter.note(
-              `Channel lookup failed; keeping entries as typed. ${String(err)}`,
-              "MS Teams channels",
+              `频道查询失败，保留原始输入。${String(err)}`,
+              "MS Teams 频道",
             );
           }
         }

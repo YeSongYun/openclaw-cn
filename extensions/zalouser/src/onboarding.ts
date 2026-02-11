@@ -44,15 +44,15 @@ function setZalouserDmPolicy(
 async function noteZalouserHelp(prompter: WizardPrompter): Promise<void> {
   await prompter.note(
     [
-      "Zalo Personal Account login via QR code.",
+      "Zalo 个人账号通过二维码登录。",
       "",
-      "Prerequisites:",
-      "1) Install zca-cli",
-      "2) You'll scan a QR code with your Zalo app",
+      "前置条件：",
+      "1) 安装 zca-cli",
+      "2) 你需要使用 Zalo 应用扫描二维码",
       "",
-      "Docs: https://docs.openclaw.ai/channels/zalouser",
+      "文档：https://docs.openclaw.ai/channels/zalouser",
     ].join("\n"),
-    "Zalo Personal Setup",
+    "Zalo 个人账号设置",
   );
 }
 
@@ -97,8 +97,8 @@ async function promptZalouserAllowFrom(params: {
     }
     if (rows.length > 1) {
       await prompter.note(
-        `Multiple matches for "${trimmed}", using ${match.displayName ?? match.userId}.`,
-        "Zalo Personal allowlist",
+        `"${trimmed}" 有多个匹配结果，使用 ${match.displayName ?? match.userId}。`,
+        "Zalo 个人白名单",
       );
     }
     return String(match.userId);
@@ -106,18 +106,18 @@ async function promptZalouserAllowFrom(params: {
 
   while (true) {
     const entry = await prompter.text({
-      message: "Zalouser allowFrom (username or user id)",
+      message: "Zalouser 白名单（用户名或用户 ID）",
       placeholder: "Alice, 123456789",
       initialValue: existingAllowFrom[0] ? String(existingAllowFrom[0]) : undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+      validate: (value) => (String(value ?? "").trim() ? undefined : "必填"),
     });
     const parts = parseInput(String(entry));
     const results = await Promise.all(parts.map((part) => resolveUserId(part)));
     const unresolved = parts.filter((_, idx) => !results[idx]);
     if (unresolved.length > 0) {
       await prompter.note(
-        `Could not resolve: ${unresolved.join(", ")}. Use numeric user ids or ensure zca is available.`,
-        "Zalo Personal allowlist",
+        `无法解析：${unresolved.join(", ")}。请使用数字用户 ID 或确保 zca 可用。`,
+        "Zalo 个人白名单",
       );
       continue;
     }
@@ -320,8 +320,8 @@ export const zalouserOnboardingAdapter: ChannelOnboardingAdapter = {
     return {
       channel,
       configured,
-      statusLines: [`Zalo Personal: ${configured ? "logged in" : "needs QR login"}`],
-      selectionHint: configured ? "recommended · logged in" : "recommended · QR login",
+      statusLines: [`Zalo 个人：${configured ? "已登录" : "需要二维码登录"}`],
+      selectionHint: configured ? "推荐 · 已登录" : "推荐 · 二维码登录",
       quickstartScore: configured ? 1 : 15,
     };
   },
@@ -337,12 +337,12 @@ export const zalouserOnboardingAdapter: ChannelOnboardingAdapter = {
     if (!zcaInstalled) {
       await prompter.note(
         [
-          "The `zca` binary was not found in PATH.",
+          "在 PATH 中未找到 `zca` 二进制文件。",
           "",
-          "Install zca-cli, then re-run onboarding:",
-          "Docs: https://docs.openclaw.ai/channels/zalouser",
+          "请安装 zca-cli，然后重新运行引导向导：",
+          "文档：https://docs.openclaw.ai/channels/zalouser",
         ].join("\n"),
-        "Missing Dependency",
+        "缺少依赖",
       );
       return { cfg, accountId: DEFAULT_ACCOUNT_ID };
     }
@@ -370,14 +370,14 @@ export const zalouserOnboardingAdapter: ChannelOnboardingAdapter = {
       await noteZalouserHelp(prompter);
 
       const wantsLogin = await prompter.confirm({
-        message: "Login via QR code now?",
+        message: "现在通过二维码登录？",
         initialValue: true,
       });
 
       if (wantsLogin) {
         await prompter.note(
-          "A QR code will appear in your terminal.\nScan it with your Zalo app to login.",
-          "QR Login",
+          "二维码将显示在终端中。\n使用 Zalo 应用扫描二维码以登录。",
+          "二维码登录",
         );
 
         // Run interactive login
@@ -386,17 +386,17 @@ export const zalouserOnboardingAdapter: ChannelOnboardingAdapter = {
         });
 
         if (!result.ok) {
-          await prompter.note(`Login failed: ${result.stderr || "Unknown error"}`, "Error");
+          await prompter.note(`登录失败：${result.stderr || "未知错误"}`, "错误");
         } else {
           const isNowAuth = await checkZcaAuthenticated(account.profile);
           if (isNowAuth) {
-            await prompter.note("Login successful!", "Success");
+            await prompter.note("登录成功！", "成功");
           }
         }
       }
     } else {
       const keepSession = await prompter.confirm({
-        message: "Zalo Personal already logged in. Keep session?",
+        message: "Zalo 个人账号已登录。是否保留会话？",
         initialValue: true,
       });
       if (!keepSession) {
@@ -449,7 +449,7 @@ export const zalouserOnboardingAdapter: ChannelOnboardingAdapter = {
 
     const accessConfig = await promptChannelAccessConfig({
       prompter,
-      label: "Zalo groups",
+      label: "Zalo 群组",
       currentPolicy: account.config.groupPolicy ?? "open",
       currentEntries: Object.keys(account.config.groups ?? {}),
       placeholder: "Family, Work, 123456789",
@@ -477,20 +477,20 @@ export const zalouserOnboardingAdapter: ChannelOnboardingAdapter = {
             if (resolvedIds.length > 0 || unresolved.length > 0) {
               await prompter.note(
                 [
-                  resolvedIds.length > 0 ? `Resolved: ${resolvedIds.join(", ")}` : undefined,
+                  resolvedIds.length > 0 ? `已解析：${resolvedIds.join(", ")}` : undefined,
                   unresolved.length > 0
-                    ? `Unresolved (kept as typed): ${unresolved.join(", ")}`
+                    ? `未解析（保留原样）：${unresolved.join(", ")}`
                     : undefined,
                 ]
                   .filter(Boolean)
                   .join("\n"),
-                "Zalo groups",
+                "Zalo 群组",
               );
             }
           } catch (err) {
             await prompter.note(
-              `Group lookup failed; keeping entries as typed. ${String(err)}`,
-              "Zalo groups",
+              `群组查找失败；保留原始输入。${String(err)}`,
+              "Zalo 群组",
             );
           }
         }

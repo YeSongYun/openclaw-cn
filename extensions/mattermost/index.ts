@@ -6,7 +6,7 @@ import { setMattermostRuntime } from "./src/runtime.js";
 const plugin = {
   id: "mattermost",
   name: "Mattermost",
-  description: "Mattermost channel plugin",
+  description: "Mattermost 频道插件",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     setMattermostRuntime(api.runtime);

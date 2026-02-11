@@ -8,7 +8,7 @@ export function setNostrRuntime(next: PluginRuntime): void {
 
 export function getNostrRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("Nostr runtime not initialized");
+    throw new Error("Nostr 运行时未初始化");
   }
   return runtime;
 }

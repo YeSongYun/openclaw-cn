@@ -6,7 +6,7 @@ import { setMSTeamsRuntime } from "./src/runtime.js";
 const plugin = {
   id: "msteams",
   name: "Microsoft Teams",
-  description: "Microsoft Teams channel plugin (Bot Framework)",
+  description: "Microsoft Teams 频道插件（Bot Framework）",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     setMSTeamsRuntime(api.runtime);

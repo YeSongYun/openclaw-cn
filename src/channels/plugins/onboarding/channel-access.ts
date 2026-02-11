@@ -24,17 +24,17 @@ export async function promptChannelAccessPolicy(params: {
   allowDisabled?: boolean;
 }): Promise<ChannelAccessPolicy> {
   const options: Array<{ value: ChannelAccessPolicy; label: string }> = [
-    { value: "allowlist", label: "Allowlist (recommended)" },
+    { value: "allowlist", label: "白名单（推荐）" },
   ];
   if (params.allowOpen !== false) {
-    options.push({ value: "open", label: "Open (allow all channels)" });
+    options.push({ value: "open", label: "开放（允许所有频道）" });
   }
   if (params.allowDisabled !== false) {
-    options.push({ value: "disabled", label: "Disabled (block all channels)" });
+    options.push({ value: "disabled", label: "禁用（阻止所有频道）" });
   }
   const initialValue = params.currentPolicy ?? "allowlist";
   return await params.prompter.select({
-    message: `${params.label} access`,
+    message: `${params.label} 访问权限`,
     options,
     initialValue,
   });
@@ -51,7 +51,7 @@ export async function promptChannelAllowlist(params: {
       ? formatAllowlistEntries(params.currentEntries)
       : undefined;
   const raw = await params.prompter.text({
-    message: `${params.label} allowlist (comma-separated)`,
+    message: `${params.label} 白名单（逗号分隔）`,
     placeholder: params.placeholder,
     initialValue,
   });
@@ -73,8 +73,8 @@ export async function promptChannelAccessConfig(params: {
   const shouldPrompt = params.defaultPrompt ?? !hasEntries;
   const wants = await params.prompter.confirm({
     message: params.updatePrompt
-      ? `Update ${params.label} access?`
-      : `Configure ${params.label} access?`,
+      ? `更新 ${params.label} 访问权限？`
+      : `配置 ${params.label} 访问权限？`,
     initialValue: shouldPrompt,
   });
   if (!wants) {

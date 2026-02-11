@@ -8,7 +8,7 @@ export function setBlueBubblesRuntime(next: PluginRuntime): void {
 
 export function getBlueBubblesRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("BlueBubbles runtime not initialized");
+    throw new Error("BlueBubbles 运行时未初始化");
   }
   return runtime;
 }

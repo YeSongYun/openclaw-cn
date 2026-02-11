@@ -55,10 +55,10 @@ async function promptAllowFrom(params: {
 }): Promise<OpenClawConfig> {
   const current = params.cfg.channels?.["googlechat"]?.dm?.allowFrom ?? [];
   const entry = await params.prompter.text({
-    message: "Google Chat allowFrom (user id or email)",
+    message: "Google Chat 白名单（用户 ID 或邮箱）",
     placeholder: "users/123456789, name@example.com",
     initialValue: current[0] ? String(current[0]) : undefined,
-    validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+    validate: (value) => (String(value ?? "").trim() ? undefined : "必填"),
   });
   const parts = parseAllowFromInput(String(entry));
   const unique = [...new Set(parts)];
@@ -139,7 +139,7 @@ async function promptCredentials(params: {
     (Boolean(process.env[ENV_SERVICE_ACCOUNT]) || Boolean(process.env[ENV_SERVICE_ACCOUNT_FILE]));
   if (envReady) {
     const useEnv = await prompter.confirm({
-      message: "Use GOOGLE_CHAT_SERVICE_ACCOUNT env vars?",
+      message: "是否使用 GOOGLE_CHAT_SERVICE_ACCOUNT 环境变量？",
       initialValue: true,
     });
     if (useEnv) {
@@ -148,19 +148,19 @@ async function promptCredentials(params: {
   }
 
   const method = await prompter.select({
-    message: "Google Chat auth method",
+    message: "Google Chat 认证方式",
     options: [
-      { value: "file", label: "Service account JSON file" },
-      { value: "inline", label: "Paste service account JSON" },
+      { value: "file", label: "服务账号 JSON 文件" },
+      { value: "inline", label: "粘贴服务账号 JSON" },
     ],
     initialValue: "file",
   });
 
   if (method === "file") {
     const path = await prompter.text({
-      message: "Service account JSON path",
+      message: "服务账号 JSON 文件路径",
       placeholder: "/path/to/service-account.json",
-      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+      validate: (value) => (String(value ?? "").trim() ? undefined : "必填"),
     });
     return applyAccountConfig({
       cfg,
@@ -170,9 +170,9 @@ async function promptCredentials(params: {
   }
 
   const json = await prompter.text({
-    message: "Service account JSON (single line)",
+    message: "服务账号 JSON（单行）",
     placeholder: '{"type":"service_account", ... }',
-    validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+    validate: (value) => (String(value ?? "").trim() ? undefined : "必填"),
   });
   return applyAccountConfig({
     cfg,
@@ -193,18 +193,18 @@ async function promptAudience(params: {
   const currentType = account.config.audienceType ?? "app-url";
   const currentAudience = account.config.audience ?? "";
   const audienceType = await params.prompter.select({
-    message: "Webhook audience type",
+    message: "Webhook 受众类型",
     options: [
-      { value: "app-url", label: "App URL (recommended)" },
-      { value: "project-number", label: "Project number" },
+      { value: "app-url", label: "应用 URL（推荐）" },
+      { value: "project-number", label: "项目编号" },
     ],
     initialValue: currentType === "project-number" ? "project-number" : "app-url",
   });
   const audience = await params.prompter.text({
-    message: audienceType === "project-number" ? "Project number" : "App URL",
+    message: audienceType === "project-number" ? "项目编号" : "应用 URL",
     placeholder: audienceType === "project-number" ? "1234567890" : "https://your.host/googlechat",
     initialValue: currentAudience || undefined,
-    validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+    validate: (value) => (String(value ?? "").trim() ? undefined : "必填"),
   });
   return applyAccountConfig({
     cfg: params.cfg,
@@ -216,12 +216,12 @@ async function promptAudience(params: {
 async function noteGoogleChatSetup(prompter: WizardPrompter) {
   await prompter.note(
     [
-      "Google Chat apps use service-account auth and an HTTPS webhook.",
-      "Set the Chat API scopes in your service account and configure the Chat app URL.",
-      "Webhook verification requires audience type + audience value.",
+      "Google Chat 应用使用服务账号认证和 HTTPS Webhook。",
+      "在服务账号中设置 Chat API 权限范围并配置 Chat 应用 URL。",
+      "Webhook 验证需要受众类型和受众值。",
       `Docs: ${formatDocsLink("/channels/googlechat", "channels/googlechat")}`,
     ].join("\n"),
-    "Google Chat setup",
+    "Google Chat 设置",
   );
 }
 
@@ -235,8 +235,8 @@ export const googlechatOnboardingAdapter: ChannelOnboardingAdapter = {
     return {
       channel,
       configured,
-      statusLines: [`Google Chat: ${configured ? "configured" : "needs service account"}`],
-      selectionHint: configured ? "configured" : "needs auth",
+      statusLines: [`Google Chat：${configured ? "已配置" : "需要服务账号"}`],
+      selectionHint: configured ? "已配置" : "需要认证",
     };
   },
   configure: async ({ cfg, prompter, accountOverrides, shouldPromptAccountIds }) => {

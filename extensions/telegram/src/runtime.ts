@@ -8,7 +8,7 @@ export function setTelegramRuntime(next: PluginRuntime) {
 
 export function getTelegramRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("Telegram runtime not initialized");
+    throw new Error("Telegram 运行时未初始化");
   }
   return runtime;
 }

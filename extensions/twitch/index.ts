@@ -8,7 +8,7 @@ export { monitorTwitchProvider } from "./src/monitor.js";
 const plugin = {
   id: "twitch",
   name: "Twitch",
-  description: "Twitch channel plugin",
+  description: "Twitch 频道插件",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     setTwitchRuntime(api.runtime);

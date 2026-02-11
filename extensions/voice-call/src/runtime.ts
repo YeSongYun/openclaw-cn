@@ -89,7 +89,7 @@ function resolveProvider(config: VoiceCallConfig): VoiceCallProvider {
     case "mock":
       return new MockProvider();
     default:
-      throw new Error(`Unsupported voice-call provider: ${String(config.provider)}`);
+      throw new Error(`不支持的语音通话提供商: ${String(config.provider)}`);
   }
 }
 
@@ -110,12 +110,12 @@ export async function createVoiceCallRuntime(params: {
   const config = resolveVoiceCallConfig(rawConfig);
 
   if (!config.enabled) {
-    throw new Error("Voice call disabled. Enable the plugin entry in config.");
+    throw new Error("语音通话已禁用。请在配置中启用该插件。");
   }
 
   const validation = validateProviderConfig(config);
   if (!validation.valid) {
-    throw new Error(`Invalid voice-call config: ${validation.errors.join("; ")}`);
+    throw new Error(`无效的语音通话配置: ${validation.errors.join("; ")}`);
   }
 
   const provider = resolveProvider(config);

@@ -8,7 +8,7 @@ export function setMSTeamsRuntime(next: PluginRuntime) {
 
 export function getMSTeamsRuntime(): PluginRuntime {
   if (!runtime) {
-    throw new Error("MSTeams runtime not initialized");
+    throw new Error("MSTeams 运行时未初始化");
   }
   return runtime;
 }

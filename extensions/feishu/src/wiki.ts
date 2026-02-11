@@ -180,9 +180,9 @@ export function registerFeishuWikiTools(api: OpenClawPluginApi) {
   api.registerTool(
     {
       name: "feishu_wiki",
-      label: "Feishu Wiki",
+      label: "飞书知识库",
       description:
-        "Feishu knowledge base operations. Actions: spaces, nodes, get, create, move, rename",
+        "飞书知识库操作。操作：spaces、nodes、get、create、move、rename",
       parameters: FeishuWikiSchema,
       async execute(_toolCallId, params) {
         const p = params as FeishuWikiParams;

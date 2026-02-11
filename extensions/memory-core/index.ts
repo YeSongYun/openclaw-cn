@@ -4,7 +4,7 @@ import { emptyPluginConfigSchema } from "openclaw/plugin-sdk";
 const memoryCorePlugin = {
   id: "memory-core",
   name: "Memory (Core)",
-  description: "File-backed memory search tools and CLI",
+  description: "基于文件的记忆搜索工具和命令行",
   kind: "memory",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {

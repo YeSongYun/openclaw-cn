@@ -6,7 +6,7 @@ import { setMatrixRuntime } from "./src/runtime.js";
 const plugin = {
   id: "matrix",
   name: "Matrix",
-  description: "Matrix channel plugin (matrix-js-sdk)",
+  description: "Matrix 频道插件（matrix-js-sdk）",
   configSchema: emptyPluginConfigSchema(),
   register(api: OpenClawPluginApi) {
     setMatrixRuntime(api.runtime);
