@@ -26,6 +26,7 @@ export type AuthChoiceGroupId =
   | "together"
   | "qianfan"
   | "xai"
+  | "dmxapi"
   | "custom";
 
 export type AuthChoiceGroup = {
@@ -52,6 +53,12 @@ const AUTH_CHOICE_GROUP_DEFS: {
     label: "Anthropic",
     hint: "setup-token + API key",
     choices: ["token", "apiKey"],
+  },
+  {
+    value: "dmxapi",
+    label: "DMXAPI",
+    hint: "Claude 代理 (v1/messages)",
+    choices: ["dmxapi-api-key"],
   },
   {
     value: "minimax",
@@ -247,6 +254,11 @@ export function buildAuthChoiceOptions(params: {
     hint: "Local proxy for VS Code Copilot models",
   });
   options.push({ value: "apiKey", label: "Anthropic API key" });
+  options.push({
+    value: "dmxapi-api-key",
+    label: "DMXAPI API key",
+    hint: "Claude 代理，使用 v1/messages 接口",
+  });
   // Token flow is currently Anthropic-only; use CLI for advanced providers.
   options.push({
     value: "opencode-zen",

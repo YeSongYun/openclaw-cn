@@ -2,6 +2,7 @@ import type { OAuthCredentials } from "@mariozechner/pi-ai";
 import { resolveOpenClawAgentDir } from "../agents/agent-paths.js";
 import { upsertAuthProfile } from "../agents/auth-profiles.js";
 export { CLOUDFLARE_AI_GATEWAY_DEFAULT_MODEL_REF } from "../agents/cloudflare-ai-gateway.js";
+export { DMXAPI_DEFAULT_MODEL_REF } from "../agents/dmxapi-models.js";
 export { XAI_DEFAULT_MODEL_REF } from "./onboard-auth.models.js";
 
 const resolveAuthAgentDir = (agentDir?: string) => agentDir ?? resolveOpenClawAgentDir();
@@ -140,6 +141,18 @@ export async function setXiaomiApiKey(key: string, agentDir?: string) {
     credential: {
       type: "api_key",
       provider: "xiaomi",
+      key,
+    },
+    agentDir: resolveAuthAgentDir(agentDir),
+  });
+}
+
+export async function setDmxapiApiKey(key: string, agentDir?: string) {
+  upsertAuthProfile({
+    profileId: "dmxapi:default",
+    credential: {
+      type: "api_key",
+      provider: "dmxapi",
       key,
     },
     agentDir: resolveAuthAgentDir(agentDir),

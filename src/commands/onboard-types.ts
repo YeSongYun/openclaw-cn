@@ -38,6 +38,7 @@ export type AuthChoice =
   | "qwen-portal"
   | "xai-api-key"
   | "qianfan-api-key"
+  | "dmxapi-api-key"
   | "custom-api-key"
   | "skip";
 export type AuthChoiceGroupId =
@@ -58,6 +59,7 @@ export type AuthChoiceGroupId =
   | "qwen"
   | "qianfan"
   | "xai"
+  | "dmxapi"
   | "custom";
 export type GatewayAuthChoice = "token" | "password";
 export type ResetScope = "config" | "config+creds+sessions" | "full";
@@ -98,6 +100,7 @@ export type OnboardOptions = {
   geminiApiKey?: string;
   zaiApiKey?: string;
   xiaomiApiKey?: string;
+  dmxapiApiKey?: string;
   minimaxApiKey?: string;
   syntheticApiKey?: string;
   veniceApiKey?: string;

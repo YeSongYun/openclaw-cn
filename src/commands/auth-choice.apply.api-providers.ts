@@ -1,5 +1,10 @@
 import type { ApplyAuthChoiceParams, ApplyAuthChoiceResult } from "./auth-choice.apply.js";
 import { ensureAuthProfileStore, resolveAuthProfileOrder } from "../agents/auth-profiles.js";
+import {
+  buildDmxapiModelDefinition,
+  DMXAPI_DEFAULT_BASE_URL,
+  DMXAPI_DEFAULT_MODEL_ID,
+} from "../agents/dmxapi-models.js";
 import { resolveEnvApiKey } from "../agents/model-auth.js";
 import {
   formatApiKeyPreview,
@@ -15,6 +20,8 @@ import {
   applyAuthProfileConfig,
   applyCloudflareAiGatewayConfig,
   applyCloudflareAiGatewayProviderConfig,
+  applyDmxapiConfig,
+  applyDmxapiProviderConfig,
   applyQianfanConfig,
   applyQianfanProviderConfig,
   applyKimiCodeConfig,
@@ -39,6 +46,7 @@ import {
   applyXiaomiProviderConfig,
   applyZaiConfig,
   CLOUDFLARE_AI_GATEWAY_DEFAULT_MODEL_REF,
+  DMXAPI_DEFAULT_MODEL_REF,
   QIANFAN_DEFAULT_MODEL_REF,
   KIMI_CODING_MODEL_REF,
   MOONSHOT_DEFAULT_MODEL_REF,
@@ -49,6 +57,7 @@ import {
   VERCEL_AI_GATEWAY_DEFAULT_MODEL_REF,
   XIAOMI_DEFAULT_MODEL_REF,
   setCloudflareAiGatewayConfig,
+  setDmxapiApiKey,
   setQianfanApiKey,
   setGeminiApiKey,
   setKimiCodingApiKey,
@@ -116,6 +125,8 @@ export async function applyAuthChoiceApiProviders(
       authChoice = "opencode-zen";
     } else if (params.opts.tokenProvider === "qianfan") {
       authChoice = "qianfan-api-key";
+    } else if (params.opts.tokenProvider === "dmxapi") {
+      authChoice = "dmxapi-api-key";
     }
   }
 
@@ -858,6 +869,132 @@ export async function applyAuthChoiceApiProviders(
         applyDefaultConfig: applyTogetherConfig,
         applyProviderConfig: applyTogetherProviderConfig,
         noteDefault: TOGETHER_DEFAULT_MODEL_REF,
+        noteAgentModel,
+        prompter: params.prompter,
+      });
+      nextConfig = applied.config;
+      agentModelOverride = applied.agentModelOverride ?? agentModelOverride;
+    }
+    return { config: nextConfig, agentModelOverride };
+  }
+
+  if (authChoice === "dmxapi-api-key") {
+    let hasCredential = false;
+
+    await params.prompter.note(
+      [
+        "DMXAPI 使用 Anthropic Claude v1/messages 兼容接口。",
+        "仅支持 Claude 格式的模型（如 claude-opus-4-5-20251101-cc）。",
+      ].join("\n"),
+      "DMXAPI",
+    );
+
+    const baseUrl = String(
+      await params.prompter.text({
+        message: "Enter DMXAPI Base URL",
+        initialValue: DMXAPI_DEFAULT_BASE_URL,
+        validate: (val) => (String(val).trim() ? undefined : "Base URL is required"),
+      }),
+    ).trim();
+
+    if (!hasCredential && params.opts?.token && params.opts?.tokenProvider === "dmxapi") {
+      await setDmxapiApiKey(normalizeApiKeyInput(params.opts.token), params.agentDir);
+      hasCredential = true;
+    }
+
+    if (!hasCredential) {
+      const envKey = resolveEnvApiKey("dmxapi");
+      if (envKey) {
+        const useExisting = await params.prompter.confirm({
+          message: `Use existing DMXAPI_API_KEY (${envKey.source}, ${formatApiKeyPreview(envKey.apiKey)})?`,
+          initialValue: true,
+        });
+        if (useExisting) {
+          await setDmxapiApiKey(envKey.apiKey, params.agentDir);
+          hasCredential = true;
+        }
+      }
+    }
+
+    if (!hasCredential) {
+      const key = await params.prompter.text({
+        message: "Enter DMXAPI API key",
+        validate: validateApiKeyInput,
+      });
+      await setDmxapiApiKey(normalizeApiKeyInput(String(key)), params.agentDir);
+      hasCredential = true;
+    }
+
+    const modelId = String(
+      await params.prompter.text({
+        message: "Enter model ID (仅支持 Claude v1/messages 格式模型)",
+        initialValue: DMXAPI_DEFAULT_MODEL_ID,
+        validate: (val) => (String(val).trim() ? undefined : "Model ID is required"),
+      }),
+    ).trim();
+
+    nextConfig = applyAuthProfileConfig(nextConfig, {
+      profileId: "dmxapi:default",
+      provider: "dmxapi",
+      mode: "api_key",
+    });
+
+    const customModelRef = `dmxapi/${modelId}`;
+    const customModelDef = buildDmxapiModelDefinition({
+      id: modelId,
+      name: modelId,
+      reasoning: false,
+      input: ["text", "image"],
+      contextWindow: 200000,
+      maxTokens: 16384,
+    });
+
+    {
+      const applied = await applyDefaultModelChoice({
+        config: nextConfig,
+        setDefaultModel: params.setDefaultModel,
+        defaultModel: customModelRef,
+        applyDefaultConfig: (cfg) => {
+          const withProvider = applyDmxapiProviderConfig(cfg, baseUrl);
+          const providers = { ...withProvider.models?.providers };
+          const existing = providers.dmxapi;
+          const existingModels = Array.isArray(existing?.models) ? existing.models : [];
+          const hasModel = existingModels.some((m) => m.id === modelId);
+          if (!hasModel) {
+            providers.dmxapi = {
+              ...existing,
+              models: [...existingModels, customModelDef],
+            };
+          }
+          const models = { ...withProvider.agents?.defaults?.models };
+          models[customModelRef] = {
+            ...models[customModelRef],
+            alias: models[customModelRef]?.alias ?? "DMXAPI",
+          };
+          const existingModel = withProvider.agents?.defaults?.model;
+          return {
+            ...withProvider,
+            agents: {
+              ...withProvider.agents,
+              defaults: {
+                ...withProvider.agents?.defaults,
+                models,
+                model: {
+                  ...(existingModel && "fallbacks" in (existingModel as Record<string, unknown>)
+                    ? { fallbacks: (existingModel as { fallbacks?: string[] }).fallbacks }
+                    : undefined),
+                  primary: customModelRef,
+                },
+              },
+            },
+            models: {
+              mode: withProvider.models?.mode ?? "merge",
+              providers,
+            },
+          };
+        },
+        applyProviderConfig: (cfg) => applyDmxapiProviderConfig(cfg, baseUrl),
+        noteDefault: customModelRef,
         noteAgentModel,
         prompter: params.prompter,
       });

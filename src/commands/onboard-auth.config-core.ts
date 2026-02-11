@@ -5,6 +5,11 @@ import {
   resolveCloudflareAiGatewayBaseUrl,
 } from "../agents/cloudflare-ai-gateway.js";
 import {
+  buildDmxapiModelDefinition,
+  DMXAPI_DEFAULT_BASE_URL,
+  DMXAPI_MODEL_CATALOG,
+} from "../agents/dmxapi-models.js";
+import {
   buildQianfanProvider,
   buildXiaomiProvider,
   QIANFAN_DEFAULT_MODEL_ID,
@@ -29,6 +34,7 @@ import {
 } from "../agents/venice-models.js";
 import {
   CLOUDFLARE_AI_GATEWAY_DEFAULT_MODEL_REF,
+  DMXAPI_DEFAULT_MODEL_REF,
   OPENROUTER_DEFAULT_MODEL_REF,
   TOGETHER_DEFAULT_MODEL_REF,
   VERCEL_AI_GATEWAY_DEFAULT_MODEL_REF,
@@ -525,6 +531,74 @@ export function applyXiaomiConfig(cfg: OpenClawConfig): OpenClawConfig {
               }
             : undefined),
           primary: XIAOMI_DEFAULT_MODEL_REF,
+        },
+      },
+    },
+  };
+}
+
+export function applyDmxapiProviderConfig(cfg: OpenClawConfig, baseUrl?: string): OpenClawConfig {
+  const resolvedBaseUrl = baseUrl ?? DMXAPI_DEFAULT_BASE_URL;
+  const models = { ...cfg.agents?.defaults?.models };
+  models[DMXAPI_DEFAULT_MODEL_REF] = {
+    ...models[DMXAPI_DEFAULT_MODEL_REF],
+    alias: models[DMXAPI_DEFAULT_MODEL_REF]?.alias ?? "DMXAPI",
+  };
+
+  const providers = { ...cfg.models?.providers };
+  const existingProvider = providers.dmxapi;
+  const existingModels = Array.isArray(existingProvider?.models) ? existingProvider.models : [];
+  const dmxapiModels = DMXAPI_MODEL_CATALOG.map(buildDmxapiModelDefinition);
+  const mergedModels = [
+    ...existingModels,
+    ...dmxapiModels.filter((model) => !existingModels.some((existing) => existing.id === model.id)),
+  ];
+  const { apiKey: existingApiKey, ...existingProviderRest } = (existingProvider ?? {}) as Record<
+    string,
+    unknown
+  > as { apiKey?: string };
+  const resolvedApiKey = typeof existingApiKey === "string" ? existingApiKey : undefined;
+  const normalizedApiKey = resolvedApiKey?.trim();
+  providers.dmxapi = {
+    ...existingProviderRest,
+    baseUrl: resolvedBaseUrl,
+    api: "anthropic-messages",
+    ...(normalizedApiKey ? { apiKey: normalizedApiKey } : {}),
+    models: mergedModels.length > 0 ? mergedModels : dmxapiModels,
+  };
+
+  return {
+    ...cfg,
+    agents: {
+      ...cfg.agents,
+      defaults: {
+        ...cfg.agents?.defaults,
+        models,
+      },
+    },
+    models: {
+      mode: cfg.models?.mode ?? "merge",
+      providers,
+    },
+  };
+}
+
+export function applyDmxapiConfig(cfg: OpenClawConfig, baseUrl?: string): OpenClawConfig {
+  const next = applyDmxapiProviderConfig(cfg, baseUrl);
+  const existingModel = next.agents?.defaults?.model;
+  return {
+    ...next,
+    agents: {
+      ...next.agents,
+      defaults: {
+        ...next.agents?.defaults,
+        model: {
+          ...(existingModel && "fallbacks" in (existingModel as Record<string, unknown>)
+            ? {
+                fallbacks: (existingModel as { fallbacks?: string[] }).fallbacks,
+              }
+            : undefined),
+          primary: DMXAPI_DEFAULT_MODEL_REF,
         },
       },
     },

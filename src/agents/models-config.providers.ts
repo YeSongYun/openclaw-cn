@@ -10,6 +10,11 @@ import {
   buildCloudflareAiGatewayModelDefinition,
   resolveCloudflareAiGatewayBaseUrl,
 } from "./cloudflare-ai-gateway.js";
+import {
+  buildDmxapiModelDefinition,
+  DMXAPI_DEFAULT_BASE_URL,
+  DMXAPI_MODEL_CATALOG,
+} from "./dmxapi-models.js";
 import { resolveAwsSdkEnvVarName, resolveEnvApiKey } from "./model-auth.js";
 import {
   buildSyntheticModelDefinition,
@@ -454,6 +459,14 @@ export function buildQianfanProvider(): ProviderConfig {
   };
 }
 
+export function buildDmxapiProvider(): ProviderConfig {
+  return {
+    baseUrl: DMXAPI_DEFAULT_BASE_URL,
+    api: "anthropic-messages",
+    models: DMXAPI_MODEL_CATALOG.map(buildDmxapiModelDefinition),
+  };
+}
+
 export async function resolveImplicitProviders(params: {
   agentDir: string;
 }): Promise<ModelsConfig["providers"]> {
@@ -564,6 +577,13 @@ export async function resolveImplicitProviders(params: {
     resolveApiKeyFromProfiles({ provider: "qianfan", store: authStore });
   if (qianfanKey) {
     providers.qianfan = { ...buildQianfanProvider(), apiKey: qianfanKey };
+  }
+
+  const dmxapiKey =
+    resolveEnvApiKeyVarName("dmxapi") ??
+    resolveApiKeyFromProfiles({ provider: "dmxapi", store: authStore });
+  if (dmxapiKey) {
+    providers.dmxapi = { ...buildDmxapiProvider(), apiKey: dmxapiKey };
   }
 
   return providers;
