@@ -88,7 +88,7 @@
   "cmd.status": "显示频道健康状态和最近会话接收者",
   "cmd.health": "从运行的网关获取健康状态",
   "cmd.sessions": "列出存储的会话",
-  "cmd.browser": "管理 clawd 的专用浏览器（Chrome/Chromium）",
+  "cmd.browser": "管理 OpenClaw 的专用浏览器（Chrome/Chromium）",
   "cmd.help": "显示命令帮助",
   "cmd.completion": "生成 Shell 自动补全脚本",
 

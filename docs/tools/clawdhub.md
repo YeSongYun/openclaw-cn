@@ -23,12 +23,12 @@ If you want to add new capabilities to your OpenClaw agent, ClawdHub is the easi
 
 ## Quick start (non-technical)
 
-1) Install the CLI (see next section).
-2) Search for something you need:
+1. Install the CLI (see next section).
+2. Search for something you need:
    - `clawdhub search "calendar"`
-3) Install a skill:
+3. Install a skill:
    - `clawdhub install <skill-slug>`
-4) Start a new OpenClaw session so it picks up the new skill.
+4. Start a new OpenClaw session so it picks up the new skill.
 
 ## Install the CLI
 

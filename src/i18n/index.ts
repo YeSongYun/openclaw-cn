@@ -25,7 +25,9 @@ export function getLocale(): string {
 function loadNamespace(ns: string): TranslationData {
   const locale = getLocale();
   const cacheKey = `${locale}:${ns}`;
-  if (cache[cacheKey]) return cache[cacheKey];
+  if (cache[cacheKey]) {
+    return cache[cacheKey];
+  }
 
   // 优先尝试 dist 扁平结构路径 (../locales)，再尝试 src 嵌套结构路径 (../../locales)
   const candidates = [

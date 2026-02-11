@@ -15,10 +15,7 @@ const rootDir = path.join(__dirname, "..");
 const localesDir = path.join(rootDir, "locales", "zh-CN");
 
 // 源代码目录
-const srcDirs = [
-  path.join(rootDir, "src"),
-  path.join(rootDir, "ui", "src"),
-];
+const srcDirs = [path.join(rootDir, "src"), path.join(rootDir, "ui", "src")];
 
 // 翻译调用模式
 const translationPatterns = [
@@ -51,7 +48,7 @@ function loadTranslations(): Record<string, Record<string, string>> {
     return translations;
   }
 
-  const files = fs.readdirSync(localesDir).filter(f => f.endsWith(".json"));
+  const files = fs.readdirSync(localesDir).filter((f) => f.endsWith(".json"));
 
   for (const file of files) {
     const namespace = path.basename(file, ".json");
@@ -70,7 +67,9 @@ function scanSourceFiles(): TranslationCall[] {
   const calls: TranslationCall[] = [];
 
   function scanDir(dir: string) {
-    if (!fs.existsSync(dir)) return;
+    if (!fs.existsSync(dir)) {
+      return;
+    }
 
     const entries = fs.readdirSync(dir, { withFileTypes: true });
 
@@ -135,7 +134,7 @@ function scanSourceFiles(): TranslationCall[] {
 
 function findGaps(
   calls: TranslationCall[],
-  translations: Record<string, Record<string, string>>
+  translations: Record<string, Record<string, string>>,
 ): TranslationGap[] {
   const gaps: Map<string, TranslationGap> = new Map();
 

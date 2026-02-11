@@ -14,7 +14,10 @@ let currentLocale = "zh-CN";
 export async function initI18n(locale?: string): Promise<void> {
   currentLocale = locale ?? detectLocale();
   try {
-    const basePath = (window as Record<string, unknown>).__CLAWDBOT_CONTROL_UI_BASE_PATH__ as string | undefined ?? "";
+    const basePath =
+      ((window as unknown as Record<string, unknown>).__CLAWDBOT_CONTROL_UI_BASE_PATH__ as
+        | string
+        | undefined) ?? "";
     const response = await fetch(`${basePath}/locales/${currentLocale}/ui.json`);
     if (response.ok) {
       translations = await response.json();
@@ -28,10 +31,14 @@ export async function initI18n(locale?: string): Promise<void> {
  * 检测语言：优先使用后端注入的 locale
  */
 function detectLocale(): string {
-  const injected = (window as Record<string, unknown>).__CLAWDBOT_LOCALE__;
-  if (typeof injected === "string" && injected) return injected;
+  const injected = (window as unknown as Record<string, unknown>).__CLAWDBOT_LOCALE__;
+  if (typeof injected === "string" && injected) {
+    return injected;
+  }
   const lang = navigator.language || "en";
-  if (lang.startsWith("zh")) return "zh-CN";
+  if (lang.startsWith("zh")) {
+    return "zh-CN";
+  }
   return "en";
 }
 
