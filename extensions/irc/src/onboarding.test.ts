@@ -12,34 +12,34 @@ describe("irc onboarding", () => {
       select: vi.fn(async () => "allowlist"),
       multiselect: vi.fn(async () => []),
       text: vi.fn(async ({ message }: { message: string }) => {
-        if (message === "IRC server host") {
+        if (message === "IRC 服务器主机") {
           return "irc.libera.chat";
         }
-        if (message === "IRC server port") {
+        if (message === "IRC 服务器端口") {
           return "6697";
         }
-        if (message === "IRC nick") {
+        if (message === "IRC 昵称") {
           return "openclaw-bot";
         }
-        if (message === "IRC username") {
+        if (message === "IRC 用户名") {
           return "openclaw";
         }
-        if (message === "IRC real name") {
+        if (message === "IRC 真实姓名") {
           return "OpenClaw Bot";
         }
-        if (message.startsWith("Auto-join IRC channels")) {
+        if (message.startsWith("自动加入的 IRC 频道")) {
           return "#openclaw, #ops";
         }
-        if (message.startsWith("IRC channels allowlist")) {
+        if (message.includes("白名单")) {
           return "#openclaw, #ops";
         }
         throw new Error(`Unexpected prompt: ${message}`);
       }) as WizardPrompter["text"],
       confirm: vi.fn(async ({ message }: { message: string }) => {
-        if (message === "Use TLS for IRC?") {
+        if (message === "IRC 是否使用 TLS？") {
           return true;
         }
-        if (message === "Configure IRC channels access?") {
+        if (message.includes("IRC channels") && message.includes("访问权限")) {
           return true;
         }
         return false;
@@ -81,7 +81,7 @@ describe("irc onboarding", () => {
       select: vi.fn(async () => "allowlist"),
       multiselect: vi.fn(async () => []),
       text: vi.fn(async ({ message }: { message: string }) => {
-        if (message === "IRC allowFrom (nick or nick!user@host)") {
+        if (message === "IRC 白名单（昵称或 nick!user@host）") {
           return "Alice, Bob!ident@example.org";
         }
         throw new Error(`Unexpected prompt: ${message}`);

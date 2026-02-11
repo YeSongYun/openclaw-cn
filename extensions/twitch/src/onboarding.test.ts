@@ -49,7 +49,7 @@ describe("onboarding helpers", () => {
 
       expect(result).toBe("oauth:test123");
       expect(mockPromptConfirm).toHaveBeenCalledWith({
-        message: "Access token already configured. Keep it?",
+        message: "访问令牌已配置，是否保留？",
         initialValue: true,
       });
       expect(mockPromptText).not.toHaveBeenCalled();
@@ -65,7 +65,7 @@ describe("onboarding helpers", () => {
 
       expect(result).toBe("oauth:newtoken123");
       expect(mockPromptText).toHaveBeenCalledWith({
-        message: "Twitch OAuth token (oauth:...)",
+        message: "Twitch OAuth 令牌（oauth:...）",
         initialValue: "",
         validate: expect.any(Function),
       });
@@ -114,8 +114,8 @@ describe("onboarding helpers", () => {
 
       // Test the validate function
       expect(capturedValidate).toBeDefined();
-      expect(capturedValidate!("")).toBe("Required");
-      expect(capturedValidate!("notoauth")).toBe("Token should start with 'oauth:'");
+      expect(capturedValidate!("")).toBe("必填");
+      expect(capturedValidate!("notoauth")).toBe("令牌应以 'oauth:' 开头");
     });
 
     it("should return early when no existing token and no env token", async () => {
@@ -140,7 +140,7 @@ describe("onboarding helpers", () => {
 
       expect(result).toBe("mybot");
       expect(mockPromptText).toHaveBeenCalledWith({
-        message: "Twitch bot username",
+        message: "Twitch Bot 用户名",
         initialValue: "",
         validate: expect.any(Function),
       });
@@ -197,8 +197,8 @@ describe("onboarding helpers", () => {
       await promptChannelName(mockPrompter, null);
 
       const { validate } = mockPromptText.mock.calls[0]?.[0] ?? {};
-      expect(validate?.("")).toBe("Required");
-      expect(validate?.("   ")).toBe("Required");
+      expect(validate?.("")).toBe("必填");
+      expect(validate?.("   ")).toBe("必填");
       expect(validate?.("#chan")).toBeUndefined();
     });
   });
@@ -213,7 +213,7 @@ describe("onboarding helpers", () => {
 
       expect(result).toEqual({});
       expect(mockPromptConfirm).toHaveBeenCalledWith({
-        message: "Enable automatic token refresh (requires client secret and refresh token)?",
+        message: "启用自动令牌刷新（需要 Client Secret 和 Refresh Token）？",
         initialValue: false,
       });
     });
