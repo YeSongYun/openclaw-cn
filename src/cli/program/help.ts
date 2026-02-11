@@ -77,6 +77,9 @@ export function configureProgramHelp(program: Command, ctx: ProgramContext) {
   program.option("--no-color", t("cli", "option.noColor", "Disable ANSI colors"), false);
 
   program.configureHelp({
+    // sort options and subcommands alphabetically
+    sortSubcommands: true,
+    sortOptions: true,
     optionTerm: (option) => theme.option(option.flags),
     subcommandTerm: (cmd) => theme.command(cmd.name()),
   });
