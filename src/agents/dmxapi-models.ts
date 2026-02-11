@@ -1,7 +1,7 @@
 import type { ModelDefinitionConfig } from "../config/types.js";
 
 export const DMXAPI_DEFAULT_BASE_URL = "https://www.dmxapi.cn";
-export const DMXAPI_DEFAULT_MODEL_ID = "claude-opus-4-5-20251101-cc";
+export const DMXAPI_DEFAULT_MODEL_ID = "claude-opus-4-6-cc";
 export const DMXAPI_DEFAULT_MODEL_REF = `dmxapi/${DMXAPI_DEFAULT_MODEL_ID}`;
 export const DMXAPI_DEFAULT_COST = {
   input: 0,
@@ -12,8 +12,8 @@ export const DMXAPI_DEFAULT_COST = {
 
 export const DMXAPI_MODEL_CATALOG = [
   {
-    id: "claude-opus-4-5-20251101-cc",
-    name: "Claude Opus 4.5 CC",
+    id: "claude-opus-4-6-cc",
+    name: "Claude Opus 4.6 CC",
     reasoning: false,
     input: ["text", "image"],
     contextWindow: 200000,
@@ -39,7 +39,16 @@ export const DMXAPI_MODEL_CATALOG = [
 
 export type DmxapiCatalogEntry = (typeof DMXAPI_MODEL_CATALOG)[number];
 
-export function buildDmxapiModelDefinition(entry: DmxapiCatalogEntry): ModelDefinitionConfig {
+export interface DmxapiModelEntry {
+  id: string;
+  name: string;
+  reasoning: boolean;
+  input: readonly ("text" | "image")[];
+  contextWindow: number;
+  maxTokens: number;
+}
+
+export function buildDmxapiModelDefinition(entry: DmxapiModelEntry): ModelDefinitionConfig {
   return {
     id: entry.id,
     name: entry.name,

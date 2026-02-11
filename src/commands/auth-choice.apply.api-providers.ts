@@ -882,7 +882,7 @@ export async function applyAuthChoiceApiProviders(
     await params.prompter.note(
       [
         "DMXAPI 使用 Anthropic Claude v1/messages 兼容接口。",
-        "仅支持 Claude 格式的模型（如 claude-opus-4-5-20251101-cc）。",
+        "仅支持 Claude 格式的模型（如 claude-opus-4-6-cc）。",
       ].join("\n"),
       "DMXAPI",
     );
