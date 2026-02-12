@@ -2,6 +2,12 @@
 
 Docs: https://docs.openclaw.ai
 
+## 1.1.7
+
+### Added
+
+- i18n: 完成 onboarding 向导和 Web UI 全面汉化（约 220 个翻译 key，27 个文件）
+
 ## 1.1.6
 
 ### Added

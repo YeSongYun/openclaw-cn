@@ -1,6 +1,6 @@
 {
   "name": "@openclaw/feishu",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "OpenClaw Feishu/Lark channel plugin (community maintained by @m1heng)",
   "type": "module",
   "dependencies": {
