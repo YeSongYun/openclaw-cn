@@ -4,6 +4,7 @@ import type { WizardPrompter } from "../wizard/prompts.js";
 import { installSkill } from "../agents/skills-install.js";
 import { buildWorkspaceSkillStatus } from "../agents/skills-status.js";
 import { formatCliCommand } from "../cli/command-format.js";
+import { t, ti } from "../i18n/index.js";
 import { normalizeSecretInput } from "../utils/normalize-secret-input.js";
 import { detectBinary, resolveNodeManagerOptions } from "./onboard-helpers.js";
 
@@ -65,16 +66,24 @@ export async function setupSkills(
 
   await prompter.note(
     [
-      `Eligible: ${eligible.length}`,
-      `Missing requirements: ${missing.length}`,
-      `Unsupported on this OS: ${unsupportedOs.length}`,
-      `Blocked by allowlist: ${blocked.length}`,
+      ti("wizard", "skills.eligible", `Eligible: ${eligible.length}`, {
+        count: String(eligible.length),
+      }),
+      ti("wizard", "skills.missingRequirements", `Missing requirements: ${missing.length}`, {
+        count: String(missing.length),
+      }),
+      ti("wizard", "skills.unsupportedOs", `Unsupported on this OS: ${unsupportedOs.length}`, {
+        count: String(unsupportedOs.length),
+      }),
+      ti("wizard", "skills.blockedByAllowlist", `Blocked by allowlist: ${blocked.length}`, {
+        count: String(blocked.length),
+      }),
     ].join("\n"),
-    "Skills status",
+    t("wizard", "skills.skillsStatus", "Skills status"),
   );
 
   const shouldConfigure = await prompter.confirm({
-    message: "Configure skills now? (recommended)",
+    message: t("wizard", "skills.configureNow", "Configure skills now? (recommended)"),
     initialValue: true,
   });
   if (!shouldConfigure) {
@@ -87,11 +96,11 @@ export async function setupSkills(
   let next: OpenClawConfig = cfg;
   if (installable.length > 0) {
     const toInstall = await prompter.multiselect({
-      message: "Install missing skill dependencies",
+      message: t("wizard", "skills.installDeps", "Install missing skill dependencies"),
       options: [
         {
           value: "__skip__",
-          label: "Skip for now",
+          label: t("wizard", "hooks.skipForNow", "Skip for now"),
           hint: "Continue without installing dependencies",
         },
         ...installable.map((skill) => ({
@@ -165,7 +174,9 @@ export async function setupSkills(
       if (!installId) {
         continue;
       }
-      const spin = prompter.progress(`Installing ${name}…`);
+      const spin = prompter.progress(
+        ti("wizard", "skills.installing", `Installing ${name}…`, { name }),
+      );
       const result = await installSkill({
         workspaceDir,
         skillName: target.name,
@@ -174,7 +185,13 @@ export async function setupSkills(
       });
       const warnings = result.warnings ?? [];
       if (result.ok) {
-        spin.stop(warnings.length > 0 ? `Installed ${name} (with warnings)` : `Installed ${name}`);
+        spin.stop(
+          warnings.length > 0
+            ? ti("wizard", "skills.installed", `Installed ${name} (with warnings)`, {
+                name: `${name} (with warnings)`,
+              })
+            : ti("wizard", "skills.installed", `Installed ${name}`, { name }),
+        );
         for (const warning of warnings) {
           runtime.log(warning);
         }
@@ -182,7 +199,14 @@ export async function setupSkills(
       }
       const code = result.code == null ? "" : ` (exit ${result.code})`;
       const detail = summarizeInstallFailure(result.message);
-      spin.stop(`Install failed: ${name}${code}${detail ? ` — ${detail}` : ""}`);
+      spin.stop(
+        ti(
+          "wizard",
+          "skills.installFailed",
+          `Install failed: ${name}${code}${detail ? ` — ${detail}` : ""}`,
+          { name, code, detail: detail ? ` — ${detail}` : "" },
+        ),
+      );
       for (const warning of warnings) {
         runtime.log(warning);
       }
@@ -192,7 +216,12 @@ export async function setupSkills(
         runtime.log(result.stdout.trim());
       }
       runtime.log(
-        `Tip: run \`${formatCliCommand("openclaw doctor")}\` to review skills + requirements.`,
+        ti(
+          "wizard",
+          "skills.installTip",
+          `Tip: run \`${formatCliCommand("openclaw doctor")}\` to review skills + requirements.`,
+          { cmd: formatCliCommand("openclaw doctor") },
+        ),
       );
       runtime.log("Docs: https://docs.openclaw.ai/skills");
     }
@@ -203,7 +232,10 @@ export async function setupSkills(
       continue;
     }
     const wantsKey = await prompter.confirm({
-      message: `Set ${skill.primaryEnv} for ${skill.name}?`,
+      message: ti("wizard", "skills.setEnvVar", `Set ${skill.primaryEnv} for ${skill.name}?`, {
+        envVar: skill.primaryEnv,
+        skill: skill.name,
+      }),
       initialValue: false,
     });
     if (!wantsKey) {
@@ -211,8 +243,11 @@ export async function setupSkills(
     }
     const apiKey = String(
       await prompter.text({
-        message: `Enter ${skill.primaryEnv}`,
-        validate: (value) => (value?.trim() ? undefined : "Required"),
+        message: ti("wizard", "skills.enterEnvVar", `Enter ${skill.primaryEnv}`, {
+          envVar: skill.primaryEnv,
+        }),
+        validate: (value) =>
+          value?.trim() ? undefined : t("wizard", "skills.envRequired", "Required"),
       }),
     );
     next = upsertSkillEntry(next, skill.skillKey, { apiKey: normalizeSecretInput(apiKey) });

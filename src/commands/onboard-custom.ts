@@ -4,6 +4,7 @@ import type { RuntimeEnv } from "../runtime.js";
 import type { WizardPrompter } from "../wizard/prompts.js";
 import { DEFAULT_PROVIDER } from "../agents/defaults.js";
 import { buildModelAliasIndex, modelKey } from "../agents/model-selection.js";
+import { t, ti } from "../i18n/index.js";
 import { fetchWithTimeout } from "../utils/fetch-timeout.js";
 import { applyPrimaryModel } from "./model-picker.js";
 import { normalizeAlias } from "./models/shared.js";
@@ -29,20 +30,20 @@ const COMPATIBILITY_OPTIONS: Array<{
 }> = [
   {
     value: "openai",
-    label: "OpenAI-compatible",
-    hint: "Uses /chat/completions",
+    label: t("wizard", "custom.openaiCompatible", "OpenAI-compatible"),
+    hint: t("wizard", "custom.openaiCompatibleHint", "Uses /chat/completions"),
     api: "openai-completions",
   },
   {
     value: "anthropic",
-    label: "Anthropic-compatible",
-    hint: "Uses /messages",
+    label: t("wizard", "custom.anthropicCompatible", "Anthropic-compatible"),
+    hint: t("wizard", "custom.anthropicCompatibleHint", "Uses /messages"),
     api: "anthropic-messages",
   },
   {
     value: "unknown",
-    label: "Unknown (detect automatically)",
-    hint: "Probes OpenAI then Anthropic endpoints",
+    label: t("wizard", "custom.unknownDetect", "Unknown (detect automatically)"),
+    hint: t("wizard", "custom.unknownDetectHint", "Probes OpenAI then Anthropic endpoints"),
   },
 ];
 
@@ -226,7 +227,7 @@ async function promptBaseUrlAndKey(params: {
   initialBaseUrl?: string;
 }): Promise<{ baseUrl: string; apiKey: string }> {
   const baseUrlInput = await params.prompter.text({
-    message: "API Base URL",
+    message: t("wizard", "custom.apiBaseUrl", "API Base URL"),
     initialValue: params.initialBaseUrl ?? DEFAULT_OLLAMA_BASE_URL,
     placeholder: "https://api.example.com/v1",
     validate: (val) => {
@@ -234,12 +235,12 @@ async function promptBaseUrlAndKey(params: {
         new URL(val);
         return undefined;
       } catch {
-        return "Please enter a valid URL (e.g. http://...)";
+        return t("wizard", "custom.invalidUrl", "Please enter a valid URL (e.g. http://...)");
       }
     },
   });
   const apiKeyInput = await params.prompter.text({
-    message: "API Key (leave blank if not required)",
+    message: t("wizard", "custom.apiKey", "API Key (leave blank if not required)"),
     placeholder: "sk-...",
     initialValue: "",
   });
@@ -258,7 +259,7 @@ export async function promptCustomApiConfig(params: {
   let apiKey = baseInput.apiKey;
 
   const compatibilityChoice = await prompter.select({
-    message: "Endpoint compatibility",
+    message: t("wizard", "custom.endpointCompatibility", "Endpoint compatibility"),
     options: COMPATIBILITY_OPTIONS.map((option) => ({
       value: option.value,
       label: option.label,
@@ -268,9 +269,10 @@ export async function promptCustomApiConfig(params: {
 
   let modelId = (
     await prompter.text({
-      message: "Model ID",
+      message: t("wizard", "custom.modelId", "Model ID"),
       placeholder: "e.g. llama3, claude-3-7-sonnet",
-      validate: (val) => (val.trim() ? undefined : "Model ID is required"),
+      validate: (val) =>
+        val.trim() ? undefined : t("wizard", "custom.modelIdRequired", "Model ID is required"),
     })
   ).trim();
 
@@ -283,32 +285,45 @@ export async function promptCustomApiConfig(params: {
   while (true) {
     let verifiedFromProbe = false;
     if (!compatibility) {
-      const probeSpinner = prompter.progress("Detecting endpoint type...");
+      const probeSpinner = prompter.progress(
+        t("wizard", "custom.detectingEndpoint", "Detecting endpoint type..."),
+      );
       const openaiProbe = await requestOpenAiVerification({ baseUrl, apiKey, modelId });
       if (openaiProbe.ok) {
-        probeSpinner.stop("Detected OpenAI-compatible endpoint.");
+        probeSpinner.stop(
+          t("wizard", "custom.detectedOpenai", "Detected OpenAI-compatible endpoint."),
+        );
         compatibility = "openai";
         providerApi = "openai-completions";
         verifiedFromProbe = true;
       } else {
         const anthropicProbe = await requestAnthropicVerification({ baseUrl, apiKey, modelId });
         if (anthropicProbe.ok) {
-          probeSpinner.stop("Detected Anthropic-compatible endpoint.");
+          probeSpinner.stop(
+            t("wizard", "custom.detectedAnthropic", "Detected Anthropic-compatible endpoint."),
+          );
           compatibility = "anthropic";
           providerApi = "anthropic-messages";
           verifiedFromProbe = true;
         } else {
-          probeSpinner.stop("Could not detect endpoint type.");
+          probeSpinner.stop(t("wizard", "custom.detectFailed", "Could not detect endpoint type."));
           await prompter.note(
-            "This endpoint did not respond to OpenAI or Anthropic style requests.",
-            "Endpoint detection",
+            t(
+              "wizard",
+              "custom.detectFailedNote",
+              "This endpoint did not respond to OpenAI or Anthropic style requests.",
+            ),
+            t("wizard", "custom.endpointDetection", "Endpoint detection"),
           );
           const retryChoice = await prompter.select({
-            message: "What would you like to change?",
+            message: t("wizard", "custom.whatToChange", "What would you like to change?"),
             options: [
-              { value: "baseUrl", label: "Change base URL" },
-              { value: "model", label: "Change model" },
-              { value: "both", label: "Change base URL and model" },
+              { value: "baseUrl", label: t("wizard", "custom.changeBaseUrl", "Change base URL") },
+              { value: "model", label: t("wizard", "custom.changeModel", "Change model") },
+              {
+                value: "both",
+                label: t("wizard", "custom.changeBoth", "Change base URL and model"),
+              },
             ],
           });
           if (retryChoice === "baseUrl" || retryChoice === "both") {
@@ -322,9 +337,12 @@ export async function promptCustomApiConfig(params: {
           if (retryChoice === "model" || retryChoice === "both") {
             modelId = (
               await prompter.text({
-                message: "Model ID",
+                message: t("wizard", "custom.modelId", "Model ID"),
                 placeholder: "e.g. llama3, claude-3-7-sonnet",
-                validate: (val) => (val.trim() ? undefined : "Model ID is required"),
+                validate: (val) =>
+                  val.trim()
+                    ? undefined
+                    : t("wizard", "custom.modelIdRequired", "Model ID is required"),
               })
             ).trim();
           }
@@ -337,26 +355,37 @@ export async function promptCustomApiConfig(params: {
       break;
     }
 
-    const verifySpinner = prompter.progress("Verifying...");
+    const verifySpinner = prompter.progress(t("wizard", "custom.verifying", "Verifying..."));
     const result =
       compatibility === "anthropic"
         ? await requestAnthropicVerification({ baseUrl, apiKey, modelId })
         : await requestOpenAiVerification({ baseUrl, apiKey, modelId });
     if (result.ok) {
-      verifySpinner.stop("Verification successful.");
+      verifySpinner.stop(t("wizard", "custom.verifySuccess", "Verification successful."));
       break;
     }
     if (result.status !== undefined) {
-      verifySpinner.stop(`Verification failed: status ${result.status}`);
+      verifySpinner.stop(
+        ti("wizard", "custom.verifyFailedStatus", `Verification failed: status ${result.status}`, {
+          status: String(result.status),
+        }),
+      );
     } else {
-      verifySpinner.stop(`Verification failed: ${formatVerificationError(result.error)}`);
+      verifySpinner.stop(
+        ti(
+          "wizard",
+          "custom.verifyFailedError",
+          `Verification failed: ${formatVerificationError(result.error)}`,
+          { error: formatVerificationError(result.error) },
+        ),
+      );
     }
     const retryChoice = await prompter.select({
-      message: "What would you like to change?",
+      message: t("wizard", "custom.whatToChange", "What would you like to change?"),
       options: [
-        { value: "baseUrl", label: "Change base URL" },
-        { value: "model", label: "Change model" },
-        { value: "both", label: "Change base URL and model" },
+        { value: "baseUrl", label: t("wizard", "custom.changeBaseUrl", "Change base URL") },
+        { value: "model", label: t("wizard", "custom.changeModel", "Change model") },
+        { value: "both", label: t("wizard", "custom.changeBoth", "Change base URL and model") },
       ],
     });
     if (retryChoice === "baseUrl" || retryChoice === "both") {
@@ -370,9 +399,10 @@ export async function promptCustomApiConfig(params: {
     if (retryChoice === "model" || retryChoice === "both") {
       modelId = (
         await prompter.text({
-          message: "Model ID",
+          message: t("wizard", "custom.modelId", "Model ID"),
           placeholder: "e.g. llama3, claude-3-7-sonnet",
-          validate: (val) => (val.trim() ? undefined : "Model ID is required"),
+          validate: (val) =>
+            val.trim() ? undefined : t("wizard", "custom.modelIdRequired", "Model ID is required"),
         })
       ).trim();
     }

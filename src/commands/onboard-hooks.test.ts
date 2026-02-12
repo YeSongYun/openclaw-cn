@@ -130,9 +130,9 @@ describe("onboard-hooks", () => {
       });
       expect(prompter.note).toHaveBeenCalledTimes(2);
       expect(prompter.multiselect).toHaveBeenCalledWith({
-        message: "Enable hooks?",
+        message: expect.stringMatching(/Enable hooks\?|启用 hooks？/),
         options: [
-          { value: "__skip__", label: "Skip for now" },
+          { value: "__skip__", label: expect.stringMatching(/Skip for now|暂时跳过/) },
           {
             value: "session-memory",
             label: "💾 session-memory",
@@ -174,8 +174,8 @@ describe("onboard-hooks", () => {
       expect(result).toEqual(cfg);
       expect(prompter.multiselect).not.toHaveBeenCalled();
       expect(prompter.note).toHaveBeenCalledWith(
-        "No eligible hooks found. You can configure hooks later in your config.",
-        "No Hooks Available",
+        expect.stringMatching(/No eligible hooks found|未找到可用的 hooks/),
+        expect.stringMatching(/No Hooks Available|无可用 Hooks/),
       );
     });
 
@@ -234,11 +234,13 @@ describe("onboard-hooks", () => {
       expect(noteCalls).toHaveLength(2);
 
       // First note should explain what hooks are
-      expect(noteCalls[0][0]).toContain("Hooks let you automate actions");
-      expect(noteCalls[0][0]).toContain("automate actions");
+      expect(noteCalls[0][0]).toMatch(/Hooks let you automate action|Hooks 让您/);
+      expect(noteCalls[0][0]).toMatch(/automate actions|自动执行操作/);
 
       // Second note should confirm configuration
-      expect(noteCalls[1][0]).toContain("Enabled 1 hook: session-memory");
+      expect(noteCalls[1][0]).toMatch(
+        /Enabled 1 hook: session-memory|已启用 1 个 hook：session-memory/,
+      );
       expect(noteCalls[1][0]).toMatch(/(?:openclaw|openclaw)( --profile isolated)? hooks list/);
     });
   });

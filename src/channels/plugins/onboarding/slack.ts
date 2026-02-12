@@ -55,7 +55,7 @@ function buildSlackManifest(botName: string) {
       slash_commands: [
         {
           command: "/openclaw",
-          description: "Send a message to OpenClaw",
+          description: "向 OpenClaw 发送消息",
           should_escape: false,
         },
       ],
@@ -425,14 +425,14 @@ export const slackOnboardingAdapter: ChannelOnboardingAdapter = {
     } else {
       botToken = String(
         await prompter.text({
-          message: "Enter Slack bot token (xoxb-...)",
-          validate: (value) => (value?.trim() ? undefined : "Required"),
+          message: "输入 Slack 机器人令牌 (xoxb-...)",
+          validate: (value) => (value?.trim() ? undefined : "必填"),
         }),
       ).trim();
       appToken = String(
         await prompter.text({
-          message: "Enter Slack app token (xapp-...)",
-          validate: (value) => (value?.trim() ? undefined : "Required"),
+          message: "输入 Slack 应用令牌 (xapp-...)",
+          validate: (value) => (value?.trim() ? undefined : "必填"),
         }),
       ).trim();
     }
@@ -520,10 +520,7 @@ export const slackOnboardingAdapter: ChannelOnboardingAdapter = {
               );
             }
           } catch (err) {
-            await prompter.note(
-              `频道查找失败；保留原始输入。${String(err)}`,
-              "Slack 频道",
-            );
+            await prompter.note(`频道查找失败；保留原始输入。${String(err)}`, "Slack 频道");
           }
         }
         next = setSlackGroupPolicy(next, slackAccountId, "allowlist");

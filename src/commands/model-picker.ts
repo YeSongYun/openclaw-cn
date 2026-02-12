@@ -11,6 +11,7 @@ import {
   normalizeProviderId,
   resolveConfiguredModelRef,
 } from "../agents/model-selection.js";
+import { t, ti } from "../i18n/index.js";
 import { formatTokenK } from "./models/shared.js";
 import { OPENAI_CODEX_DEFAULT_MODEL } from "./openai-codex-model-default.js";
 
@@ -89,10 +90,14 @@ async function promptManualModel(params: {
   initialValue?: string;
 }): Promise<PromptDefaultModelResult> {
   const modelInput = await params.prompter.text({
-    message: params.allowBlank ? "Default model (blank to keep)" : "Default model",
+    message: params.allowBlank
+      ? t("wizard", "model.defaultModelBlank", "Default model (blank to keep)")
+      : t("wizard", "model.defaultModel", "Default model"),
     initialValue: params.initialValue,
     placeholder: "provider/model",
-    validate: params.allowBlank ? undefined : (value) => (value?.trim() ? undefined : "Required"),
+    validate: params.allowBlank
+      ? undefined
+      : (value) => (value?.trim() ? undefined : t("wizard", "model.required", "Required")),
   });
   const model = String(modelInput ?? "").trim();
   if (!model) {
@@ -162,9 +167,9 @@ export async function promptDefaultModel(
     !hasPreferredProvider && providers.length > 1 && models.length > PROVIDER_FILTER_THRESHOLD;
   if (shouldPromptProvider) {
     const selection = await params.prompter.select({
-      message: "Filter models by provider",
+      message: t("wizard", "model.filterByProvider", "Filter models by provider"),
       options: [
-        { value: "*", label: "All providers" },
+        { value: "*", label: t("wizard", "model.allProviders", "All providers") },
         ...providers.map((provider) => {
           const count = models.filter((entry) => entry.provider === provider).length;
           return {
@@ -203,14 +208,19 @@ export async function promptDefaultModel(
     options.push({
       value: KEEP_VALUE,
       label: configuredRaw
-        ? `Keep current (${configuredRaw})`
-        : `Keep current (default: ${resolvedKey})`,
+        ? ti("wizard", "model.keepCurrent", "Keep current ({model})", { model: configuredRaw })
+        : ti("wizard", "model.keepCurrentDefault", "Keep current (default: {model})", {
+            model: resolvedKey,
+          }),
       hint:
         configuredRaw && configuredRaw !== resolvedKey ? `resolves to ${resolvedKey}` : undefined,
     });
   }
   if (includeManual) {
-    options.push({ value: MANUAL_VALUE, label: "Enter model manually" });
+    options.push({
+      value: MANUAL_VALUE,
+      label: t("wizard", "model.enterManually", "Enter model manually"),
+    });
   }
 
   const seen = new Set<string>();
@@ -280,7 +290,7 @@ export async function promptDefaultModel(
   }
 
   const selection = await params.prompter.select({
-    message: params.message ?? "Default model",
+    message: params.message ?? t("wizard", "model.defaultModel", "Default model"),
     options,
     initialValue,
   });
@@ -330,7 +340,11 @@ export async function promptModelAllowlist(params: {
     const raw = await params.prompter.text({
       message:
         params.message ??
-        "Allowlist models (comma-separated provider/model; blank to keep current)",
+        t(
+          "wizard",
+          "model.allowlistModels",
+          "Allowlist models (comma-separated provider/model; blank to keep current)",
+        ),
       initialValue: existingKeys.join(", "),
       placeholder: `${OPENAI_CODEX_DEFAULT_MODEL}, anthropic/claude-opus-4-6`,
     });
@@ -429,7 +443,9 @@ export async function promptModelAllowlist(params: {
   }
 
   const selection = await params.prompter.multiselect({
-    message: params.message ?? "Models in /model picker (multi-select)",
+    message:
+      params.message ??
+      t("wizard", "model.modelsInPicker", "Models in /model picker (multi-select)"),
     options,
     initialValues: initialKeys.length > 0 ? initialKeys : undefined,
   });
@@ -441,7 +457,7 @@ export async function promptModelAllowlist(params: {
     return { models: [] };
   }
   const confirmClear = await params.prompter.confirm({
-    message: "Clear the model allowlist? (shows all models)",
+    message: t("wizard", "model.clearAllowlist", "Clear the model allowlist? (shows all models)"),
     initialValue: false,
   });
   if (!confirmClear) {

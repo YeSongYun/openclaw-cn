@@ -177,7 +177,10 @@ describe("runOnboardingWizard", () => {
     await fs.writeFile(path.join(workspaceDir, DEFAULT_BOOTSTRAP_FILENAME), "{}");
 
     const select: WizardPrompter["select"] = vi.fn(async (opts) => {
-      if (opts.message === "How do you want to hatch your bot?") {
+      if (
+        opts.message === "How do you want to hatch your bot?" ||
+        opts.message === "您想如何孵化您的机器人？"
+      ) {
         return "tui";
       }
       return "quickstart";
@@ -234,7 +237,10 @@ describe("runOnboardingWizard", () => {
     const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-onboard-"));
 
     const select: WizardPrompter["select"] = vi.fn(async (opts) => {
-      if (opts.message === "How do you want to hatch your bot?") {
+      if (
+        opts.message === "How do you want to hatch your bot?" ||
+        opts.message === "您想如何孵化您的机器人？"
+      ) {
         return "tui";
       }
       return "quickstart";
@@ -325,7 +331,11 @@ describe("runOnboardingWizard", () => {
 
       const calls = (note as unknown as { mock: { calls: unknown[][] } }).mock.calls;
       expect(calls.length).toBeGreaterThan(0);
-      expect(calls.some((call) => call?.[1] === "Web search (optional)")).toBe(true);
+      expect(
+        calls.some(
+          (call) => call?.[1] === "Web search (optional)" || call?.[1] === "网络搜索（可选）",
+        ),
+      ).toBe(true);
     } finally {
       if (prevBraveKey === undefined) {
         delete process.env.BRAVE_API_KEY;

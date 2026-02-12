@@ -4,6 +4,7 @@ import type { WizardPrompter } from "../wizard/prompts.js";
 import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "../agents/agent-scope.js";
 import { formatCliCommand } from "../cli/command-format.js";
 import { buildWorkspaceHookStatus } from "../hooks/hooks-status.js";
+import { t, ti } from "../i18n/index.js";
 
 export async function setupInternalHooks(
   cfg: OpenClawConfig,
@@ -12,12 +13,16 @@ export async function setupInternalHooks(
 ): Promise<OpenClawConfig> {
   await prompter.note(
     [
-      "Hooks let you automate actions when agent commands are issued.",
-      "Example: Save session context to memory when you issue /new.",
+      t(
+        "wizard",
+        "hooks.description",
+        "Hooks let you automate actions when agent commands are issued.",
+      ),
+      t("wizard", "hooks.example", "Example: Save session context to memory when you issue /new."),
       "",
       "Learn more: https://docs.openclaw.ai/hooks",
     ].join("\n"),
-    "Hooks",
+    t("wizard", "hooks.title", "Hooks"),
   );
 
   // Discover available hooks using the hook discovery system
@@ -29,16 +34,20 @@ export async function setupInternalHooks(
 
   if (eligibleHooks.length === 0) {
     await prompter.note(
-      "No eligible hooks found. You can configure hooks later in your config.",
-      "No Hooks Available",
+      t(
+        "wizard",
+        "hooks.noEligible",
+        "No eligible hooks found. You can configure hooks later in your config.",
+      ),
+      t("wizard", "hooks.noEligibleTitle", "No Hooks Available"),
     );
     return cfg;
   }
 
   const toEnable = await prompter.multiselect({
-    message: "Enable hooks?",
+    message: t("wizard", "hooks.enableHooks", "Enable hooks?"),
     options: [
-      { value: "__skip__", label: "Skip for now" },
+      { value: "__skip__", label: t("wizard", "hooks.skipForNow", "Skip for now") },
       ...eligibleHooks.map((hook) => ({
         value: hook.name,
         label: `${hook.emoji ?? "🔗"} ${hook.name}`,
@@ -71,14 +80,19 @@ export async function setupInternalHooks(
 
   await prompter.note(
     [
-      `Enabled ${selected.length} hook${selected.length > 1 ? "s" : ""}: ${selected.join(", ")}`,
+      ti(
+        "wizard",
+        "hooks.enabledCount",
+        `Enabled ${selected.length} hook${selected.length > 1 ? "s" : ""}: ${selected.join(", ")}`,
+        { count: String(selected.length), names: selected.join(", ") },
+      ),
       "",
-      "You can manage hooks later with:",
+      t("wizard", "hooks.manageLater", "You can manage hooks later with:"),
       `  ${formatCliCommand("openclaw hooks list")}`,
       `  ${formatCliCommand("openclaw hooks enable <name>")}`,
       `  ${formatCliCommand("openclaw hooks disable <name>")}`,
     ].join("\n"),
-    "Hooks Configured",
+    t("wizard", "hooks.configured", "Hooks Configured"),
   );
 
   return next;

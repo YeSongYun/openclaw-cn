@@ -352,8 +352,8 @@ export const discordOnboardingAdapter: ChannelOnboardingAdapter = {
     } else {
       token = String(
         await prompter.text({
-          message: "Enter Discord bot token",
-          validate: (value) => (value?.trim() ? undefined : "Required"),
+          message: "输入 Discord 机器人令牌",
+          validate: (value) => (value?.trim() ? undefined : "必填"),
         }),
       ).trim();
     }
@@ -456,10 +456,7 @@ export const discordOnboardingAdapter: ChannelOnboardingAdapter = {
               await prompter.note(summary.join("\n"), "Discord 频道");
             }
           } catch (err) {
-            await prompter.note(
-              `频道查找失败；保留原始输入。${String(err)}`,
-              "Discord 频道",
-            );
+            await prompter.note(`频道查找失败；保留原始输入。${String(err)}`, "Discord 频道");
           }
         }
         const allowlistEntries: Array<{ guildKey: string; channelKey?: string }> = [];

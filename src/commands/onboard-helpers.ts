@@ -12,6 +12,7 @@ import { resolveSessionTranscriptsDirForAgent } from "../config/sessions.js";
 import { callGateway } from "../gateway/call.js";
 import { normalizeControlUiBasePath } from "../gateway/control-ui-shared.js";
 import { pickPrimaryLanIPv4, isValidIPv4 } from "../gateway/net.js";
+import { t } from "../i18n/index.js";
 import { isSafeExecutableValue } from "../infra/exec-safety.js";
 import { pickPrimaryTailnetIPv4 } from "../infra/tailnet.js";
 import { isWSL } from "../infra/wsl.js";
@@ -29,7 +30,10 @@ import { VERSION } from "../version.js";
 
 export function guardCancel<T>(value: T | symbol, runtime: RuntimeEnv): T {
   if (isCancel(value)) {
-    cancel(stylePromptTitle("Setup cancelled.") ?? "Setup cancelled.");
+    cancel(
+      stylePromptTitle(t("wizard", "helpers.setupCancelled", "Setup cancelled.")) ??
+        t("wizard", "helpers.setupCancelled", "Setup cancelled."),
+    );
     runtime.exit(0);
   }
   return value;
@@ -62,7 +66,9 @@ export function summarizeExistingConfig(config: OpenClawConfig): string {
   if (config.skills?.install?.nodeManager) {
     rows.push(shortenHomeInString(`skills.nodeManager: ${config.skills.install.nodeManager}`));
   }
-  return rows.length ? rows.join("\n") : "No key settings detected.";
+  return rows.length
+    ? rows.join("\n")
+    : t("wizard", "helpers.noKeySettings", "No key settings detected.");
 }
 
 export function randomToken(): string {

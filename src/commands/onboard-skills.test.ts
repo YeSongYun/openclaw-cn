@@ -44,7 +44,7 @@ function createPrompter(params: {
     multiselect: vi.fn(async () => params.multiselect ?? ["__skip__"]),
     text: vi.fn(async () => ""),
     confirm: vi.fn(async ({ message }) => {
-      if (message === "Show Homebrew install command?") {
+      if (message === "Show Homebrew install command?" || message === "显示 Homebrew 安装命令？") {
         return params.showBrewInstall ?? false;
       }
       return confirmAnswers.shift() ?? false;
@@ -124,10 +124,13 @@ describe("setupSkills", () => {
     await setupSkills({} as OpenClawConfig, "/tmp/ws", runtime, prompter);
 
     // OS-mismatched skill should be counted as unsupported, not installable/missing.
-    const status = notes.find((n) => n.title === "Skills status")?.message ?? "";
-    expect(status).toContain("Unsupported on this OS: 1");
+    const status =
+      notes.find((n) => n.title === "Skills status" || n.title === "技能状态")?.message ?? "";
+    expect(status).toMatch(/Unsupported on this OS: 1|此操作系统不支持：1/);
 
-    const brewNote = notes.find((n) => n.title === "Homebrew recommended");
+    const brewNote = notes.find(
+      (n) => n.title === "Homebrew recommended" || n.title === "推荐安装 Homebrew",
+    );
     expect(brewNote).toBeUndefined();
   });
 
@@ -171,7 +174,9 @@ describe("setupSkills", () => {
     const { prompter, notes } = createPrompter({ multiselect: ["video-frames"] });
     await setupSkills({} as OpenClawConfig, "/tmp/ws", runtime, prompter);
 
-    const brewNote = notes.find((n) => n.title === "Homebrew recommended");
+    const brewNote = notes.find(
+      (n) => n.title === "Homebrew recommended" || n.title === "推荐安装 Homebrew",
+    );
     expect(brewNote).toBeDefined();
   });
 });

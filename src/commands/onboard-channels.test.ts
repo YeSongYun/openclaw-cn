@@ -47,7 +47,10 @@ describe("setupChannels", () => {
       throw new Error("unexpected multiselect");
     });
     const text = vi.fn(async ({ message }: { message: string }) => {
-      if (message.includes("Enter Telegram bot token")) {
+      if (
+        message.includes("Enter Telegram bot token") ||
+        message.includes("输入 Telegram 机器人令牌")
+      ) {
         throw new Error("unexpected Telegram token prompt");
       }
       if (message.includes("你的个人 WhatsApp 号码")) {
@@ -82,17 +85,19 @@ describe("setupChannels", () => {
     });
 
     expect(select).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Select channel (QuickStart)" }),
+      expect.objectContaining({
+        message: expect.stringMatching(/Select channel \(QuickStart\)|选择频道（快速开始）/),
+      }),
     );
     expect(multiselect).not.toHaveBeenCalled();
   });
 
   it("prompts for configured channel action and skips configuration when told to skip", async () => {
     const select = vi.fn(async ({ message }: { message: string }) => {
-      if (message === "Select channel (QuickStart)") {
+      if (message === "Select channel (QuickStart)" || message === "选择频道（快速开始）") {
         return "telegram";
       }
-      if (message.includes("already configured")) {
+      if (message.includes("already configured") || message.includes("已配置")) {
         return "skip";
       }
       throw new Error(`unexpected select prompt: ${message}`);
@@ -140,10 +145,12 @@ describe("setupChannels", () => {
     );
 
     expect(select).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Select channel (QuickStart)" }),
+      expect.objectContaining({
+        message: expect.stringMatching(/Select channel \(QuickStart\)|选择频道（快速开始）/),
+      }),
     );
     expect(select).toHaveBeenCalledWith(
-      expect.objectContaining({ message: expect.stringContaining("already configured") }),
+      expect.objectContaining({ message: expect.stringMatching(/already configured|已配置/) }),
     );
     expect(multiselect).not.toHaveBeenCalled();
     expect(text).not.toHaveBeenCalled();
@@ -152,14 +159,14 @@ describe("setupChannels", () => {
   it("adds disabled hint to channel selection when a channel is disabled", async () => {
     let selectionCount = 0;
     const select = vi.fn(async ({ message, options }: { message: string; options: unknown[] }) => {
-      if (message === "Select a channel") {
+      if (message === "Select a channel" || message === "选择一个频道") {
         selectionCount += 1;
         const opts = options as Array<{ value: string; hint?: string }>;
         const telegram = opts.find((opt) => opt.value === "telegram");
         expect(telegram?.hint).toContain("disabled");
         return selectionCount === 1 ? "telegram" : "__done__";
       }
-      if (message.includes("already configured")) {
+      if (message.includes("already configured") || message.includes("已配置")) {
         return "skip";
       }
       return "__done__";
@@ -202,7 +209,9 @@ describe("setupChannels", () => {
       },
     );
 
-    expect(select).toHaveBeenCalledWith(expect.objectContaining({ message: "Select a channel" }));
+    expect(select).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringMatching(/Select a channel|选择一个频道/) }),
+    );
     expect(multiselect).not.toHaveBeenCalled();
   });
 });

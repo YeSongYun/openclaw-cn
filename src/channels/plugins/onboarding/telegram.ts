@@ -294,8 +294,8 @@ export const telegramOnboardingAdapter: ChannelOnboardingAdapter = {
     } else {
       token = String(
         await prompter.text({
-          message: "Enter Telegram bot token",
-          validate: (value) => (value?.trim() ? undefined : "Required"),
+          message: "输入 Telegram 机器人令牌",
+          validate: (value) => (value?.trim() ? undefined : "必填"),
         }),
       ).trim();
     }

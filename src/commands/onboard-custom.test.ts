@@ -164,8 +164,8 @@ describe("promptCustomApiConfig", () => {
     });
 
     expect(prompter.note).toHaveBeenCalledWith(
-      expect.stringContaining("did not respond"),
-      "Endpoint detection",
+      expect.stringMatching(/did not respond|未响应/),
+      expect.stringMatching(/Endpoint detection|端点检测/),
     );
   });
 
