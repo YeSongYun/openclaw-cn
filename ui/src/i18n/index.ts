@@ -15,7 +15,7 @@ export async function initI18n(locale?: string): Promise<void> {
   currentLocale = locale ?? detectLocale();
   try {
     const basePath =
-      ((window as unknown as Record<string, unknown>).__CLAWDBOT_CONTROL_UI_BASE_PATH__ as
+      ((window as unknown as Record<string, unknown>).__OPENCLAW_CONTROL_UI_BASE_PATH__ as
         | string
         | undefined) ?? "";
     const response = await fetch(`${basePath}/locales/${currentLocale}/ui.json`);
@@ -31,7 +31,7 @@ export async function initI18n(locale?: string): Promise<void> {
  * 检测语言：优先使用后端注入的 locale
  */
 function detectLocale(): string {
-  const injected = (window as unknown as Record<string, unknown>).__CLAWDBOT_LOCALE__;
+  const injected = (window as unknown as Record<string, unknown>).__OPENCLAW_LOCALE__;
   if (typeof injected === "string" && injected) {
     return injected;
   }
