@@ -43,6 +43,12 @@ const AUTH_CHOICE_GROUP_DEFS: {
   choices: AuthChoice[];
 }[] = [
   {
+    value: "dmxapi",
+    label: "DMXAPI",
+    hint: "Claude 代理 (v1/messages)",
+    choices: ["dmxapi-api-key"],
+  },
+  {
     value: "openai",
     label: "OpenAI",
     hint: "Codex OAuth + API key",
@@ -53,12 +59,6 @@ const AUTH_CHOICE_GROUP_DEFS: {
     label: "Anthropic",
     hint: "setup-token + API key",
     choices: ["token", "apiKey"],
-  },
-  {
-    value: "dmxapi",
-    label: "DMXAPI",
-    hint: "Claude 代理 (v1/messages)",
-    choices: ["dmxapi-api-key"],
   },
   {
     value: "minimax",
