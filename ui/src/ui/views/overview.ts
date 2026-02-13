@@ -27,8 +27,12 @@ export function renderOverview(props: OverviewProps) {
   const snapshot = props.hello?.snapshot as
     | { uptimeMs?: number; policy?: { tickIntervalMs?: number } }
     | undefined;
-  const uptime = snapshot?.uptimeMs ? formatDurationHuman(snapshot.uptimeMs) : "n/a";
-  const tick = snapshot?.policy?.tickIntervalMs ? `${snapshot.policy.tickIntervalMs}ms` : "n/a";
+  const uptime = snapshot?.uptimeMs
+    ? formatDurationHuman(snapshot.uptimeMs)
+    : t("common.na", "n/a");
+  const tick = snapshot?.policy?.tickIntervalMs
+    ? `${snapshot.policy.tickIntervalMs}ms`
+    : t("common.na", "n/a");
   const authHint = (() => {
     if (props.connected || !props.lastError) {
       return null;
@@ -157,7 +161,7 @@ export function renderOverview(props: OverviewProps) {
                 const v = (e.target as HTMLInputElement).value;
                 props.onPasswordChange(v);
               }}
-              placeholder="system or shared password"
+              placeholder="${t("overview.passwordPlaceholder", "system or shared password")}"
             />
           </label>
           <label class="field">
@@ -199,7 +203,7 @@ export function renderOverview(props: OverviewProps) {
           <div class="stat">
             <div class="stat-label">${t("overview.lastChannelsRefresh", "Last Channels Refresh")}</div>
             <div class="stat-value">
-              ${props.lastChannelsRefresh ? formatRelativeTimestamp(props.lastChannelsRefresh) : "n/a"}
+              ${props.lastChannelsRefresh ? formatRelativeTimestamp(props.lastChannelsRefresh) : t("common.na", "n/a")}
             </div>
           </div>
         </div>
@@ -227,13 +231,13 @@ export function renderOverview(props: OverviewProps) {
       </div>
       <div class="card stat-card">
         <div class="stat-label">${t("sessions.title", "Sessions")}</div>
-        <div class="stat-value">${props.sessionsCount ?? "n/a"}</div>
+        <div class="stat-value">${props.sessionsCount ?? t("common.na", "n/a")}</div>
         <div class="muted">${t("overview.sessionsDesc", "Recent session keys tracked by the gateway.")}</div>
       </div>
       <div class="card stat-card">
         <div class="stat-label">${t("cron.title", "Cron")}</div>
         <div class="stat-value">
-          ${props.cronEnabled == null ? "n/a" : props.cronEnabled ? t("cron.enabled", "Enabled") : t("cron.disabled", "Disabled")}
+          ${props.cronEnabled == null ? t("common.na", "n/a") : props.cronEnabled ? t("cron.enabled", "Enabled") : t("cron.disabled", "Disabled")}
         </div>
         <div class="muted">${t("cron.nextWake", "Next wake")} ${formatNextRun(props.cronNext)}</div>
       </div>

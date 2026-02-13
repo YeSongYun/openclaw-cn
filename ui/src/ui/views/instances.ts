@@ -1,6 +1,6 @@
 import { html, nothing } from "lit";
 import type { PresenceEntry } from "../types.ts";
-import { t } from "../../i18n/index.ts";
+import { t, ti } from "../../i18n/index.ts";
 import { formatPresenceAge, formatPresenceSummary } from "../presenter.ts";
 
 export type InstancesProps = {
@@ -52,15 +52,17 @@ export function renderInstances(props: InstancesProps) {
 
 function renderEntry(entry: PresenceEntry) {
   const lastInput =
-    entry.lastInputSeconds != null ? `${entry.lastInputSeconds}s ago` : t("common.na", "n/a");
+    entry.lastInputSeconds != null
+      ? ti("instances.lastInputAgo", "{n} 秒前", { n: entry.lastInputSeconds })
+      : t("common.na", "n/a");
   const mode = entry.mode ?? t("common.unknown", "unknown");
   const roles = Array.isArray(entry.roles) ? entry.roles.filter(Boolean) : [];
   const scopes = Array.isArray(entry.scopes) ? entry.scopes.filter(Boolean) : [];
   const scopesLabel =
     scopes.length > 0
       ? scopes.length > 3
-        ? `${scopes.length} scopes`
-        : `scopes: ${scopes.join(", ")}`
+        ? ti("instances.scopeCount", "{n} scopes", { n: scopes.length })
+        : `${t("instances.scopesLabel", "scopes")}: ${scopes.join(", ")}`
       : null;
   return html`
     <div class="list-item">

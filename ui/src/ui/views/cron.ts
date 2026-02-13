@@ -46,7 +46,7 @@ function buildChannelOptions(props: CronProps): string[] {
 
 function resolveChannelLabel(props: CronProps, channel: string): string {
   if (channel === "last") {
-    return "last";
+    return t("cron.lastChannel", "last");
   }
   const meta = props.channelMeta?.find((entry) => entry.id === channel);
   if (meta?.label) {
@@ -71,12 +71,12 @@ export function renderCron(props: CronProps) {
           <div class="stat">
             <div class="stat-label">${t("cron.enabledLabel", "Enabled")}</div>
             <div class="stat-value">
-              ${props.status ? (props.status.enabled ? t("cron.yes", "Yes") : t("cron.no", "No")) : "n/a"}
+              ${props.status ? (props.status.enabled ? t("cron.yes", "Yes") : t("cron.no", "No")) : t("common.na", "n/a")}
             </div>
           </div>
           <div class="stat">
             <div class="stat-label">${t("cron.jobs", "Jobs")}</div>
-            <div class="stat-value">${props.status?.jobs ?? "n/a"}</div>
+            <div class="stat-value">${props.status?.jobs ?? t("common.na", "n/a")}</div>
           </div>
           <div class="stat">
             <div class="stat-label">${t("cron.nextWake", "Next wake")}</div>
@@ -117,7 +117,7 @@ export function renderCron(props: CronProps) {
               .value=${props.form.agentId}
               @input=${(e: Event) =>
                 props.onFormChange({ agentId: (e.target as HTMLInputElement).value })}
-              placeholder="default"
+              placeholder="${t("cron.defaultPlaceholder", "default")}"
             />
           </label>
           <label class="field checkbox">
@@ -461,7 +461,7 @@ function renderJobPayload(job: CronJob) {
   const delivery = job.delivery;
   const deliveryTarget =
     delivery?.channel || delivery?.to
-      ? ` (${delivery.channel ?? "last"}${delivery.to ? ` -> ${delivery.to}` : ""})`
+      ? ` (${delivery.channel ?? t("cron.lastChannel", "last")}${delivery.to ? ` -> ${delivery.to}` : ""})`
       : "";
 
   return html`
@@ -482,13 +482,13 @@ function renderJobPayload(job: CronJob) {
 
 function formatStateRelative(ms?: number) {
   if (typeof ms !== "number" || !Number.isFinite(ms)) {
-    return "n/a";
+    return t("common.na", "n/a");
   }
   return formatRelativeTimestamp(ms);
 }
 
 function renderJobState(job: CronJob) {
-  const status = job.state?.lastStatus ?? "n/a";
+  const status = job.state?.lastStatus ?? t("common.na", "n/a");
   const statusClass =
     status === "ok"
       ? "cron-job-status-ok"
