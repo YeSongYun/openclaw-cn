@@ -2,6 +2,12 @@
 
 Docs: https://docs.openclaw.ai
 
+## 1.1.8
+
+### Changes
+
+- DMXAPI: 更新默认模型为 claude-opus-4-6，扩展内置模型列表至 11 个
+
 ## 1.1.7
 
 ### Added
