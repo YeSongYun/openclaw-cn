@@ -2,6 +2,12 @@
 
 Docs: https://docs.openclaw.ai
 
+## 1.1.9
+
+### Added
+
+- i18n: 补全 Web UI 约 40 处硬编码英文字符串的汉化（34 个新翻译 key，11 个文件）
+
 ## 1.1.8
 
 ### Changes

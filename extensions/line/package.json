@@ -1,6 +1,6 @@
 {
   "name": "@openclaw/line",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "private": true,
   "description": "OpenClaw LINE channel plugin",
   "type": "module",
