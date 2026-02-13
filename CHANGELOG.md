@@ -2,6 +2,16 @@
 
 Docs: https://docs.openclaw.ai
 
+## 1.2.0
+
+### Changes
+
+- UI: 将 DMXAPI 移至模型提供商列表首位，方便快速选择
+
+### Fixes
+
+- i18n: 修复 Web UI 中文翻译不生效
+
 ## 1.1.9
 
 ### Added
