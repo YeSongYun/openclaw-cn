@@ -1,6 +1,5 @@
 import { html, nothing } from "lit";
 import type { GatewaySessionRow, SessionsListResult } from "../types.ts";
-import { t } from "../../i18n/index.ts";
 import { formatRelativeTimestamp } from "../format.ts";
 import { pathForTab } from "../navigation.ts";
 import { formatSessionTokens } from "../presenter.ts";
@@ -35,14 +34,12 @@ export type SessionsProps = {
 
 const THINK_LEVELS = ["", "off", "minimal", "low", "medium", "high", "xhigh"] as const;
 const BINARY_THINK_LEVELS = ["", "off", "on"] as const;
-function getVerboseLevels() {
-  return [
-    { value: "", label: t("sessions.inherit", "inherit") },
-    { value: "off", label: t("sessions.offExplicit", "off (explicit)") },
-    { value: "on", label: t("sessions.on", "on") },
-    { value: "full", label: t("sessions.full", "full") },
-  ];
-}
+const VERBOSE_LEVELS = [
+  { value: "", label: "inherit" },
+  { value: "off", label: "off (explicit)" },
+  { value: "on", label: "on" },
+  { value: "full", label: "full" },
+] as const;
 const REASONING_LEVELS = ["", "off", "on", "stream"] as const;
 
 function normalizeProviderId(provider?: string | null): string {
@@ -116,17 +113,17 @@ export function renderSessions(props: SessionsProps) {
     <section class="card">
       <div class="row" style="justify-content: space-between;">
         <div>
-          <div class="card-title">${t("sessions.title", "Sessions")}</div>
-          <div class="card-sub">${t("sessions.activeSessions.sub", "Active session keys and per-session overrides.")}</div>
+          <div class="card-title">Sessions</div>
+          <div class="card-sub">Active session keys and per-session overrides.</div>
         </div>
         <button class="btn" ?disabled=${props.loading} @click=${props.onRefresh}>
-          ${props.loading ? t("common.loading", "Loading…") : t("common.refresh", "Refresh")}
+          ${props.loading ? "Loading…" : "Refresh"}
         </button>
       </div>
 
       <div class="filters" style="margin-top: 14px;">
         <label class="field">
-          <span>${t("sessions.activeWithin", "Active within (minutes)")}</span>
+          <span>Active within (minutes)</span>
           <input
             .value=${props.activeMinutes}
             @input=${(e: Event) =>
@@ -139,7 +136,7 @@ export function renderSessions(props: SessionsProps) {
           />
         </label>
         <label class="field">
-          <span>${t("sessions.limit", "Limit")}</span>
+          <span>Limit</span>
           <input
             .value=${props.limit}
             @input=${(e: Event) =>
@@ -152,7 +149,7 @@ export function renderSessions(props: SessionsProps) {
           />
         </label>
         <label class="field checkbox">
-          <span>${t("sessions.includeGlobal", "Include global")}</span>
+          <span>Include global</span>
           <input
             type="checkbox"
             .checked=${props.includeGlobal}
@@ -166,7 +163,7 @@ export function renderSessions(props: SessionsProps) {
           />
         </label>
         <label class="field checkbox">
-          <span>${t("sessions.includeUnknown", "Include unknown")}</span>
+          <span>Include unknown</span>
           <input
             type="checkbox"
             .checked=${props.includeUnknown}
@@ -188,25 +185,25 @@ export function renderSessions(props: SessionsProps) {
       }
 
       <div class="muted" style="margin-top: 12px;">
-        ${props.result ? `${t("sessions.store", "Store")}: ${props.result.path}` : ""}
+        ${props.result ? `Store: ${props.result.path}` : ""}
       </div>
 
       <div class="table" style="margin-top: 16px;">
         <div class="table-head">
-          <div>${t("sessions.col.key", "Key")}</div>
-          <div>${t("sessions.col.label", "Label")}</div>
-          <div>${t("sessions.col.kind", "Kind")}</div>
-          <div>${t("sessions.col.updated", "Updated")}</div>
-          <div>${t("sessions.col.tokens", "Tokens")}</div>
-          <div>${t("sessions.col.thinking", "Thinking")}</div>
-          <div>${t("sessions.col.verbose", "Verbose")}</div>
-          <div>${t("sessions.col.reasoning", "Reasoning")}</div>
-          <div>${t("common.actions", "Actions")}</div>
+          <div>Key</div>
+          <div>Label</div>
+          <div>Kind</div>
+          <div>Updated</div>
+          <div>Tokens</div>
+          <div>Thinking</div>
+          <div>Verbose</div>
+          <div>Reasoning</div>
+          <div>Actions</div>
         </div>
         ${
           rows.length === 0
             ? html`
-                <div class="muted">${t("sessions.noSessions", "No sessions found.")}</div>
+                <div class="muted">No sessions found.</div>
               `
             : rows.map((row) =>
                 renderRow(row, props.basePath, props.onPatch, props.onDelete, props.loading),
@@ -230,7 +227,7 @@ function renderRow(
   const thinking = resolveThinkLevelDisplay(rawThinking, isBinaryThinking);
   const thinkLevels = withCurrentOption(resolveThinkLevelOptions(row.modelProvider), thinking);
   const verbose = row.verboseLevel ?? "";
-  const verboseLevels = withCurrentLabeledOption(getVerboseLevels(), verbose);
+  const verboseLevels = withCurrentLabeledOption(VERBOSE_LEVELS, verbose);
   const reasoning = row.reasoningLevel ?? "";
   const reasoningLevels = withCurrentOption(REASONING_LEVELS, reasoning);
   const displayName =
@@ -277,7 +274,7 @@ function renderRow(
           ${thinkLevels.map(
             (level) =>
               html`<option value=${level} ?selected=${thinking === level}>
-                ${level || t("sessions.inherit", "inherit")}
+                ${level || "inherit"}
               </option>`,
           )}
         </select>
@@ -309,14 +306,14 @@ function renderRow(
           ${reasoningLevels.map(
             (level) =>
               html`<option value=${level} ?selected=${reasoning === level}>
-                ${level || t("sessions.inherit", "inherit")}
+                ${level || "inherit"}
               </option>`,
           )}
         </select>
       </div>
       <div>
         <button class="btn danger" ?disabled=${disabled} @click=${() => onDelete(row.key)}>
-          ${t("sessions.delete", "Delete")}
+          Delete
         </button>
       </div>
     </div>

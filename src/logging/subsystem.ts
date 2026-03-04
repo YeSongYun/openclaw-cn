@@ -1,18 +1,18 @@
 import type { Logger as TsLogger } from "tslog";
 import { Chalk } from "chalk";
-import { CHAT_CHANNEL_ORDER } from "../channels/registry.js";
 import { isVerbose } from "../globals.js";
 import { defaultRuntime, type RuntimeEnv } from "../runtime.js";
 import { clearActiveProgressLine } from "../terminal/progress-line.js";
 import { getConsoleSettings, shouldLogSubsystemToConsole } from "./console.js";
 import { type LogLevel, levelToMinLevel } from "./levels.js";
-import { getChildLogger } from "./logger.js";
+import { getChildLogger, isFileLogLevelEnabled } from "./logger.js";
 import { loggingState } from "./state.js";
 
 type LogObj = { date?: Date } & Record<string, unknown>;
 
 export type SubsystemLogger = {
   subsystem: string;
+  isEnabled: (level: LogLevel, target?: "any" | "console" | "file") => boolean;
   trace: (message: string, meta?: Record<string, unknown>) => void;
   debug: (message: string, meta?: Record<string, unknown>) => void;
   info: (message: string, meta?: Record<string, unknown>) => void;
@@ -33,6 +33,39 @@ function shouldLogToConsole(level: LogLevel, settings: { level: LogLevel }): boo
 }
 
 type ChalkInstance = InstanceType<typeof Chalk>;
+
+const inspectValue: ((value: unknown) => string) | null = (() => {
+  const getBuiltinModule = (
+    process as NodeJS.Process & {
+      getBuiltinModule?: (id: string) => unknown;
+    }
+  ).getBuiltinModule;
+  if (typeof getBuiltinModule !== "function") {
+    return null;
+  }
+  try {
+    const utilNamespace = getBuiltinModule("util") as {
+      inspect?: (value: unknown) => string;
+    };
+    return typeof utilNamespace.inspect === "function" ? utilNamespace.inspect : null;
+  } catch {
+    return null;
+  }
+})();
+
+function formatRuntimeArg(arg: unknown): string {
+  if (typeof arg === "string") {
+    return arg;
+  }
+  if (inspectValue) {
+    return inspectValue(arg);
+  }
+  try {
+    return JSON.stringify(arg);
+  } catch {
+    return String(arg);
+  }
+}
 
 function isRichConsoleEnv(): boolean {
   const term = (process.env.TERM ?? "").toLowerCase();
@@ -60,7 +93,17 @@ const SUBSYSTEM_COLOR_OVERRIDES: Record<string, (typeof SUBSYSTEM_COLORS)[number
 };
 const SUBSYSTEM_PREFIXES_TO_DROP = ["gateway", "channels", "providers"] as const;
 const SUBSYSTEM_MAX_SEGMENTS = 2;
-const CHANNEL_SUBSYSTEM_PREFIXES = new Set<string>(CHAT_CHANNEL_ORDER);
+// Keep local to avoid importing channel registry into hot logging paths.
+const CHANNEL_SUBSYSTEM_PREFIXES = new Set<string>([
+  "telegram",
+  "whatsapp",
+  "discord",
+  "irc",
+  "googlechat",
+  "slack",
+  "signal",
+  "imessage",
+]);
 
 function pickSubsystemColor(color: ChalkInstance, subsystem: string): ChalkInstance {
   const override = SUBSYSTEM_COLOR_OVERRIDES[subsystem];
@@ -236,6 +279,13 @@ export function createSubsystemLogger(subsystem: string): SubsystemLogger {
   };
   const emit = (level: LogLevel, message: string, meta?: Record<string, unknown>) => {
     const consoleSettings = getConsoleSettings();
+    const consoleEnabled =
+      shouldLogToConsole(level, { level: consoleSettings.level }) &&
+      shouldLogSubsystemToConsole(subsystem);
+    const fileEnabled = isFileLogLevelEnabled(level);
+    if (!consoleEnabled && !fileEnabled) {
+      return;
+    }
     let consoleMessageOverride: string | undefined;
     let fileMeta = meta;
     if (meta && Object.keys(meta).length > 0) {
@@ -247,11 +297,10 @@ export function createSubsystemLogger(subsystem: string): SubsystemLogger {
       }
       fileMeta = Object.keys(rest).length > 0 ? rest : undefined;
     }
-    logToFile(getFileLogger(), level, message, fileMeta);
-    if (!shouldLogToConsole(level, { level: consoleSettings.level })) {
-      return;
+    if (fileEnabled) {
+      logToFile(getFileLogger(), level, message, fileMeta);
     }
-    if (!shouldLogSubsystemToConsole(subsystem)) {
+    if (!consoleEnabled) {
       return;
     }
     const consoleMessage = consoleMessageOverride ?? message;
@@ -271,9 +320,26 @@ export function createSubsystemLogger(subsystem: string): SubsystemLogger {
     });
     writeConsoleLine(level, line);
   };
+  const isConsoleEnabled = (level: LogLevel): boolean => {
+    const consoleSettings = getConsoleSettings();
+    return (
+      shouldLogToConsole(level, { level: consoleSettings.level }) &&
+      shouldLogSubsystemToConsole(subsystem)
+    );
+  };
+  const isFileEnabled = (level: LogLevel): boolean => isFileLogLevelEnabled(level);
 
   const logger: SubsystemLogger = {
     subsystem,
+    isEnabled: (level, target = "any") => {
+      if (target === "console") {
+        return isConsoleEnabled(level);
+      }
+      if (target === "file") {
+        return isFileEnabled(level);
+      }
+      return isConsoleEnabled(level) || isFileEnabled(level);
+    },
     trace: (message, meta) => emit("trace", message, meta),
     debug: (message, meta) => emit("debug", message, meta),
     info: (message, meta) => emit("info", message, meta),
@@ -281,8 +347,10 @@ export function createSubsystemLogger(subsystem: string): SubsystemLogger {
     error: (message, meta) => emit("error", message, meta),
     fatal: (message, meta) => emit("fatal", message, meta),
     raw: (message) => {
-      logToFile(getFileLogger(), "info", message, { raw: true });
-      if (shouldLogSubsystemToConsole(subsystem)) {
+      if (isFileEnabled("info")) {
+        logToFile(getFileLogger(), "info", message, { raw: true });
+      }
+      if (isConsoleEnabled("info")) {
         if (
           !isVerbose() &&
           subsystem === "agent/embedded" &&
@@ -302,9 +370,14 @@ export function runtimeForLogger(
   logger: SubsystemLogger,
   exit: RuntimeEnv["exit"] = defaultRuntime.exit,
 ): RuntimeEnv {
+  const formatArgs = (...args: unknown[]) =>
+    args
+      .map((arg) => formatRuntimeArg(arg))
+      .join(" ")
+      .trim();
   return {
-    log: (message: string) => logger.info(message),
-    error: (message: string) => logger.error(message),
+    log: (...args: unknown[]) => logger.info(formatArgs(...args)),
+    error: (...args: unknown[]) => logger.error(formatArgs(...args)),
     exit,
   };
 }

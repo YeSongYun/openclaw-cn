@@ -9,6 +9,7 @@ import {
   DEFAULT_ACCOUNT_ID,
   addWildcardAllowFrom,
   formatDocsLink,
+  mergeAllowFromEntries,
   normalizeAccountId,
   promptAccountId,
 } from "openclaw/plugin-sdk";
@@ -17,6 +18,7 @@ import {
   resolveBlueBubblesAccount,
   resolveDefaultBlueBubblesAccountId,
 } from "./accounts.js";
+import { hasConfiguredSecretInput, normalizeSecretInputString } from "./secret-input.js";
 import { parseBlueBubblesAllowTarget } from "./targets.js";
 import { normalizeBlueBubblesServerUrl } from "./types.js";
 
@@ -93,25 +95,25 @@ async function promptBlueBubblesAllowFrom(params: {
   const existing = resolved.config.allowFrom ?? [];
   await params.prompter.note(
     [
-      "通过句柄或聊天目标设置 BlueBubbles 私信白名单。",
-      "示例：",
+      "Allowlist BlueBubbles DMs by handle or chat target.",
+      "Examples:",
       "- +15555550123",
       "- user@example.com",
       "- chat_id:123",
       "- chat_guid:iMessage;-;+15555550123",
-      "多个条目：用逗号或换行分隔。",
+      "Multiple entries: comma- or newline-separated.",
       `Docs: ${formatDocsLink("/channels/bluebubbles", "bluebubbles")}`,
     ].join("\n"),
-    "BlueBubbles 白名单",
+    "BlueBubbles allowlist",
   );
   const entry = await params.prompter.text({
-    message: "BlueBubbles 白名单（句柄或 chat_id）",
+    message: "BlueBubbles allowFrom (handle or chat_id)",
     placeholder: "+15555550123, user@example.com, chat_id:123",
     initialValue: existing[0] ? String(existing[0]) : undefined,
     validate: (value) => {
       const raw = String(value ?? "").trim();
       if (!raw) {
-        return "必填";
+        return "Required";
       }
       const parts = parseBlueBubblesAllowFromInput(raw);
       for (const part of parts) {
@@ -120,14 +122,14 @@ async function promptBlueBubblesAllowFrom(params: {
         }
         const parsed = parseBlueBubblesAllowTarget(part);
         if (parsed.kind === "handle" && !parsed.handle) {
-          return `无效条目：${part}`;
+          return `Invalid entry: ${part}`;
         }
       }
       return undefined;
     },
   });
   const parts = parseBlueBubblesAllowFromInput(String(entry));
-  const unique = [...new Set(parts)];
+  const unique = mergeAllowFromEntries(undefined, parts);
   return setBlueBubblesAllowFrom(params.cfg, accountId, unique);
 }
 
@@ -151,8 +153,8 @@ export const blueBubblesOnboardingAdapter: ChannelOnboardingAdapter = {
     return {
       channel,
       configured,
-      statusLines: [`BlueBubbles：${configured ? "已配置" : "需要设置"}`],
-      selectionHint: configured ? "已配置" : "通过 BlueBubbles 应用使用 iMessage",
+      statusLines: [`BlueBubbles: ${configured ? "configured" : "needs setup"}`],
+      selectionHint: configured ? "configured" : "iMessage via BlueBubbles app",
       quickstartScore: configured ? 1 : 0,
     };
   },
@@ -175,112 +177,104 @@ export const blueBubblesOnboardingAdapter: ChannelOnboardingAdapter = {
 
     let next = cfg;
     const resolvedAccount = resolveBlueBubblesAccount({ cfg: next, accountId });
+    const validateServerUrlInput = (value: unknown): string | undefined => {
+      const trimmed = String(value ?? "").trim();
+      if (!trimmed) {
+        return "Required";
+      }
+      try {
+        const normalized = normalizeBlueBubblesServerUrl(trimmed);
+        new URL(normalized);
+        return undefined;
+      } catch {
+        return "Invalid URL format";
+      }
+    };
+    const promptServerUrl = async (initialValue?: string): Promise<string> => {
+      const entered = await prompter.text({
+        message: "BlueBubbles server URL",
+        placeholder: "http://192.168.1.100:1234",
+        initialValue,
+        validate: validateServerUrlInput,
+      });
+      return String(entered).trim();
+    };
 
     // Prompt for server URL
     let serverUrl = resolvedAccount.config.serverUrl?.trim();
     if (!serverUrl) {
       await prompter.note(
         [
-          "输入 BlueBubbles 服务器 URL（例如 http://192.168.1.100:1234）。",
-          "在 BlueBubbles Server 应用的「连接」中找到此信息。",
+          "Enter the BlueBubbles server URL (e.g., http://192.168.1.100:1234).",
+          "Find this in the BlueBubbles Server app under Connection.",
           `Docs: ${formatDocsLink("/channels/bluebubbles", "bluebubbles")}`,
         ].join("\n"),
-        "BlueBubbles 服务器 URL",
+        "BlueBubbles server URL",
       );
-      const entered = await prompter.text({
-        message: "BlueBubbles 服务器 URL",
-        placeholder: "http://192.168.1.100:1234",
-        validate: (value) => {
-          const trimmed = String(value ?? "").trim();
-          if (!trimmed) {
-            return "必填";
-          }
-          try {
-            const normalized = normalizeBlueBubblesServerUrl(trimmed);
-            new URL(normalized);
-            return undefined;
-          } catch {
-            return "无效的 URL 格式";
-          }
-        },
-      });
-      serverUrl = String(entered).trim();
+      serverUrl = await promptServerUrl();
     } else {
       const keepUrl = await prompter.confirm({
-        message: `BlueBubbles 服务器 URL 已设置（${serverUrl}）。是否保留？`,
+        message: `BlueBubbles server URL already set (${serverUrl}). Keep it?`,
         initialValue: true,
       });
       if (!keepUrl) {
-        const entered = await prompter.text({
-          message: "BlueBubbles 服务器 URL",
-          placeholder: "http://192.168.1.100:1234",
-          initialValue: serverUrl,
-          validate: (value) => {
-            const trimmed = String(value ?? "").trim();
-            if (!trimmed) {
-              return "必填";
-            }
-            try {
-              const normalized = normalizeBlueBubblesServerUrl(trimmed);
-              new URL(normalized);
-              return undefined;
-            } catch {
-              return "无效的 URL 格式";
-            }
-          },
-        });
-        serverUrl = String(entered).trim();
+        serverUrl = await promptServerUrl(serverUrl);
       }
     }
 
     // Prompt for password
-    let password = resolvedAccount.config.password?.trim();
-    if (!password) {
+    const existingPassword = resolvedAccount.config.password;
+    const existingPasswordText = normalizeSecretInputString(existingPassword);
+    const hasConfiguredPassword = hasConfiguredSecretInput(existingPassword);
+    let password: unknown = existingPasswordText;
+    if (!hasConfiguredPassword) {
       await prompter.note(
         [
-          "输入 BlueBubbles 服务器密码。",
-          "在 BlueBubbles Server 应用的「设置」中找到此信息。",
+          "Enter the BlueBubbles server password.",
+          "Find this in the BlueBubbles Server app under Settings.",
         ].join("\n"),
-        "BlueBubbles 密码",
+        "BlueBubbles password",
       );
       const entered = await prompter.text({
-        message: "BlueBubbles 密码",
-        validate: (value) => (String(value ?? "").trim() ? undefined : "必填"),
+        message: "BlueBubbles password",
+        validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
       });
       password = String(entered).trim();
     } else {
       const keepPassword = await prompter.confirm({
-        message: "BlueBubbles 密码已设置。是否保留？",
+        message: "BlueBubbles password already set. Keep it?",
         initialValue: true,
       });
       if (!keepPassword) {
         const entered = await prompter.text({
-          message: "BlueBubbles 密码",
-          validate: (value) => (String(value ?? "").trim() ? undefined : "必填"),
+          message: "BlueBubbles password",
+          validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
         });
         password = String(entered).trim();
+      } else if (!existingPasswordText) {
+        password = existingPassword;
       }
     }
 
     // Prompt for webhook path (optional)
     const existingWebhookPath = resolvedAccount.config.webhookPath?.trim();
     const wantsWebhook = await prompter.confirm({
-      message: "是否配置自定义 Webhook 路径？（默认：/bluebubbles-webhook）",
+      message: "Configure a custom webhook path? (default: /bluebubbles-webhook)",
       initialValue: Boolean(existingWebhookPath && existingWebhookPath !== "/bluebubbles-webhook"),
     });
     let webhookPath = "/bluebubbles-webhook";
     if (wantsWebhook) {
       const entered = await prompter.text({
-        message: "Webhook 路径",
+        message: "Webhook path",
         placeholder: "/bluebubbles-webhook",
         initialValue: existingWebhookPath || "/bluebubbles-webhook",
         validate: (value) => {
           const trimmed = String(value ?? "").trim();
           if (!trimmed) {
-            return "必填";
+            return "Required";
           }
           if (!trimmed.startsWith("/")) {
-            return "路径必须以 / 开头";
+            return "Path must start with /";
           }
           return undefined;
         },
@@ -328,15 +322,15 @@ export const blueBubblesOnboardingAdapter: ChannelOnboardingAdapter = {
 
     await prompter.note(
       [
-        "在 BlueBubbles Server 中配置 Webhook URL：",
-        "1. 打开 BlueBubbles Server → 设置 → Webhooks",
-        "2. 添加你的 OpenClaw 网关 URL + Webhook 路径",
-        "   示例：https://your-gateway-host:3000/bluebubbles-webhook",
-        "3. 启用 Webhook 并保存",
+        "Configure the webhook URL in BlueBubbles Server:",
+        "1. Open BlueBubbles Server → Settings → Webhooks",
+        "2. Add your OpenClaw gateway URL + webhook path",
+        "   Example: https://your-gateway-host:3000/bluebubbles-webhook",
+        "3. Enable the webhook and save",
         "",
         `Docs: ${formatDocsLink("/channels/bluebubbles", "bluebubbles")}`,
       ].join("\n"),
-      "BlueBubbles 后续步骤",
+      "BlueBubbles next steps",
     );
 
     return { cfg: next, accountId };

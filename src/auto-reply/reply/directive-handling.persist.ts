@@ -20,7 +20,7 @@ import { enqueueSystemEvent } from "../../infra/system-events.js";
 import { applyVerboseOverride } from "../../sessions/level-overrides.js";
 import { applyModelOverrideToSessionEntry } from "../../sessions/model-overrides.js";
 import { resolveProfileOverride } from "./directive-handling.auth.js";
-import { formatElevatedEvent, formatReasoningEvent } from "./directive-handling.shared.js";
+import { enqueueModeSwitchEvents } from "./directive-handling.shared.js";
 
 export async function persistInlineDirectives(params: {
   directives: InlineDirectives;
@@ -91,7 +91,8 @@ export async function persistInlineDirectives(params: {
     }
     if (directives.hasReasoningDirective && directives.reasoningLevel) {
       if (directives.reasoningLevel === "off") {
-        delete sessionEntry.reasoningLevel;
+        // Persist explicit off so it overrides model-capability defaults.
+        sessionEntry.reasoningLevel = "off";
       } else {
         sessionEntry.reasoningLevel = directives.reasoningLevel;
       }
@@ -199,20 +200,13 @@ export async function persistInlineDirectives(params: {
           store[sessionKey] = sessionEntry;
         });
       }
-      if (elevatedChanged) {
-        const nextElevated = (sessionEntry.elevatedLevel ?? "off") as ElevatedLevel;
-        enqueueSystemEvent(formatElevatedEvent(nextElevated), {
-          sessionKey,
-          contextKey: "mode:elevated",
-        });
-      }
-      if (reasoningChanged) {
-        const nextReasoning = (sessionEntry.reasoningLevel ?? "off") as ReasoningLevel;
-        enqueueSystemEvent(formatReasoningEvent(nextReasoning), {
-          sessionKey,
-          contextKey: "mode:reasoning",
-        });
-      }
+      enqueueModeSwitchEvents({
+        enqueueSystemEvent,
+        sessionEntry,
+        sessionKey,
+        elevatedChanged,
+        reasoningChanged,
+      });
     }
   }
 

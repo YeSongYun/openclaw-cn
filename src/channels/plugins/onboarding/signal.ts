@@ -1,11 +1,9 @@
 import type { OpenClawConfig } from "../../../config/config.js";
-import type { DmPolicy } from "../../../config/types.js";
 import type { WizardPrompter } from "../../../wizard/prompts.js";
 import type { ChannelOnboardingAdapter, ChannelOnboardingDmPolicy } from "../onboarding-types.js";
 import { formatCliCommand } from "../../../cli/command-format.js";
 import { detectBinary } from "../../../commands/onboard-helpers.js";
 import { installSignalCli } from "../../../commands/signal-install.js";
-import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "../../../routing/session-key.js";
 import {
   listSignalAccountIds,
   resolveDefaultSignalAccountId,
@@ -13,70 +11,53 @@ import {
 } from "../../../signal/accounts.js";
 import { formatDocsLink } from "../../../terminal/links.js";
 import { normalizeE164 } from "../../../utils.js";
-import { addWildcardAllowFrom, promptAccountId } from "./helpers.js";
+import * as onboardingHelpers from "./helpers.js";
 
 const channel = "signal" as const;
+const MIN_E164_DIGITS = 5;
+const MAX_E164_DIGITS = 15;
+const DIGITS_ONLY = /^\d+$/;
+const INVALID_SIGNAL_ACCOUNT_ERROR =
+  "Invalid E.164 phone number (must start with + and country code, e.g. +15555550123)";
 
-function setSignalDmPolicy(cfg: OpenClawConfig, dmPolicy: DmPolicy) {
-  const allowFrom =
-    dmPolicy === "open" ? addWildcardAllowFrom(cfg.channels?.signal?.allowFrom) : undefined;
-  return {
-    ...cfg,
-    channels: {
-      ...cfg.channels,
-      signal: {
-        ...cfg.channels?.signal,
-        dmPolicy,
-        ...(allowFrom ? { allowFrom } : {}),
-      },
-    },
-  };
-}
-
-function setSignalAllowFrom(
-  cfg: OpenClawConfig,
-  accountId: string,
-  allowFrom: string[],
-): OpenClawConfig {
-  if (accountId === DEFAULT_ACCOUNT_ID) {
-    return {
-      ...cfg,
-      channels: {
-        ...cfg.channels,
-        signal: {
-          ...cfg.channels?.signal,
-          allowFrom,
-        },
-      },
-    };
+export function normalizeSignalAccountInput(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return null;
   }
-  return {
-    ...cfg,
-    channels: {
-      ...cfg.channels,
-      signal: {
-        ...cfg.channels?.signal,
-        accounts: {
-          ...cfg.channels?.signal?.accounts,
-          [accountId]: {
-            ...cfg.channels?.signal?.accounts?.[accountId],
-            allowFrom,
-          },
-        },
-      },
-    },
-  };
-}
-
-function parseSignalAllowFromInput(raw: string): string[] {
-  return raw
-    .split(/[\n,;]+/g)
-    .map((entry) => entry.trim())
-    .filter(Boolean);
+  const normalized = normalizeE164(trimmed);
+  const digits = normalized.slice(1);
+  if (!DIGITS_ONLY.test(digits)) {
+    return null;
+  }
+  if (digits.length < MIN_E164_DIGITS || digits.length > MAX_E164_DIGITS) {
+    return null;
+  }
+  return `+${digits}`;
 }
 
 function isUuidLike(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+export function parseSignalAllowFromEntries(raw: string): { entries: string[]; error?: string } {
+  return onboardingHelpers.parseOnboardingEntriesAllowingWildcard(raw, (entry) => {
+    if (entry.toLowerCase().startsWith("uuid:")) {
+      const id = entry.slice("uuid:".length).trim();
+      if (!id) {
+        return { error: "Invalid uuid entry" };
+      }
+      return { value: `uuid:${id}` };
+    }
+    if (isUuidLike(entry)) {
+      return { value: `uuid:${entry}` };
+    }
+    const normalized = normalizeSignalAccountInput(entry);
+    if (!normalized) {
+      return { error: `Invalid entry: ${entry}` };
+    }
+    return { value: normalized };
+  });
 }
 
 async function promptSignalAllowFrom(params: {
@@ -84,70 +65,29 @@ async function promptSignalAllowFrom(params: {
   prompter: WizardPrompter;
   accountId?: string;
 }): Promise<OpenClawConfig> {
-  const accountId =
-    params.accountId && normalizeAccountId(params.accountId)
-      ? (normalizeAccountId(params.accountId) ?? DEFAULT_ACCOUNT_ID)
-      : resolveDefaultSignalAccountId(params.cfg);
-  const resolved = resolveSignalAccount({ cfg: params.cfg, accountId });
-  const existing = resolved.config.allowFrom ?? [];
-  await params.prompter.note(
-    [
-      "通过发送者 ID 将 Signal 私信加入白名单。",
-      "示例：",
+  return onboardingHelpers.promptParsedAllowFromForScopedChannel({
+    cfg: params.cfg,
+    channel: "signal",
+    accountId: params.accountId,
+    defaultAccountId: resolveDefaultSignalAccountId(params.cfg),
+    prompter: params.prompter,
+    noteTitle: "Signal allowlist",
+    noteLines: [
+      "Allowlist Signal DMs by sender id.",
+      "Examples:",
       "- +15555550123",
       "- uuid:123e4567-e89b-12d3-a456-426614174000",
-      "多个条目：逗号分隔。",
-      `文档：${formatDocsLink("/signal", "signal")}`,
-    ].join("\n"),
-    "Signal 白名单",
-  );
-  const entry = await params.prompter.text({
-    message: "Signal 白名单（E.164 或 uuid）",
+      "Multiple entries: comma-separated.",
+      `Docs: ${formatDocsLink("/signal", "signal")}`,
+    ],
+    message: "Signal allowFrom (E.164 or uuid)",
     placeholder: "+15555550123, uuid:123e4567-e89b-12d3-a456-426614174000",
-    initialValue: existing[0] ? String(existing[0]) : undefined,
-    validate: (value) => {
-      const raw = String(value ?? "").trim();
-      if (!raw) {
-        return "必填";
-      }
-      const parts = parseSignalAllowFromInput(raw);
-      for (const part of parts) {
-        if (part === "*") {
-          continue;
-        }
-        if (part.toLowerCase().startsWith("uuid:")) {
-          if (!part.slice("uuid:".length).trim()) {
-            return "无效的 uuid 条目";
-          }
-          continue;
-        }
-        if (isUuidLike(part)) {
-          continue;
-        }
-        if (!normalizeE164(part)) {
-          return `无效条目：${part}`;
-        }
-      }
-      return undefined;
+    parseEntries: parseSignalAllowFromEntries,
+    getExistingAllowFrom: ({ cfg, accountId }) => {
+      const resolved = resolveSignalAccount({ cfg, accountId });
+      return resolved.config.allowFrom ?? [];
     },
   });
-  const parts = parseSignalAllowFromInput(String(entry));
-  const normalized = parts
-    .map((part) => {
-      if (part === "*") {
-        return "*";
-      }
-      if (part.toLowerCase().startsWith("uuid:")) {
-        return `uuid:${part.slice(5).trim()}`;
-      }
-      if (isUuidLike(part)) {
-        return `uuid:${part}`;
-      }
-      return normalizeE164(part);
-    })
-    .filter(Boolean);
-  const unique = [...new Set(normalized)];
-  return setSignalAllowFrom(params.cfg, accountId, unique);
 }
 
 const dmPolicy: ChannelOnboardingDmPolicy = {
@@ -156,7 +96,12 @@ const dmPolicy: ChannelOnboardingDmPolicy = {
   policyKey: "channels.signal.dmPolicy",
   allowFromKey: "channels.signal.allowFrom",
   getCurrent: (cfg) => cfg.channels?.signal?.dmPolicy ?? "pairing",
-  setPolicy: (cfg, policy) => setSignalDmPolicy(cfg, policy),
+  setPolicy: (cfg, policy) =>
+    onboardingHelpers.setChannelDmPolicyWithAllowFrom({
+      cfg,
+      channel: "signal",
+      dmPolicy: policy,
+    }),
   promptAllowFrom: promptSignalAllowFrom,
 };
 
@@ -172,10 +117,10 @@ export const signalOnboardingAdapter: ChannelOnboardingAdapter = {
       channel,
       configured,
       statusLines: [
-        `Signal：${configured ? "已配置" : "需要设置"}`,
-        `signal-cli：${signalCliDetected ? "已找到" : "缺失"} (${signalCliPath})`,
+        `Signal: ${configured ? "configured" : "needs setup"}`,
+        `signal-cli: ${signalCliDetected ? "found" : "missing"} (${signalCliPath})`,
       ],
-      selectionHint: signalCliDetected ? "signal-cli 已找到" : "signal-cli 缺失",
+      selectionHint: signalCliDetected ? "signal-cli found" : "signal-cli missing",
       quickstartScore: signalCliDetected ? 1 : 0,
     };
   },
@@ -187,21 +132,16 @@ export const signalOnboardingAdapter: ChannelOnboardingAdapter = {
     shouldPromptAccountIds,
     options,
   }) => {
-    const signalOverride = accountOverrides.signal?.trim();
     const defaultSignalAccountId = resolveDefaultSignalAccountId(cfg);
-    let signalAccountId = signalOverride
-      ? normalizeAccountId(signalOverride)
-      : defaultSignalAccountId;
-    if (shouldPromptAccountIds && !signalOverride) {
-      signalAccountId = await promptAccountId({
-        cfg,
-        prompter,
-        label: "Signal",
-        currentId: signalAccountId,
-        listAccountIds: listSignalAccountIds,
-        defaultAccountId: defaultSignalAccountId,
-      });
-    }
+    const signalAccountId = await onboardingHelpers.resolveAccountIdForConfigure({
+      cfg,
+      prompter,
+      label: "Signal",
+      accountOverride: accountOverrides.signal,
+      shouldPromptAccountIds,
+      listAccountIds: listSignalAccountIds,
+      defaultAccountId: defaultSignalAccountId,
+    });
 
     let next = cfg;
     const resolvedAccount = resolveSignalAccount({
@@ -214,8 +154,8 @@ export const signalOnboardingAdapter: ChannelOnboardingAdapter = {
     if (options?.allowSignalInstall) {
       const wantsInstall = await prompter.confirm({
         message: cliDetected
-          ? "检测到 signal-cli。现在重新安装/更新吗？"
-          : "未找到 signal-cli。现在安装吗？",
+          ? "signal-cli detected. Reinstall/update now?"
+          : "signal-cli not found. Install now?",
         initialValue: !cliDetected,
       });
       if (wantsInstall) {
@@ -224,98 +164,81 @@ export const signalOnboardingAdapter: ChannelOnboardingAdapter = {
           if (result.ok && result.cliPath) {
             cliDetected = true;
             resolvedCliPath = result.cliPath;
-            await prompter.note(`已安装 signal-cli 到 ${result.cliPath}`, "Signal");
+            await prompter.note(`Installed signal-cli at ${result.cliPath}`, "Signal");
           } else if (!result.ok) {
-            await prompter.note(result.error ?? "signal-cli 安装失败。", "Signal");
+            await prompter.note(result.error ?? "signal-cli install failed.", "Signal");
           }
         } catch (err) {
-          await prompter.note(`signal-cli 安装失败：${String(err)}`, "Signal");
+          await prompter.note(`signal-cli install failed: ${String(err)}`, "Signal");
         }
       }
     }
 
     if (!cliDetected) {
       await prompter.note(
-        "未找到 signal-cli。请安装后重新运行此步骤，或设置 channels.signal.cliPath。",
+        "signal-cli not found. Install it, then rerun this step or set channels.signal.cliPath.",
         "Signal",
       );
     }
 
     let account = accountConfig.account ?? "";
     if (account) {
-      const keep = await prompter.confirm({
-        message: `Signal 账户已设置 (${account})。保留吗？`,
-        initialValue: true,
-      });
-      if (!keep) {
+      const normalizedExisting = normalizeSignalAccountInput(account);
+      if (!normalizedExisting) {
+        await prompter.note(
+          "Existing Signal account isn't a valid E.164 number. Please enter it again.",
+          "Signal",
+        );
         account = "";
+      } else {
+        account = normalizedExisting;
+        const keep = await prompter.confirm({
+          message: `Signal account set (${account}). Keep it?`,
+          initialValue: true,
+        });
+        if (!keep) {
+          account = "";
+        }
       }
     }
 
     if (!account) {
-      account = String(
+      const rawAccount = String(
         await prompter.text({
-          message: "Signal 机器人号码（E.164 格式）",
-          validate: (value) => (value?.trim() ? undefined : "必填"),
+          message: "Signal bot number (E.164)",
+          validate: (value) =>
+            normalizeSignalAccountInput(String(value ?? ""))
+              ? undefined
+              : INVALID_SIGNAL_ACCOUNT_ERROR,
         }),
-      ).trim();
+      );
+      account = normalizeSignalAccountInput(rawAccount) ?? "";
     }
 
     if (account) {
-      if (signalAccountId === DEFAULT_ACCOUNT_ID) {
-        next = {
-          ...next,
-          channels: {
-            ...next.channels,
-            signal: {
-              ...next.channels?.signal,
-              enabled: true,
-              account,
-              cliPath: resolvedCliPath ?? "signal-cli",
-            },
-          },
-        };
-      } else {
-        next = {
-          ...next,
-          channels: {
-            ...next.channels,
-            signal: {
-              ...next.channels?.signal,
-              enabled: true,
-              accounts: {
-                ...next.channels?.signal?.accounts,
-                [signalAccountId]: {
-                  ...next.channels?.signal?.accounts?.[signalAccountId],
-                  enabled: next.channels?.signal?.accounts?.[signalAccountId]?.enabled ?? true,
-                  account,
-                  cliPath: resolvedCliPath ?? "signal-cli",
-                },
-              },
-            },
-          },
-        };
-      }
+      next = onboardingHelpers.patchChannelConfigForAccount({
+        cfg: next,
+        channel: "signal",
+        accountId: signalAccountId,
+        patch: {
+          account,
+          cliPath: resolvedCliPath ?? "signal-cli",
+        },
+      });
     }
 
     await prompter.note(
       [
-        '使用以下命令关联设备：signal-cli link -n "OpenClaw"',
-        "在 Signal 中扫描二维码 → 已关联的设备",
+        'Link device with: signal-cli link -n "OpenClaw"',
+        "Scan QR in Signal → Linked Devices",
         `Then run: ${formatCliCommand("openclaw gateway call channels.status --params '{\"probe\":true}'")}`,
         `Docs: ${formatDocsLink("/signal", "signal")}`,
       ].join("\n"),
-      "Signal 后续步骤",
+      "Signal next steps",
     );
 
     return { cfg: next, accountId: signalAccountId };
   },
   dmPolicy,
-  disable: (cfg) => ({
-    ...cfg,
-    channels: {
-      ...cfg.channels,
-      signal: { ...cfg.channels?.signal, enabled: false },
-    },
-  }),
+  disable: (cfg) => onboardingHelpers.setOnboardingChannelEnabled(cfg, channel, false),
 };

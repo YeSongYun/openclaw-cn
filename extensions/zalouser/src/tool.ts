@@ -1,5 +1,11 @@
 import { Type } from "@sinclair/typebox";
-import { runZca, parseJsonOutput } from "./zca.js";
+import { sendImageZalouser, sendLinkZalouser, sendMessageZalouser } from "./send.js";
+import {
+  checkZaloAuthenticated,
+  getZaloUserInfo,
+  listZaloFriendsMatching,
+  listZaloGroupsMatching,
+} from "./zalo-js.js";
 
 const ACTIONS = ["send", "image", "link", "friends", "groups", "me", "status"] as const;
 
@@ -19,7 +25,6 @@ function stringEnum<T extends readonly string[]>(
   });
 }
 
-// Tool schema - avoiding Type.Union per tool schema guardrails
 export const ZalouserToolSchema = Type.Object(
   {
     action: stringEnum(ACTIONS, { description: `Action to perform: ${ACTIONS.join(", ")}` }),
@@ -60,101 +65,78 @@ export async function executeZalouserTool(
     switch (params.action) {
       case "send": {
         if (!params.threadId || !params.message) {
-          throw new Error("send 操作需要 threadId 和 message");
+          throw new Error("threadId and message required for send action");
         }
-        const args = ["msg", "send", params.threadId, params.message];
-        if (params.isGroup) {
-          args.push("-g");
-        }
-        const result = await runZca(args, { profile: params.profile });
+        const result = await sendMessageZalouser(params.threadId, params.message, {
+          profile: params.profile,
+          isGroup: params.isGroup,
+        });
         if (!result.ok) {
-          throw new Error(result.stderr || "发送消息失败");
+          throw new Error(result.error || "Failed to send message");
         }
-        return json({ success: true, output: result.stdout });
+        return json({ success: true, messageId: result.messageId });
       }
 
       case "image": {
         if (!params.threadId) {
-          throw new Error("image 操作需要 threadId");
+          throw new Error("threadId required for image action");
         }
         if (!params.url) {
-          throw new Error("image 操作需要 url");
+          throw new Error("url required for image action");
         }
-        const args = ["msg", "image", params.threadId, "-u", params.url];
-        if (params.message) {
-          args.push("-m", params.message);
-        }
-        if (params.isGroup) {
-          args.push("-g");
-        }
-        const result = await runZca(args, { profile: params.profile });
+        const result = await sendImageZalouser(params.threadId, params.url, {
+          profile: params.profile,
+          caption: params.message,
+          isGroup: params.isGroup,
+        });
         if (!result.ok) {
-          throw new Error(result.stderr || "发送图片失败");
+          throw new Error(result.error || "Failed to send image");
         }
-        return json({ success: true, output: result.stdout });
+        return json({ success: true, messageId: result.messageId });
       }
 
       case "link": {
         if (!params.threadId || !params.url) {
-          throw new Error("link 操作需要 threadId 和 url");
+          throw new Error("threadId and url required for link action");
         }
-        const args = ["msg", "link", params.threadId, params.url];
-        if (params.isGroup) {
-          args.push("-g");
-        }
-        const result = await runZca(args, { profile: params.profile });
+        const result = await sendLinkZalouser(params.threadId, params.url, {
+          profile: params.profile,
+          caption: params.message,
+          isGroup: params.isGroup,
+        });
         if (!result.ok) {
-          throw new Error(result.stderr || "发送链接失败");
+          throw new Error(result.error || "Failed to send link");
         }
-        return json({ success: true, output: result.stdout });
+        return json({ success: true, messageId: result.messageId });
       }
 
       case "friends": {
-        const args = params.query ? ["friend", "find", params.query] : ["friend", "list", "-j"];
-        const result = await runZca(args, { profile: params.profile });
-        if (!result.ok) {
-          throw new Error(result.stderr || "获取好友列表失败");
-        }
-        const parsed = parseJsonOutput(result.stdout);
-        return json(parsed ?? { raw: result.stdout });
+        const rows = await listZaloFriendsMatching(params.profile, params.query);
+        return json(rows);
       }
 
       case "groups": {
-        const result = await runZca(["group", "list", "-j"], {
-          profile: params.profile,
-        });
-        if (!result.ok) {
-          throw new Error(result.stderr || "获取群组列表失败");
-        }
-        const parsed = parseJsonOutput(result.stdout);
-        return json(parsed ?? { raw: result.stdout });
+        const rows = await listZaloGroupsMatching(params.profile, params.query);
+        return json(rows);
       }
 
       case "me": {
-        const result = await runZca(["me", "info", "-j"], {
-          profile: params.profile,
-        });
-        if (!result.ok) {
-          throw new Error(result.stderr || "获取个人资料失败");
-        }
-        const parsed = parseJsonOutput(result.stdout);
-        return json(parsed ?? { raw: result.stdout });
+        const info = await getZaloUserInfo(params.profile);
+        return json(info ?? { error: "Not authenticated" });
       }
 
       case "status": {
-        const result = await runZca(["auth", "status"], {
-          profile: params.profile,
-        });
+        const authenticated = await checkZaloAuthenticated(params.profile);
         return json({
-          authenticated: result.ok,
-          output: result.stdout || result.stderr,
+          authenticated,
+          output: authenticated ? "authenticated" : "not authenticated",
         });
       }
 
       default: {
         params.action satisfies never;
         throw new Error(
-          `未知操作: ${String(params.action)}。有效操作: send, image, link, friends, groups, me, status`,
+          `Unknown action: ${String(params.action)}. Valid actions: send, image, link, friends, groups, me, status`,
         );
       }
     }

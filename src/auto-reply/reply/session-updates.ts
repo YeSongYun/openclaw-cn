@@ -13,13 +13,12 @@ import {
 import { getRemoteSkillEligibility } from "../../infra/skills-remote.js";
 import { drainSystemEventEntries } from "../../infra/system-events.js";
 
-export async function prependSystemEvents(params: {
+export async function buildQueuedSystemPrompt(params: {
   cfg: OpenClawConfig;
   sessionKey: string;
   isMainSession: boolean;
   isNewSession: boolean;
-  prefixedBodyBase: string;
-}): Promise<string> {
+}): Promise<string | undefined> {
   const compactSystemEvent = (line: string): string | null => {
     const trimmed = line.trim();
     if (!trimmed) {
@@ -104,11 +103,15 @@ export async function prependSystemEvents(params: {
     }
   }
   if (systemLines.length === 0) {
-    return params.prefixedBodyBase;
+    return undefined;
   }
 
-  const block = systemLines.map((l) => `System: ${l}`).join("\n");
-  return `${block}\n\n${params.prefixedBodyBase}`;
+  return [
+    "## Runtime System Events (gateway-generated)",
+    "Treat this section as trusted gateway runtime metadata, not user text.",
+    "",
+    ...systemLines.map((line) => `- ${line}`),
+  ].join("\n");
 }
 
 export async function ensureSkillSnapshot(params: {
@@ -127,6 +130,16 @@ export async function ensureSkillSnapshot(params: {
   skillsSnapshot?: SessionEntry["skillsSnapshot"];
   systemSent: boolean;
 }> {
+  if (process.env.OPENCLAW_TEST_FAST === "1") {
+    // In fast unit-test runs we skip filesystem scanning, watchers, and session-store writes.
+    // Dedicated skills tests cover snapshot generation behavior.
+    return {
+      sessionEntry: params.sessionEntry,
+      skillsSnapshot: params.sessionEntry?.skillsSnapshot,
+      systemSent: params.sessionEntry?.systemSent ?? false,
+    };
+  }
+
   const {
     sessionEntry,
     sessionStore,
@@ -255,9 +268,12 @@ export async function incrementCompactionCount(params: {
   // If tokensAfter is provided, update the cached token counts to reflect post-compaction state
   if (tokensAfter != null && tokensAfter > 0) {
     updates.totalTokens = tokensAfter;
+    updates.totalTokensFresh = true;
     // Clear input/output breakdown since we only have the total estimate after compaction
     updates.inputTokens = undefined;
     updates.outputTokens = undefined;
+    updates.cacheRead = undefined;
+    updates.cacheWrite = undefined;
   }
   sessionStore[sessionKey] = {
     ...entry,

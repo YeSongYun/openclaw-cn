@@ -1,55 +1,53 @@
 import type { Client } from "@buape/carbon";
-import type { HistoryEntry } from "../../auto-reply/reply/history.js";
-import type { ReplyToMode } from "../../config/config.js";
-import type { RuntimeEnv } from "../../runtime.js";
-import type { DiscordGuildEntryResolved } from "./allow-list.js";
 import type { DiscordMessageEvent, DiscordMessageHandler } from "./listeners.js";
-import { hasControlCommand } from "../../auto-reply/command-detection.js";
+import type { DiscordMessagePreflightParams } from "./message-handler.preflight.types.js";
 import {
-  createInboundDebouncer,
-  resolveInboundDebounceMs,
-} from "../../auto-reply/inbound-debounce.js";
+  createChannelInboundDebouncer,
+  shouldDebounceTextInbound,
+} from "../../channels/inbound-debounce-policy.js";
+import { resolveOpenProviderRuntimeGroupPolicy } from "../../config/runtime-group-policy.js";
 import { danger } from "../../globals.js";
 import { preflightDiscordMessage } from "./message-handler.preflight.js";
 import { processDiscordMessage } from "./message-handler.process.js";
-import { resolveDiscordMessageText } from "./message-utils.js";
+import {
+  hasDiscordMessageStickers,
+  resolveDiscordMessageChannelId,
+  resolveDiscordMessageText,
+} from "./message-utils.js";
 
-type LoadedConfig = ReturnType<typeof import("../../config/config.js").loadConfig>;
-type DiscordConfig = NonNullable<
-  import("../../config/config.js").OpenClawConfig["channels"]
->["discord"];
+type DiscordMessageHandlerParams = Omit<
+  DiscordMessagePreflightParams,
+  "ackReactionScope" | "groupPolicy" | "data" | "client"
+>;
 
-export function createDiscordMessageHandler(params: {
-  cfg: LoadedConfig;
-  discordConfig: DiscordConfig;
-  accountId: string;
-  token: string;
-  runtime: RuntimeEnv;
-  botUserId?: string;
-  guildHistories: Map<string, HistoryEntry[]>;
-  historyLimit: number;
-  mediaMaxBytes: number;
-  textLimit: number;
-  replyToMode: ReplyToMode;
-  dmEnabled: boolean;
-  groupDmEnabled: boolean;
-  groupDmChannels?: Array<string | number>;
-  allowFrom?: Array<string | number>;
-  guildEntries?: Record<string, DiscordGuildEntryResolved>;
-}): DiscordMessageHandler {
-  const groupPolicy = params.discordConfig?.groupPolicy ?? "open";
-  const ackReactionScope = params.cfg.messages?.ackReactionScope ?? "group-mentions";
-  const debounceMs = resolveInboundDebounceMs({ cfg: params.cfg, channel: "discord" });
-
-  const debouncer = createInboundDebouncer<{ data: DiscordMessageEvent; client: Client }>({
-    debounceMs,
+export function createDiscordMessageHandler(
+  params: DiscordMessageHandlerParams,
+): DiscordMessageHandler {
+  const { groupPolicy } = resolveOpenProviderRuntimeGroupPolicy({
+    providerConfigPresent: params.cfg.channels?.discord !== undefined,
+    groupPolicy: params.discordConfig?.groupPolicy,
+    defaultGroupPolicy: params.cfg.channels?.defaults?.groupPolicy,
+  });
+  const ackReactionScope =
+    params.discordConfig?.ackReactionScope ??
+    params.cfg.messages?.ackReactionScope ??
+    "group-mentions";
+  const { debouncer } = createChannelInboundDebouncer<{
+    data: DiscordMessageEvent;
+    client: Client;
+  }>({
+    cfg: params.cfg,
+    channel: "discord",
     buildKey: (entry) => {
       const message = entry.data.message;
       const authorId = entry.data.author?.id;
       if (!message || !authorId) {
         return null;
       }
-      const channelId = message.channelId;
+      const channelId = resolveDiscordMessageChannelId({
+        message,
+        eventChannelId: entry.data.channel_id,
+      });
       if (!channelId) {
         return null;
       }
@@ -60,14 +58,15 @@ export function createDiscordMessageHandler(params: {
       if (!message) {
         return false;
       }
-      if (message.attachments && message.attachments.length > 0) {
-        return false;
-      }
       const baseText = resolveDiscordMessageText(message, { includeForwarded: false });
-      if (!baseText.trim()) {
-        return false;
-      }
-      return !hasControlCommand(baseText, params.cfg);
+      return shouldDebounceTextInbound({
+        text: baseText,
+        cfg: params.cfg,
+        hasMedia: Boolean(
+          (message.attachments && message.attachments.length > 0) ||
+          hasDiscordMessageStickers(message),
+        ),
+      });
     },
     onFlush: async (entries) => {
       const last = entries.at(-1);

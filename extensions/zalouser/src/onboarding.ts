@@ -4,23 +4,72 @@ import type {
   OpenClawConfig,
   WizardPrompter,
 } from "openclaw/plugin-sdk";
+import fsp from "node:fs/promises";
+import path from "node:path";
 import {
   addWildcardAllowFrom,
   DEFAULT_ACCOUNT_ID,
+  formatResolvedUnresolvedNote,
+  mergeAllowFromEntries,
   normalizeAccountId,
   promptAccountId,
   promptChannelAccessConfig,
+  resolvePreferredOpenClawTmpDir,
 } from "openclaw/plugin-sdk";
-import type { ZcaFriend, ZcaGroup } from "./types.js";
 import {
   listZalouserAccountIds,
   resolveDefaultZalouserAccountId,
   resolveZalouserAccountSync,
   checkZcaAuthenticated,
 } from "./accounts.js";
-import { runZca, runZcaInteractive, checkZcaInstalled, parseJsonOutput } from "./zca.js";
+import {
+  logoutZaloProfile,
+  resolveZaloAllowFromEntries,
+  resolveZaloGroupsByEntries,
+  startZaloQrLogin,
+  waitForZaloQrLogin,
+} from "./zalo-js.js";
 
 const channel = "zalouser" as const;
+
+function setZalouserAccountScopedConfig(
+  cfg: OpenClawConfig,
+  accountId: string,
+  defaultPatch: Record<string, unknown>,
+  accountPatch: Record<string, unknown> = defaultPatch,
+): OpenClawConfig {
+  if (accountId === DEFAULT_ACCOUNT_ID) {
+    return {
+      ...cfg,
+      channels: {
+        ...cfg.channels,
+        zalouser: {
+          ...cfg.channels?.zalouser,
+          enabled: true,
+          ...defaultPatch,
+        },
+      },
+    } as OpenClawConfig;
+  }
+  return {
+    ...cfg,
+    channels: {
+      ...cfg.channels,
+      zalouser: {
+        ...cfg.channels?.zalouser,
+        enabled: true,
+        accounts: {
+          ...cfg.channels?.zalouser?.accounts,
+          [accountId]: {
+            ...cfg.channels?.zalouser?.accounts?.[accountId],
+            enabled: cfg.channels?.zalouser?.accounts?.[accountId]?.enabled ?? true,
+            ...accountPatch,
+          },
+        },
+      },
+    },
+  } as OpenClawConfig;
+}
 
 function setZalouserDmPolicy(
   cfg: OpenClawConfig,
@@ -44,16 +93,33 @@ function setZalouserDmPolicy(
 async function noteZalouserHelp(prompter: WizardPrompter): Promise<void> {
   await prompter.note(
     [
-      "Zalo 个人账号通过二维码登录。",
+      "Zalo Personal Account login via QR code.",
       "",
-      "前置条件：",
-      "1) 安装 zca-cli",
-      "2) 你需要使用 Zalo 应用扫描二维码",
+      "This plugin uses zca-js directly (no external CLI dependency).",
       "",
-      "文档：https://docs.openclaw.ai/channels/zalouser",
+      "Docs: https://docs.openclaw.ai/channels/zalouser",
     ].join("\n"),
-    "Zalo 个人账号设置",
+    "Zalo Personal Setup",
   );
+}
+
+async function writeQrDataUrlToTempFile(
+  qrDataUrl: string,
+  profile: string,
+): Promise<string | null> {
+  const trimmed = qrDataUrl.trim();
+  const match = trimmed.match(/^data:image\/png;base64,(.+)$/i);
+  const base64 = (match?.[1] ?? "").trim();
+  if (!base64) {
+    return null;
+  }
+  const safeProfile = profile.replace(/[^a-zA-Z0-9_-]+/g, "-") || "default";
+  const filePath = path.join(
+    resolvePreferredOpenClawTmpDir(),
+    `openclaw-zalouser-qr-${safeProfile}.png`,
+  );
+  await fsp.writeFile(filePath, Buffer.from(base64, "base64"));
+  return filePath;
 }
 
 async function promptZalouserAllowFrom(params: {
@@ -70,96 +136,44 @@ async function promptZalouserAllowFrom(params: {
       .map((entry) => entry.trim())
       .filter(Boolean);
 
-  const resolveUserId = async (input: string): Promise<string | null> => {
-    const trimmed = input.trim();
-    if (!trimmed) {
-      return null;
-    }
-    if (/^\d+$/.test(trimmed)) {
-      return trimmed;
-    }
-    const ok = await checkZcaInstalled();
-    if (!ok) {
-      return null;
-    }
-    const result = await runZca(["friend", "find", trimmed], {
-      profile: resolved.profile,
-      timeout: 15000,
-    });
-    if (!result.ok) {
-      return null;
-    }
-    const parsed = parseJsonOutput<ZcaFriend[]>(result.stdout);
-    const rows = Array.isArray(parsed) ? parsed : [];
-    const match = rows[0];
-    if (!match?.userId) {
-      return null;
-    }
-    if (rows.length > 1) {
-      await prompter.note(
-        `"${trimmed}" 有多个匹配结果，使用 ${match.displayName ?? match.userId}。`,
-        "Zalo 个人白名单",
-      );
-    }
-    return String(match.userId);
-  };
-
   while (true) {
     const entry = await prompter.text({
-      message: "Zalouser 白名单（用户名或用户 ID）",
+      message: "Zalouser allowFrom (name or user id)",
       placeholder: "Alice, 123456789",
       initialValue: existingAllowFrom[0] ? String(existingAllowFrom[0]) : undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "必填"),
+      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
     });
     const parts = parseInput(String(entry));
-    const results = await Promise.all(parts.map((part) => resolveUserId(part)));
-    const unresolved = parts.filter((_, idx) => !results[idx]);
+    const resolvedEntries = await resolveZaloAllowFromEntries({
+      profile: resolved.profile,
+      entries: parts,
+    });
+
+    const unresolved = resolvedEntries.filter((item) => !item.resolved).map((item) => item.input);
     if (unresolved.length > 0) {
       await prompter.note(
-        `无法解析：${unresolved.join(", ")}。请使用数字用户 ID 或确保 zca 可用。`,
-        "Zalo 个人白名单",
+        `Could not resolve: ${unresolved.join(", ")}. Use numeric user ids or exact friend names.`,
+        "Zalo Personal allowlist",
       );
       continue;
     }
-    const merged = [
-      ...existingAllowFrom.map((item) => String(item).trim()).filter(Boolean),
-      ...(results.filter(Boolean) as string[]),
-    ];
-    const unique = [...new Set(merged)];
-    if (accountId === DEFAULT_ACCOUNT_ID) {
-      return {
-        ...cfg,
-        channels: {
-          ...cfg.channels,
-          zalouser: {
-            ...cfg.channels?.zalouser,
-            enabled: true,
-            dmPolicy: "allowlist",
-            allowFrom: unique,
-          },
-        },
-      } as OpenClawConfig;
+
+    const resolvedIds = resolvedEntries
+      .filter((item) => item.resolved && item.id)
+      .map((item) => item.id as string);
+    const unique = mergeAllowFromEntries(existingAllowFrom, resolvedIds);
+
+    const notes = resolvedEntries
+      .filter((item) => item.note)
+      .map((item) => `${item.input} -> ${item.id} (${item.note})`);
+    if (notes.length > 0) {
+      await prompter.note(notes.join("\n"), "Zalo Personal allowlist");
     }
 
-    return {
-      ...cfg,
-      channels: {
-        ...cfg.channels,
-        zalouser: {
-          ...cfg.channels?.zalouser,
-          enabled: true,
-          accounts: {
-            ...cfg.channels?.zalouser?.accounts,
-            [accountId]: {
-              ...cfg.channels?.zalouser?.accounts?.[accountId],
-              enabled: cfg.channels?.zalouser?.accounts?.[accountId]?.enabled ?? true,
-              dmPolicy: "allowlist",
-              allowFrom: unique,
-            },
-          },
-        },
-      },
-    } as OpenClawConfig;
+    return setZalouserAccountScopedConfig(cfg, accountId, {
+      dmPolicy: "allowlist",
+      allowFrom: unique,
+    });
   }
 }
 
@@ -168,37 +182,9 @@ function setZalouserGroupPolicy(
   accountId: string,
   groupPolicy: "open" | "allowlist" | "disabled",
 ): OpenClawConfig {
-  if (accountId === DEFAULT_ACCOUNT_ID) {
-    return {
-      ...cfg,
-      channels: {
-        ...cfg.channels,
-        zalouser: {
-          ...cfg.channels?.zalouser,
-          enabled: true,
-          groupPolicy,
-        },
-      },
-    } as OpenClawConfig;
-  }
-  return {
-    ...cfg,
-    channels: {
-      ...cfg.channels,
-      zalouser: {
-        ...cfg.channels?.zalouser,
-        enabled: true,
-        accounts: {
-          ...cfg.channels?.zalouser?.accounts,
-          [accountId]: {
-            ...cfg.channels?.zalouser?.accounts?.[accountId],
-            enabled: cfg.channels?.zalouser?.accounts?.[accountId]?.enabled ?? true,
-            groupPolicy,
-          },
-        },
-      },
-    },
-  } as OpenClawConfig;
+  return setZalouserAccountScopedConfig(cfg, accountId, {
+    groupPolicy,
+  });
 }
 
 function setZalouserGroupAllowlist(
@@ -207,79 +193,8 @@ function setZalouserGroupAllowlist(
   groupKeys: string[],
 ): OpenClawConfig {
   const groups = Object.fromEntries(groupKeys.map((key) => [key, { allow: true }]));
-  if (accountId === DEFAULT_ACCOUNT_ID) {
-    return {
-      ...cfg,
-      channels: {
-        ...cfg.channels,
-        zalouser: {
-          ...cfg.channels?.zalouser,
-          enabled: true,
-          groups,
-        },
-      },
-    } as OpenClawConfig;
-  }
-  return {
-    ...cfg,
-    channels: {
-      ...cfg.channels,
-      zalouser: {
-        ...cfg.channels?.zalouser,
-        enabled: true,
-        accounts: {
-          ...cfg.channels?.zalouser?.accounts,
-          [accountId]: {
-            ...cfg.channels?.zalouser?.accounts?.[accountId],
-            enabled: cfg.channels?.zalouser?.accounts?.[accountId]?.enabled ?? true,
-            groups,
-          },
-        },
-      },
-    },
-  } as OpenClawConfig;
-}
-
-async function resolveZalouserGroups(params: {
-  cfg: OpenClawConfig;
-  accountId: string;
-  entries: string[];
-}): Promise<Array<{ input: string; resolved: boolean; id?: string }>> {
-  const account = resolveZalouserAccountSync({ cfg: params.cfg, accountId: params.accountId });
-  const result = await runZca(["group", "list", "-j"], {
-    profile: account.profile,
-    timeout: 15000,
-  });
-  if (!result.ok) {
-    throw new Error(result.stderr || "获取群组列表失败");
-  }
-  const groups = (parseJsonOutput<ZcaGroup[]>(result.stdout) ?? []).filter((group) =>
-    Boolean(group.groupId),
-  );
-  const byName = new Map<string, ZcaGroup[]>();
-  for (const group of groups) {
-    const name = group.name?.trim().toLowerCase();
-    if (!name) {
-      continue;
-    }
-    const list = byName.get(name) ?? [];
-    list.push(group);
-    byName.set(name, list);
-  }
-
-  return params.entries.map((input) => {
-    const trimmed = input.trim();
-    if (!trimmed) {
-      return { input, resolved: false };
-    }
-    if (/^\d+$/.test(trimmed)) {
-      return { input, resolved: true, id: trimmed };
-    }
-    const matches = byName.get(trimmed.toLowerCase()) ?? [];
-    const match = matches[0];
-    return match?.groupId
-      ? { input, resolved: true, id: String(match.groupId) }
-      : { input, resolved: false };
+  return setZalouserAccountScopedConfig(cfg, accountId, {
+    groups,
   });
 }
 
@@ -296,7 +211,7 @@ const dmPolicy: ChannelOnboardingDmPolicy = {
         ? (normalizeAccountId(accountId) ?? DEFAULT_ACCOUNT_ID)
         : resolveDefaultZalouserAccountId(cfg);
     return promptZalouserAllowFrom({
-      cfg: cfg,
+      cfg,
       prompter,
       accountId: id,
     });
@@ -310,7 +225,7 @@ export const zalouserOnboardingAdapter: ChannelOnboardingAdapter = {
     const ids = listZalouserAccountIds(cfg);
     let configured = false;
     for (const accountId of ids) {
-      const account = resolveZalouserAccountSync({ cfg: cfg, accountId });
+      const account = resolveZalouserAccountSync({ cfg, accountId });
       const isAuth = await checkZcaAuthenticated(account.profile);
       if (isAuth) {
         configured = true;
@@ -320,8 +235,8 @@ export const zalouserOnboardingAdapter: ChannelOnboardingAdapter = {
     return {
       channel,
       configured,
-      statusLines: [`Zalo 个人：${configured ? "已登录" : "需要二维码登录"}`],
-      selectionHint: configured ? "推荐 · 已登录" : "推荐 · 二维码登录",
+      statusLines: [`Zalo Personal: ${configured ? "logged in" : "needs QR login"}`],
+      selectionHint: configured ? "recommended · logged in" : "recommended · QR login",
       quickstartScore: configured ? 1 : 15,
     };
   },
@@ -332,28 +247,13 @@ export const zalouserOnboardingAdapter: ChannelOnboardingAdapter = {
     shouldPromptAccountIds,
     forceAllowFrom,
   }) => {
-    // Check zca is installed
-    const zcaInstalled = await checkZcaInstalled();
-    if (!zcaInstalled) {
-      await prompter.note(
-        [
-          "在 PATH 中未找到 `zca` 二进制文件。",
-          "",
-          "请安装 zca-cli，然后重新运行引导向导：",
-          "文档：https://docs.openclaw.ai/channels/zalouser",
-        ].join("\n"),
-        "缺少依赖",
-      );
-      return { cfg, accountId: DEFAULT_ACCOUNT_ID };
-    }
-
     const zalouserOverride = accountOverrides.zalouser?.trim();
     const defaultAccountId = resolveDefaultZalouserAccountId(cfg);
     let accountId = zalouserOverride ? normalizeAccountId(zalouserOverride) : defaultAccountId;
 
     if (shouldPromptAccountIds && !zalouserOverride) {
       accountId = await promptAccountId({
-        cfg: cfg,
+        cfg,
         prompter,
         label: "Zalo Personal",
         currentId: accountId,
@@ -370,74 +270,71 @@ export const zalouserOnboardingAdapter: ChannelOnboardingAdapter = {
       await noteZalouserHelp(prompter);
 
       const wantsLogin = await prompter.confirm({
-        message: "现在通过二维码登录？",
+        message: "Login via QR code now?",
         initialValue: true,
       });
 
       if (wantsLogin) {
-        await prompter.note(
-          "二维码将显示在终端中。\n使用 Zalo 应用扫描二维码以登录。",
-          "二维码登录",
-        );
-
-        // Run interactive login
-        const result = await runZcaInteractive(["auth", "login"], {
-          profile: account.profile,
-        });
-
-        if (!result.ok) {
-          await prompter.note(`登录失败：${result.stderr || "未知错误"}`, "错误");
-        } else {
-          const isNowAuth = await checkZcaAuthenticated(account.profile);
-          if (isNowAuth) {
-            await prompter.note("登录成功！", "成功");
+        const start = await startZaloQrLogin({ profile: account.profile, timeoutMs: 35_000 });
+        if (start.qrDataUrl) {
+          const qrPath = await writeQrDataUrlToTempFile(start.qrDataUrl, account.profile);
+          await prompter.note(
+            [
+              start.message,
+              qrPath
+                ? `QR image saved to: ${qrPath}`
+                : "Could not write QR image file; use gateway web login UI instead.",
+              "Scan + approve on phone, then continue.",
+            ].join("\n"),
+            "QR Login",
+          );
+          const scanned = await prompter.confirm({
+            message: "Did you scan and approve the QR on your phone?",
+            initialValue: true,
+          });
+          if (scanned) {
+            const waited = await waitForZaloQrLogin({
+              profile: account.profile,
+              timeoutMs: 120_000,
+            });
+            await prompter.note(waited.message, waited.connected ? "Success" : "Login pending");
           }
+        } else {
+          await prompter.note(start.message, "Login pending");
         }
       }
     } else {
       const keepSession = await prompter.confirm({
-        message: "Zalo 个人账号已登录。是否保留会话？",
+        message: "Zalo Personal already logged in. Keep session?",
         initialValue: true,
       });
       if (!keepSession) {
-        await runZcaInteractive(["auth", "logout"], { profile: account.profile });
-        await runZcaInteractive(["auth", "login"], { profile: account.profile });
+        await logoutZaloProfile(account.profile);
+        const start = await startZaloQrLogin({
+          profile: account.profile,
+          force: true,
+          timeoutMs: 35_000,
+        });
+        if (start.qrDataUrl) {
+          const qrPath = await writeQrDataUrlToTempFile(start.qrDataUrl, account.profile);
+          await prompter.note(
+            [start.message, qrPath ? `QR image saved to: ${qrPath}` : undefined]
+              .filter(Boolean)
+              .join("\n"),
+            "QR Login",
+          );
+          const waited = await waitForZaloQrLogin({ profile: account.profile, timeoutMs: 120_000 });
+          await prompter.note(waited.message, waited.connected ? "Success" : "Login pending");
+        }
       }
     }
 
-    // Enable the channel
-    if (accountId === DEFAULT_ACCOUNT_ID) {
-      next = {
-        ...next,
-        channels: {
-          ...next.channels,
-          zalouser: {
-            ...next.channels?.zalouser,
-            enabled: true,
-            profile: account.profile !== "default" ? account.profile : undefined,
-          },
-        },
-      } as OpenClawConfig;
-    } else {
-      next = {
-        ...next,
-        channels: {
-          ...next.channels,
-          zalouser: {
-            ...next.channels?.zalouser,
-            enabled: true,
-            accounts: {
-              ...next.channels?.zalouser?.accounts,
-              [accountId]: {
-                ...next.channels?.zalouser?.accounts?.[accountId],
-                enabled: true,
-                profile: account.profile,
-              },
-            },
-          },
-        },
-      } as OpenClawConfig;
-    }
+    next = setZalouserAccountScopedConfig(
+      next,
+      accountId,
+      { profile: account.profile !== "default" ? account.profile : undefined },
+      { profile: account.profile, enabled: true },
+    );
 
     if (forceAllowFrom) {
       next = await promptZalouserAllowFrom({
@@ -447,14 +344,16 @@ export const zalouserOnboardingAdapter: ChannelOnboardingAdapter = {
       });
     }
 
+    const updatedAccount = resolveZalouserAccountSync({ cfg: next, accountId });
     const accessConfig = await promptChannelAccessConfig({
       prompter,
-      label: "Zalo 群组",
-      currentPolicy: account.config.groupPolicy ?? "open",
-      currentEntries: Object.keys(account.config.groups ?? {}),
+      label: "Zalo groups",
+      currentPolicy: updatedAccount.config.groupPolicy ?? "allowlist",
+      currentEntries: Object.keys(updatedAccount.config.groups ?? {}),
       placeholder: "Family, Work, 123456789",
-      updatePrompt: Boolean(account.config.groups),
+      updatePrompt: Boolean(updatedAccount.config.groups),
     });
+
     if (accessConfig) {
       if (accessConfig.policy !== "allowlist") {
         next = setZalouserGroupPolicy(next, accountId, accessConfig.policy);
@@ -462,9 +361,8 @@ export const zalouserOnboardingAdapter: ChannelOnboardingAdapter = {
         let keys = accessConfig.entries;
         if (accessConfig.entries.length > 0) {
           try {
-            const resolved = await resolveZalouserGroups({
-              cfg: next,
-              accountId,
+            const resolved = await resolveZaloGroupsByEntries({
+              profile: updatedAccount.profile,
               entries: accessConfig.entries,
             });
             const resolvedIds = resolved
@@ -474,21 +372,18 @@ export const zalouserOnboardingAdapter: ChannelOnboardingAdapter = {
               .filter((entry) => !entry.resolved)
               .map((entry) => entry.input);
             keys = [...resolvedIds, ...unresolved.map((entry) => entry.trim()).filter(Boolean)];
-            if (resolvedIds.length > 0 || unresolved.length > 0) {
-              await prompter.note(
-                [
-                  resolvedIds.length > 0 ? `已解析：${resolvedIds.join(", ")}` : undefined,
-                  unresolved.length > 0
-                    ? `未解析（保留原样）：${unresolved.join(", ")}`
-                    : undefined,
-                ]
-                  .filter(Boolean)
-                  .join("\n"),
-                "Zalo 群组",
-              );
+            const resolution = formatResolvedUnresolvedNote({
+              resolved: resolvedIds,
+              unresolved,
+            });
+            if (resolution) {
+              await prompter.note(resolution, "Zalo groups");
             }
           } catch (err) {
-            await prompter.note(`群组查找失败；保留原始输入。${String(err)}`, "Zalo 群组");
+            await prompter.note(
+              `Group lookup failed; keeping entries as typed. ${String(err)}`,
+              "Zalo groups",
+            );
           }
         }
         next = setZalouserGroupPolicy(next, accountId, "allowlist");

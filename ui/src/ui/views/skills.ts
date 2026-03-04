@@ -1,63 +1,13 @@
 import { html, nothing } from "lit";
 import type { SkillMessageMap } from "../controllers/skills.ts";
 import type { SkillStatusEntry, SkillStatusReport } from "../types.ts";
-import { t } from "../../i18n/index.ts";
 import { clampText } from "../format.ts";
-
-type SkillGroup = {
-  id: string;
-  label: string;
-  skills: SkillStatusEntry[];
-};
-
-const SKILL_SOURCE_GROUPS: Array<{ id: string; label: string; sources: string[] }> = [
-  {
-    id: "workspace",
-    label: t("skills.workspaceSkills", "Workspace Skills"),
-    sources: ["openclaw-workspace"],
-  },
-  {
-    id: "built-in",
-    label: t("skills.builtInSkills", "Built-in Skills"),
-    sources: ["openclaw-bundled"],
-  },
-  {
-    id: "installed",
-    label: t("skills.installedSkills", "Installed Skills"),
-    sources: ["openclaw-managed"],
-  },
-  { id: "extra", label: t("skills.extraSkills", "Extra Skills"), sources: ["openclaw-extra"] },
-];
-
-function groupSkills(skills: SkillStatusEntry[]): SkillGroup[] {
-  const groups = new Map<string, SkillGroup>();
-  for (const def of SKILL_SOURCE_GROUPS) {
-    groups.set(def.id, { id: def.id, label: def.label, skills: [] });
-  }
-  const builtInGroup = SKILL_SOURCE_GROUPS.find((group) => group.id === "built-in");
-  const other: SkillGroup = {
-    id: "other",
-    label: t("skills.otherSkills", "Other Skills"),
-    skills: [],
-  };
-  for (const skill of skills) {
-    const match = skill.bundled
-      ? builtInGroup
-      : SKILL_SOURCE_GROUPS.find((group) => group.sources.includes(skill.source));
-    if (match) {
-      groups.get(match.id)?.skills.push(skill);
-    } else {
-      other.skills.push(skill);
-    }
-  }
-  const ordered = SKILL_SOURCE_GROUPS.map((group) => groups.get(group.id)).filter(
-    (group): group is SkillGroup => Boolean(group && group.skills.length > 0),
-  );
-  if (other.skills.length > 0) {
-    ordered.push(other);
-  }
-  return ordered;
-}
+import { groupSkills } from "./skills-grouping.ts";
+import {
+  computeSkillMissing,
+  computeSkillReasons,
+  renderSkillStatusChips,
+} from "./skills-shared.ts";
 
 export type SkillsProps = {
   loading: boolean;
@@ -89,24 +39,24 @@ export function renderSkills(props: SkillsProps) {
     <section class="card">
       <div class="row" style="justify-content: space-between;">
         <div>
-          <div class="card-title">${t("skills.title", "Skills")}</div>
-          <div class="card-sub">${t("skills.sub", "Bundled, managed, and workspace skills.")}</div>
+          <div class="card-title">Skills</div>
+          <div class="card-sub">Bundled, managed, and workspace skills.</div>
         </div>
         <button class="btn" ?disabled=${props.loading} @click=${props.onRefresh}>
-          ${props.loading ? t("skills.loading", "Loading…") : t("skills.refresh", "Refresh")}
+          ${props.loading ? "Loading…" : "Refresh"}
         </button>
       </div>
 
       <div class="filters" style="margin-top: 14px;">
         <label class="field" style="flex: 1;">
-          <span>${t("skills.filterLabel", "Filter")}</span>
+          <span>Filter</span>
           <input
             .value=${props.filter}
             @input=${(e: Event) => props.onFilterChange((e.target as HTMLInputElement).value)}
-            placeholder=${t("skills.searchSkills", "Search skills")}
+            placeholder="Search skills"
           />
         </label>
-        <div class="muted">${filtered.length} ${t("skills.shown", "shown")}</div>
+        <div class="muted">${filtered.length} shown</div>
       </div>
 
       ${
@@ -118,7 +68,7 @@ export function renderSkills(props: SkillsProps) {
       ${
         filtered.length === 0
           ? html`
-              <div class="muted" style="margin-top: 16px">${t("skills.noSkills", "No skills found.")}</div>
+              <div class="muted" style="margin-top: 16px">No skills found.</div>
             `
           : html`
             <div class="agent-skills-groups" style="margin-top: 16px;">
@@ -149,19 +99,8 @@ function renderSkill(skill: SkillStatusEntry, props: SkillsProps) {
   const message = props.messages[skill.skillKey] ?? null;
   const canInstall = skill.install.length > 0 && skill.missing.bins.length > 0;
   const showBundledBadge = Boolean(skill.bundled && skill.source !== "openclaw-bundled");
-  const missing = [
-    ...skill.missing.bins.map((b) => `bin:${b}`),
-    ...skill.missing.env.map((e) => `env:${e}`),
-    ...skill.missing.config.map((c) => `config:${c}`),
-    ...skill.missing.os.map((o) => `os:${o}`),
-  ];
-  const reasons: string[] = [];
-  if (skill.disabled) {
-    reasons.push(t("skills.disabled", "disabled"));
-  }
-  if (skill.blockedByAllowlist) {
-    reasons.push(t("skills.blockedByAllowlist", "blocked by allowlist"));
-  }
+  const missing = computeSkillMissing(skill);
+  const reasons = computeSkillReasons(skill);
   return html`
     <div class="list-item">
       <div class="list-main">
@@ -169,31 +108,12 @@ function renderSkill(skill: SkillStatusEntry, props: SkillsProps) {
           ${skill.emoji ? `${skill.emoji} ` : ""}${skill.name}
         </div>
         <div class="list-sub">${clampText(skill.description, 140)}</div>
-        <div class="chip-row" style="margin-top: 6px;">
-          <span class="chip">${skill.source}</span>
-          ${
-            showBundledBadge
-              ? html`
-                  <span class="chip">${t("skills.bundled", "bundled")}</span>
-                `
-              : nothing
-          }
-          <span class="chip ${skill.eligible ? "chip-ok" : "chip-warn"}">
-            ${skill.eligible ? t("skills.eligible", "eligible") : t("skills.blocked", "blocked")}
-          </span>
-          ${
-            skill.disabled
-              ? html`
-                  <span class="chip chip-warn">${t("skills.disabled", "disabled")}</span>
-                `
-              : nothing
-          }
-        </div>
+        ${renderSkillStatusChips({ skill, showBundledBadge })}
         ${
           missing.length > 0
             ? html`
               <div class="muted" style="margin-top: 6px;">
-                ${t("skills.missing", "Missing")}: ${missing.join(", ")}
+                Missing: ${missing.join(", ")}
               </div>
             `
             : nothing
@@ -202,7 +122,7 @@ function renderSkill(skill: SkillStatusEntry, props: SkillsProps) {
           reasons.length > 0
             ? html`
               <div class="muted" style="margin-top: 6px;">
-                ${t("skills.reason", "Reason")}: ${reasons.join(", ")}
+                Reason: ${reasons.join(", ")}
               </div>
             `
             : nothing
@@ -215,7 +135,7 @@ function renderSkill(skill: SkillStatusEntry, props: SkillsProps) {
             ?disabled=${busy}
             @click=${() => props.onToggle(skill.skillKey, skill.disabled)}
           >
-            ${skill.disabled ? t("skills.enable", "Enable") : t("skills.disable", "Disable")}
+            ${skill.disabled ? "Enable" : "Disable"}
           </button>
           ${
             canInstall
@@ -224,7 +144,7 @@ function renderSkill(skill: SkillStatusEntry, props: SkillsProps) {
                 ?disabled=${busy}
                 @click=${() => props.onInstall(skill.skillKey, skill.name, skill.install[0].id)}
               >
-                ${busy ? t("skills.installing", "Installing…") : skill.install[0].label}
+                ${busy ? "Installing…" : skill.install[0].label}
               </button>`
               : nothing
           }
@@ -247,7 +167,7 @@ function renderSkill(skill: SkillStatusEntry, props: SkillsProps) {
           skill.primaryEnv
             ? html`
               <div class="field" style="margin-top: 10px;">
-                <span>${t("skills.apiKey", "API key")}</span>
+                <span>API key</span>
                 <input
                   type="password"
                   .value=${apiKey}
@@ -261,7 +181,7 @@ function renderSkill(skill: SkillStatusEntry, props: SkillsProps) {
                 ?disabled=${busy}
                 @click=${() => props.onSaveKey(skill.skillKey)}
               >
-                ${t("skills.saveKey", "Save key")}
+                Save key
               </button>
             `
             : nothing

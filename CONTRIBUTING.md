@@ -1,107 +1,161 @@
-# 为 OpenClaw 做贡献
+# Contributing to OpenClaw
 
-欢迎来到龙虾池！🦞
+Welcome to the lobster tank! 🦞
 
-## 快速链接
+## Quick Links
 
 - **GitHub:** https://github.com/openclaw/openclaw
+- **Vision:** [`VISION.md`](VISION.md)
 - **Discord:** https://discord.gg/qkhbAGHRBT
 - **X/Twitter:** [@steipete](https://x.com/steipete) / [@openclaw](https://x.com/openclaw)
 
-## 维护者
+## Maintainers
 
-- **Peter Steinberger** - 仁慈的独裁者
+- **Peter Steinberger** - Benevolent Dictator
   - GitHub: [@steipete](https://github.com/steipete) · X: [@steipete](https://x.com/steipete)
 
-- **Shadow** - Discord + Slack 子系统
+- **Shadow** - Discord subsystem, Discord admin, Clawhub, all community moderation
   - GitHub: [@thewilloftheshadow](https://github.com/thewilloftheshadow) · X: [@4shad0wed](https://x.com/4shad0wed)
 
-- **Vignesh** - 记忆（QMD）、形式化建模、TUI 和 Lobster
+- **Vignesh** - Memory (QMD), formal modeling, TUI, IRC, and Lobster
   - GitHub: [@vignesh07](https://github.com/vignesh07) · X: [@\_vgnsh](https://x.com/_vgnsh)
 
-- **Jos** - Telegram、API、Nix 模式
+- **Jos** - Telegram, API, Nix mode
   - GitHub: [@joshp123](https://github.com/joshp123) · X: [@jjpcodes](https://x.com/jjpcodes)
 
-- **Christoph Nakazawa** - JS 基础设施
+- **Ayaan Zaidi** - Telegram subsystem, iOS app
+  - GitHub: [@obviyus](https://github.com/obviyus) · X: [@0bviyus](https://x.com/0bviyus)
+
+- **Tyler Yust** - Agents/subagents, cron, BlueBubbles, macOS app
+  - GitHub: [@tyler6204](https://github.com/tyler6204) · X: [@tyleryust](https://x.com/tyleryust)
+
+- **Mariano Belinky** - iOS app, Security
+  - GitHub: [@mbelinky](https://github.com/mbelinky) · X: [@belimad](https://x.com/belimad)
+
+- **Nimrod Gutman** - iOS app, macOS app and crustacean features
+  - GitHub: [@ngutman](https://github.com/ngutman) · X: [@theguti](https://x.com/theguti)
+
+- **Vincent Koc** - Agents, Telemetry, Hooks, Security
+  - GitHub: [@vincentkoc](https://github.com/vincentkoc) · X: [@vincent_koc](https://x.com/vincent_koc)
+
+- **Val Alexander** - UI/UX, Docs, and Agent DevX
+  - GitHub: [@BunsDev](https://github.com/BunsDev) · X: [@BunsDev](https://x.com/BunsDev)
+
+- **Seb Slight** - Docs, Agent Reliability, Runtime Hardening
+  - GitHub: [@sebslight](https://github.com/sebslight) · X: [@sebslig](https://x.com/sebslig)
+
+- **Christoph Nakazawa** - JS Infra
   - GitHub: [@cpojer](https://github.com/cpojer) · X: [@cnakazawa](https://x.com/cnakazawa)
 
-- **Gustavo Madeira Santana** - 多智能体、CLI、Web UI
+- **Gustavo Madeira Santana** - Multi-agents, CLI, web UI
   - GitHub: [@gumadeiras](https://github.com/gumadeiras) · X: [@gumadeiras](https://x.com/gumadeiras)
 
-- **Maximilian Nussbaumer** - DevOps、CI、代码质量
-  - GitHub: [@quotentiroler](https://github.com/quotentiroler) · X: [@quotentiroler](https://x.com/quotentiroler)
+- **Onur Solmaz** - Agents, dev workflows, ACP integrations, MS Teams
+  - GitHub: [@onutc](https://github.com/onutc), [@osolmaz](https://github.com/osolmaz) · X: [@onusoz](https://x.com/onusoz)
 
-## 如何贡献
+- **Josh Avant** - Core, CLI, Gateway, Security, Agents
+  - GitHub: [@joshavant](https://github.com/joshavant) · X: [@joshavant](https://x.com/joshavant)
 
-1. **Bug 修复和小改动** → 直接提交 PR！
-2. **新功能 / 架构变更** → 先发起 [GitHub Discussion](https://github.com/openclaw/openclaw/discussions) 或在 Discord 中讨论
-3. **问题咨询** → Discord #setup-help
+- **Jonathan Taylor** - ACP subsystem, Gateway features/bugs, Gog/Mog/Sog CLI's, SEDMAT
+  - Github [@visionik](https://github.com/visionik) · X: [@visionik](https://x.com/visionik)
+- **Josh Lehman** - Compaction, Tlon/Urbit subsystem
+  - Github [@jalehman](https://github.com/jalehman) · X: [@jlehman\_](https://x.com/jlehman_)
 
-## 提交 PR 前须知
+## How to Contribute
 
-- 在你的 OpenClaw 实例上进行本地测试
-- 运行测试：`pnpm build && pnpm check && pnpm test`
-- 确保 CI 检查全部通过
-- 保持 PR 聚焦（每个 PR 只做一件事）
-- 描述清楚改了什么以及为什么
+1. **Bugs & small fixes** → Open a PR!
+2. **New features / architecture** → Start a [GitHub Discussion](https://github.com/openclaw/openclaw/discussions) or ask in Discord first
+3. **Questions** → Discord [#help](https://discord.com/channels/1456350064065904867/1459642797895319552) / [#users-helping-users](https://discord.com/channels/1456350064065904867/1459007081603403828)
 
-## Control UI 装饰器
+## Before You PR
 
-Control UI 使用 Lit 框架，并采用**旧式**装饰器（当前 Rollup 解析不支持标准装饰器所需的 `accessor` 字段）。添加响应式字段时，请保持旧式风格：
+- Test locally with your OpenClaw instance
+- Run tests: `pnpm build && pnpm check && pnpm test`
+- Ensure CI checks pass
+- Keep PRs focused (one thing per PR; do not mix unrelated concerns)
+- Describe what & why
+
+## Control UI Decorators
+
+The Control UI uses Lit with **legacy** decorators (current Rollup parsing does not support
+`accessor` fields required for standard decorators). When adding reactive fields, keep the
+legacy style:
 
 ```ts
 @state() foo = "bar";
 @property({ type: Number }) count = 0;
 ```
 
-根目录的 `tsconfig.json` 已配置为旧式装饰器（`experimentalDecorators: true`），并设置了 `useDefineForClassFields: false`。除非你同时更新 UI 构建工具以支持标准装饰器，否则不要修改这些设置。
+The root `tsconfig.json` is configured for legacy decorators (`experimentalDecorators: true`)
+with `useDefineForClassFields: false`. Avoid flipping these unless you are also updating the UI
+build tooling to support standard decorators.
 
-## 欢迎 AI/Vibe-Coded PR！🤖
+## AI/Vibe-Coded PRs Welcome! 🤖
 
-使用 Codex、Claude 或其他 AI 工具构建的？**太棒了——只需标注即可！**
+Built with Codex, Claude, or other AI tools? **Awesome - just mark it!**
 
-请在你的 PR 中包含：
+Please include in your PR:
 
-- [ ] 在 PR 标题或描述中标注为 AI 辅助
-- [ ] 说明测试程度（未测试 / 轻度测试 / 完整测试）
-- [ ] 如有可能，附上提示词或会话日志（非常有帮助！）
-- [ ] 确认你理解代码的功能
+- [ ] Mark as AI-assisted in the PR title or description
+- [ ] Note the degree of testing (untested / lightly tested / fully tested)
+- [ ] Include prompts or session logs if possible (super helpful!)
+- [ ] Confirm you understand what the code does
 
-AI PR 在这里是一等公民。我们只是希望保持透明，以便审阅者知道需要关注什么。
+AI PRs are first-class citizens here. We just want transparency so reviewers know what to look for.
 
-## 当前重点与路线图 🗺
+## Current Focus & Roadmap 🗺
 
-我们目前优先关注：
+We are currently prioritizing:
 
-- **稳定性**：修复渠道连接中的边缘情况（WhatsApp/Telegram）。
-- **用户体验**：改进引导向导和错误提示。
-- **技能扩展**：如需贡献技能，请前往 [ClawHub](https://clawhub.ai/) — OpenClaw 技能的社区中心。
-- **性能优化**：优化 token 使用和压缩逻辑。
+- **Stability**: Fixing edge cases in channel connections (WhatsApp/Telegram).
+- **UX**: Improving the onboarding wizard and error messages.
+- **Skills**: For skill contributions, head to [ClawHub](https://clawhub.ai/) — the community hub for OpenClaw skills.
+- **Performance**: Optimizing token usage and compaction logic.
 
-查看 [GitHub Issues](https://github.com/openclaw/openclaw/issues) 中带有 "good first issue" 标签的议题！
+Check the [GitHub Issues](https://github.com/openclaw/openclaw/issues) for "good first issue" labels!
 
-## 报告漏洞
+## Maintainers
 
-我们非常重视安全报告。请直接向问题所在的仓库报告漏洞：
+We're selectively expanding the maintainer team.
+If you're an experienced contributor who wants to help shape OpenClaw's direction — whether through code, docs, or community — we'd like to hear from you.
 
-- **核心 CLI 和网关** — [openclaw/openclaw](https://github.com/openclaw/openclaw)
-- **macOS 桌面应用** — [openclaw/openclaw](https://github.com/openclaw/openclaw) (apps/macos)
-- **iOS 应用** — [openclaw/openclaw](https://github.com/openclaw/openclaw) (apps/ios)
-- **Android 应用** — [openclaw/openclaw](https://github.com/openclaw/openclaw) (apps/android)
+Being a maintainer is a responsibility, not an honorary title. We expect active, consistent involvement — triaging issues, reviewing PRs, and helping move the project forward.
+
+Still interested? Email contributing@openclaw.ai with:
+
+- Links to your PRs on OpenClaw (if you don't have any, start there first)
+- Links to open source projects you maintain or actively contribute to
+- Your GitHub, Discord, and X/Twitter handles
+- A brief intro: background, experience, and areas of interest
+- Languages you speak and where you're based
+- How much time you can realistically commit
+
+We welcome people across all skill sets — engineering, documentation, community management, and more.
+We review every human-only-written application carefully and add maintainers slowly and deliberately.
+Please allow a few weeks for a response.
+
+## Report a Vulnerability
+
+We take security reports seriously. Report vulnerabilities directly to the repository where the issue lives:
+
+- **Core CLI and gateway** — [openclaw/openclaw](https://github.com/openclaw/openclaw)
+- **macOS desktop app** — [openclaw/openclaw](https://github.com/openclaw/openclaw) (apps/macos)
+- **iOS app** — [openclaw/openclaw](https://github.com/openclaw/openclaw) (apps/ios)
+- **Android app** — [openclaw/openclaw](https://github.com/openclaw/openclaw) (apps/android)
 - **ClawHub** — [openclaw/clawhub](https://github.com/openclaw/clawhub)
-- **信任与威胁模型** — [openclaw/trust](https://github.com/openclaw/trust)
+- **Trust and threat model** — [openclaw/trust](https://github.com/openclaw/trust)
 
-对于不适合特定仓库的问题，或如果你不确定，请发邮件至 **security@openclaw.ai**，我们会进行转发处理。
+For issues that don't fit a specific repo, or if you're unsure, email **security@openclaw.ai** and we'll route it.
 
-### 报告必须包含
+### Required in Reports
 
-1. **标题**
-2. **严重性评估**
-3. **影响范围**
-4. **受影响组件**
-5. **技术复现步骤**
-6. **影响演示**
-7. **环境信息**
-8. **修复建议**
+1. **Title**
+2. **Severity Assessment**
+3. **Impact**
+4. **Affected Component**
+5. **Technical Reproduction**
+6. **Demonstrated Impact**
+7. **Environment**
+8. **Remediation Advice**
 
-缺少复现步骤、影响演示和修复建议的报告将被降低优先级。鉴于 AI 生成的扫描结果数量众多，我们必须确保收到的是来自理解问题的研究人员的经过验证的报告。
+Reports without reproduction steps, demonstrated impact, and remediation advice will be deprioritized. Given the volume of AI-generated scanner findings, we must ensure we're receiving vetted reports from researchers who understand the issues.

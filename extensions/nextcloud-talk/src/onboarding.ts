@@ -1,9 +1,13 @@
 import {
   addWildcardAllowFrom,
   formatDocsLink,
+  hasConfiguredSecretInput,
+  mergeAllowFromEntries,
+  promptSingleChannelSecretInput,
   promptAccountId,
   DEFAULT_ACCOUNT_ID,
   normalizeAccountId,
+  type SecretInput,
   type ChannelOnboardingAdapter,
   type ChannelOnboardingDmPolicy,
   type OpenClawConfig,
@@ -42,26 +46,26 @@ function setNextcloudTalkDmPolicy(cfg: CoreConfig, dmPolicy: DmPolicy): CoreConf
 async function noteNextcloudTalkSecretHelp(prompter: WizardPrompter): Promise<void> {
   await prompter.note(
     [
-      "1) SSH 登录到你的 Nextcloud 服务器",
-      '2) 运行：./occ talk:bot:install "OpenClaw" "<shared-secret>" "<webhook-url>" --feature reaction',
-      "3) 复制你在命令中使用的共享密钥",
-      "4) 在 Nextcloud Talk 房间设置中启用机器人",
-      "提示：你也可以在环境变量中设置 NEXTCLOUD_TALK_BOT_SECRET。",
+      "1) SSH into your Nextcloud server",
+      '2) Run: ./occ talk:bot:install "OpenClaw" "<shared-secret>" "<webhook-url>" --feature reaction',
+      "3) Copy the shared secret you used in the command",
+      "4) Enable the bot in your Nextcloud Talk room settings",
+      "Tip: you can also set NEXTCLOUD_TALK_BOT_SECRET in your env.",
       `Docs: ${formatDocsLink("/channels/nextcloud-talk", "channels/nextcloud-talk")}`,
     ].join("\n"),
-    "Nextcloud Talk 机器人设置",
+    "Nextcloud Talk bot setup",
   );
 }
 
 async function noteNextcloudTalkUserIdHelp(prompter: WizardPrompter): Promise<void> {
   await prompter.note(
     [
-      "1) 在 Nextcloud 管理面板中查看用户 ID",
-      "2) 或查看有人发消息时的 Webhook 负载日志",
-      "3) 用户 ID 通常是 Nextcloud 中的小写用户名",
+      "1) Check the Nextcloud admin panel for user IDs",
+      "2) Or look at the webhook payload logs when someone messages",
+      "3) User IDs are typically lowercase usernames in Nextcloud",
       `Docs: ${formatDocsLink("/channels/nextcloud-talk", "channels/nextcloud-talk")}`,
     ].join("\n"),
-    "Nextcloud Talk 用户 ID",
+    "Nextcloud Talk user id",
   );
 }
 
@@ -84,14 +88,14 @@ async function promptNextcloudTalkAllowFrom(params: {
   let resolvedIds: string[] = [];
   while (resolvedIds.length === 0) {
     const entry = await prompter.text({
-      message: "Nextcloud Talk 白名单（用户 ID）",
+      message: "Nextcloud Talk allowFrom (user id)",
       placeholder: "username",
       initialValue: existingAllowFrom[0] ? String(existingAllowFrom[0]) : undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "必填"),
+      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
     });
     resolvedIds = parseInput(String(entry));
     if (resolvedIds.length === 0) {
-      await prompter.note("请输入至少一个有效的用户 ID。", "Nextcloud Talk 白名单");
+      await prompter.note("Please enter at least one valid user ID.", "Nextcloud Talk allowlist");
     }
   }
 
@@ -99,7 +103,7 @@ async function promptNextcloudTalkAllowFrom(params: {
     ...existingAllowFrom.map((item) => String(item).trim().toLowerCase()).filter(Boolean),
     ...resolvedIds,
   ];
-  const unique = [...new Set(merged)];
+  const unique = mergeAllowFromEntries(undefined, merged);
 
   if (accountId === DEFAULT_ACCOUNT_ID) {
     return {
@@ -177,8 +181,8 @@ export const nextcloudTalkOnboardingAdapter: ChannelOnboardingAdapter = {
     return {
       channel,
       configured,
-      statusLines: [`Nextcloud Talk：${configured ? "已配置" : "需要设置"}`],
-      selectionHint: configured ? "已配置" : "自托管聊天",
+      statusLines: [`Nextcloud Talk: ${configured ? "configured" : "needs setup"}`],
+      selectionHint: configured ? "configured" : "self-hosted chat",
       quickstartScore: configured ? 1 : 5,
     };
   },
@@ -215,21 +219,22 @@ export const nextcloudTalkOnboardingAdapter: ChannelOnboardingAdapter = {
     const allowEnv = accountId === DEFAULT_ACCOUNT_ID;
     const canUseEnv = allowEnv && Boolean(process.env.NEXTCLOUD_TALK_BOT_SECRET?.trim());
     const hasConfigSecret = Boolean(
-      resolvedAccount.config.botSecret || resolvedAccount.config.botSecretFile,
+      hasConfiguredSecretInput(resolvedAccount.config.botSecret) ||
+      resolvedAccount.config.botSecretFile,
     );
 
     let baseUrl = resolvedAccount.baseUrl;
     if (!baseUrl) {
       baseUrl = String(
         await prompter.text({
-          message: "输入 Nextcloud 实例 URL（例如 https://cloud.example.com）",
+          message: "Enter Nextcloud instance URL (e.g., https://cloud.example.com)",
           validate: (value) => {
             const v = String(value ?? "").trim();
             if (!v) {
-              return "必填";
+              return "Required";
             }
             if (!v.startsWith("http://") && !v.startsWith("https://")) {
-              return "URL 必须以 http:// 或 https:// 开头";
+              return "URL must start with http:// or https://";
             }
             return undefined;
           },
@@ -237,59 +242,29 @@ export const nextcloudTalkOnboardingAdapter: ChannelOnboardingAdapter = {
       ).trim();
     }
 
-    let secret: string | null = null;
+    let secret: SecretInput | null = null;
     if (!accountConfigured) {
       await noteNextcloudTalkSecretHelp(prompter);
     }
 
-    if (canUseEnv && !resolvedAccount.config.botSecret) {
-      const keepEnv = await prompter.confirm({
-        message: "检测到 NEXTCLOUD_TALK_BOT_SECRET。是否使用环境变量？",
-        initialValue: true,
-      });
-      if (keepEnv) {
-        next = {
-          ...next,
-          channels: {
-            ...next.channels,
-            "nextcloud-talk": {
-              ...next.channels?.["nextcloud-talk"],
-              enabled: true,
-              baseUrl,
-            },
-          },
-        };
-      } else {
-        secret = String(
-          await prompter.text({
-            message: "输入 Nextcloud Talk 机器人密钥",
-            validate: (value) => (value?.trim() ? undefined : "必填"),
-          }),
-        ).trim();
-      }
-    } else if (hasConfigSecret) {
-      const keep = await prompter.confirm({
-        message: "Nextcloud Talk 密钥已配置。是否保留？",
-        initialValue: true,
-      });
-      if (!keep) {
-        secret = String(
-          await prompter.text({
-            message: "输入 Nextcloud Talk 机器人密钥",
-            validate: (value) => (value?.trim() ? undefined : "必填"),
-          }),
-        ).trim();
-      }
-    } else {
-      secret = String(
-        await prompter.text({
-          message: "输入 Nextcloud Talk 机器人密钥",
-          validate: (value) => (value?.trim() ? undefined : "必填"),
-        }),
-      ).trim();
+    const secretResult = await promptSingleChannelSecretInput({
+      cfg: next,
+      prompter,
+      providerHint: "nextcloud-talk",
+      credentialLabel: "bot secret",
+      accountConfigured,
+      canUseEnv: canUseEnv && !hasConfigSecret,
+      hasConfigToken: hasConfigSecret,
+      envPrompt: "NEXTCLOUD_TALK_BOT_SECRET detected. Use env var?",
+      keepPrompt: "Nextcloud Talk bot secret already configured. Keep it?",
+      inputPrompt: "Enter Nextcloud Talk bot secret",
+      preferredEnvVar: "NEXTCLOUD_TALK_BOT_SECRET",
+    });
+    if (secretResult.action === "set") {
+      secret = secretResult.value;
     }
 
-    if (secret || baseUrl !== resolvedAccount.baseUrl) {
+    if (secretResult.action === "use-env" || secret || baseUrl !== resolvedAccount.baseUrl) {
       if (accountId === DEFAULT_ACCOUNT_ID) {
         next = {
           ...next,
@@ -319,6 +294,74 @@ export const nextcloudTalkOnboardingAdapter: ChannelOnboardingAdapter = {
                     next.channels?.["nextcloud-talk"]?.accounts?.[accountId]?.enabled ?? true,
                   baseUrl,
                   ...(secret ? { botSecret: secret } : {}),
+                },
+              },
+            },
+          },
+        };
+      }
+    }
+
+    const existingApiUser = resolvedAccount.config.apiUser?.trim();
+    const existingApiPasswordConfigured = Boolean(
+      hasConfiguredSecretInput(resolvedAccount.config.apiPassword) ||
+      resolvedAccount.config.apiPasswordFile,
+    );
+    const configureApiCredentials = await prompter.confirm({
+      message: "Configure optional Nextcloud Talk API credentials for room lookups?",
+      initialValue: Boolean(existingApiUser && existingApiPasswordConfigured),
+    });
+    if (configureApiCredentials) {
+      const apiUser = String(
+        await prompter.text({
+          message: "Nextcloud Talk API user",
+          initialValue: existingApiUser,
+          validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+        }),
+      ).trim();
+      const apiPasswordResult = await promptSingleChannelSecretInput({
+        cfg: next,
+        prompter,
+        providerHint: "nextcloud-talk-api",
+        credentialLabel: "API password",
+        accountConfigured: Boolean(existingApiUser && existingApiPasswordConfigured),
+        canUseEnv: false,
+        hasConfigToken: existingApiPasswordConfigured,
+        envPrompt: "",
+        keepPrompt: "Nextcloud Talk API password already configured. Keep it?",
+        inputPrompt: "Enter Nextcloud Talk API password",
+        preferredEnvVar: "NEXTCLOUD_TALK_API_PASSWORD",
+      });
+      const apiPassword = apiPasswordResult.action === "set" ? apiPasswordResult.value : undefined;
+      if (accountId === DEFAULT_ACCOUNT_ID) {
+        next = {
+          ...next,
+          channels: {
+            ...next.channels,
+            "nextcloud-talk": {
+              ...next.channels?.["nextcloud-talk"],
+              enabled: true,
+              apiUser,
+              ...(apiPassword ? { apiPassword } : {}),
+            },
+          },
+        };
+      } else {
+        next = {
+          ...next,
+          channels: {
+            ...next.channels,
+            "nextcloud-talk": {
+              ...next.channels?.["nextcloud-talk"],
+              enabled: true,
+              accounts: {
+                ...next.channels?.["nextcloud-talk"]?.accounts,
+                [accountId]: {
+                  ...next.channels?.["nextcloud-talk"]?.accounts?.[accountId],
+                  enabled:
+                    next.channels?.["nextcloud-talk"]?.accounts?.[accountId]?.enabled ?? true,
+                  apiUser,
+                  ...(apiPassword ? { apiPassword } : {}),
                 },
               },
             },

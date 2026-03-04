@@ -19,13 +19,18 @@ export type MemorySearchManagerResult = {
 export async function getMemorySearchManager(params: {
   cfg: OpenClawConfig;
   agentId: string;
+  purpose?: "default" | "status";
 }): Promise<MemorySearchManagerResult> {
   const resolved = resolveMemoryBackendConfig(params);
   if (resolved.backend === "qmd" && resolved.qmd) {
-    const cacheKey = buildQmdCacheKey(params.agentId, resolved.qmd);
-    const cached = QMD_MANAGER_CACHE.get(cacheKey);
-    if (cached) {
-      return { manager: cached };
+    const statusOnly = params.purpose === "status";
+    let cacheKey: string | undefined;
+    if (!statusOnly) {
+      cacheKey = buildQmdCacheKey(params.agentId, resolved.qmd);
+      const cached = QMD_MANAGER_CACHE.get(cacheKey);
+      if (cached) {
+        return { manager: cached };
+      }
     }
     try {
       const { QmdMemoryManager } = await import("./qmd-manager.js");
@@ -33,8 +38,12 @@ export async function getMemorySearchManager(params: {
         cfg: params.cfg,
         agentId: params.agentId,
         resolved,
+        mode: statusOnly ? "status" : "full",
       });
       if (primary) {
+        if (statusOnly) {
+          return { manager: primary };
+        }
         const wrapper = new FallbackMemoryManager(
           {
             primary,
@@ -43,9 +52,15 @@ export async function getMemorySearchManager(params: {
               return await MemoryIndexManager.get(params);
             },
           },
-          () => QMD_MANAGER_CACHE.delete(cacheKey),
+          () => {
+            if (cacheKey) {
+              QMD_MANAGER_CACHE.delete(cacheKey);
+            }
+          },
         );
-        QMD_MANAGER_CACHE.set(cacheKey, wrapper);
+        if (cacheKey) {
+          QMD_MANAGER_CACHE.set(cacheKey, wrapper);
+        }
         return { manager: wrapper };
       }
     } catch (err) {
@@ -183,9 +198,16 @@ class FallbackMemoryManager implements MemorySearchManager {
     if (this.fallback) {
       return this.fallback;
     }
-    const fallback = await this.deps.fallbackFactory();
-    if (!fallback) {
-      log.warn("memory fallback requested but builtin index is unavailable");
+    let fallback: MemorySearchManager | null;
+    try {
+      fallback = await this.deps.fallbackFactory();
+      if (!fallback) {
+        log.warn("memory fallback requested but builtin index is unavailable");
+        return null;
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      log.warn(`memory fallback unavailable: ${message}`);
       return null;
     }
     this.fallback = fallback;
@@ -202,22 +224,7 @@ class FallbackMemoryManager implements MemorySearchManager {
 }
 
 function buildQmdCacheKey(agentId: string, config: ResolvedQmdConfig): string {
-  return `${agentId}:${stableSerialize(config)}`;
-}
-
-function stableSerialize(value: unknown): string {
-  return JSON.stringify(sortValue(value));
-}
-
-function sortValue(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((entry) => sortValue(entry));
-  }
-  if (value && typeof value === "object") {
-    const sortedEntries = Object.keys(value as Record<string, unknown>)
-      .toSorted((a, b) => a.localeCompare(b))
-      .map((key) => [key, sortValue((value as Record<string, unknown>)[key])]);
-    return Object.fromEntries(sortedEntries);
-  }
-  return value;
+  // ResolvedQmdConfig is assembled in a stable field order in resolveMemoryBackendConfig.
+  // Fast stringify avoids deep key-sorting overhead on this hot path.
+  return `${agentId}:${JSON.stringify(config)}`;
 }

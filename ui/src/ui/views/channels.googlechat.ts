@@ -1,7 +1,6 @@
 import { html, nothing } from "lit";
 import type { GoogleChatStatus } from "../types.ts";
 import type { ChannelsProps } from "./channels.types.ts";
-import { t } from "../../i18n/index.ts";
 import { formatRelativeTimestamp } from "../format.ts";
 import { renderChannelConfigSection } from "./channels.config.ts";
 
@@ -15,39 +14,39 @@ export function renderGoogleChatCard(params: {
   return html`
     <div class="card">
       <div class="card-title">Google Chat</div>
-      <div class="card-sub">${t("channels.googlechat.sub", "Chat API webhook status and channel configuration.")}</div>
+      <div class="card-sub">Chat API webhook status and channel configuration.</div>
       ${accountCountLabel}
 
       <div class="status-list" style="margin-top: 16px;">
         <div>
-          <span class="label">${t("channels.configured", "Configured")}</span>
-          <span>${googleChat ? (googleChat.configured ? t("channels.yes", "Yes") : t("channels.no", "No")) : t("channels.na", "n/a")}</span>
+          <span class="label">Configured</span>
+          <span>${googleChat ? (googleChat.configured ? "Yes" : "No") : "n/a"}</span>
         </div>
         <div>
-          <span class="label">${t("channels.running", "Running")}</span>
-          <span>${googleChat ? (googleChat.running ? t("channels.yes", "Yes") : t("channels.no", "No")) : t("channels.na", "n/a")}</span>
+          <span class="label">Running</span>
+          <span>${googleChat ? (googleChat.running ? "Yes" : "No") : "n/a"}</span>
         </div>
         <div>
-          <span class="label">${t("channels.googlechat.credential", "Credential")}</span>
-          <span>${googleChat?.credentialSource ?? t("channels.na", "n/a")}</span>
+          <span class="label">Credential</span>
+          <span>${googleChat?.credentialSource ?? "n/a"}</span>
         </div>
         <div>
-          <span class="label">${t("channels.googlechat.audience", "Audience")}</span>
+          <span class="label">Audience</span>
           <span>
             ${
               googleChat?.audienceType
                 ? `${googleChat.audienceType}${googleChat.audience ? ` · ${googleChat.audience}` : ""}`
-                : t("channels.na", "n/a")
+                : "n/a"
             }
           </span>
         </div>
         <div>
-          <span class="label">${t("channels.lastStart", "Last start")}</span>
-          <span>${googleChat?.lastStartAt ? formatRelativeTimestamp(googleChat.lastStartAt) : t("channels.na", "n/a")}</span>
+          <span class="label">Last start</span>
+          <span>${googleChat?.lastStartAt ? formatRelativeTimestamp(googleChat.lastStartAt) : "n/a"}</span>
         </div>
         <div>
-          <span class="label">${t("channels.lastProbe", "Last probe")}</span>
-          <span>${googleChat?.lastProbeAt ? formatRelativeTimestamp(googleChat.lastProbeAt) : t("channels.na", "n/a")}</span>
+          <span class="label">Last probe</span>
+          <span>${googleChat?.lastProbeAt ? formatRelativeTimestamp(googleChat.lastProbeAt) : "n/a"}</span>
         </div>
       </div>
 
@@ -62,7 +61,7 @@ export function renderGoogleChatCard(params: {
       ${
         googleChat?.probe
           ? html`<div class="callout" style="margin-top: 12px;">
-            ${t("channels.probe", "Probe")} ${googleChat.probe.ok ? t("channels.probeOk", "ok") : t("channels.probeFailed", "failed")} ·
+            Probe ${googleChat.probe.ok ? "ok" : "failed"} ·
             ${googleChat.probe.status ?? ""} ${googleChat.probe.error ?? ""}
           </div>`
           : nothing
@@ -72,7 +71,7 @@ export function renderGoogleChatCard(params: {
 
       <div class="row" style="margin-top: 12px;">
         <button class="btn" @click=${() => props.onRefresh(true)}>
-          ${t("channels.probe", "Probe")}
+          Probe
         </button>
       </div>
     </div>

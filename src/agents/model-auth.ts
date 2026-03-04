@@ -279,12 +279,23 @@ export function resolveEnvApiKey(provider: string): EnvApiKeyResult | null {
     return pick("QWEN_OAUTH_TOKEN") ?? pick("QWEN_PORTAL_API_KEY");
   }
 
+  if (normalized === "volcengine" || normalized === "volcengine-plan") {
+    return pick("VOLCANO_ENGINE_API_KEY");
+  }
+
+  if (normalized === "byteplus" || normalized === "byteplus-plan") {
+    return pick("BYTEPLUS_API_KEY");
+  }
   if (normalized === "minimax-portal") {
     return pick("MINIMAX_OAUTH_TOKEN") ?? pick("MINIMAX_API_KEY");
   }
 
   if (normalized === "kimi-coding") {
     return pick("KIMI_API_KEY") ?? pick("KIMICODE_API_KEY");
+  }
+
+  if (normalized === "huggingface") {
+    return pick("HUGGINGFACE_HUB_TOKEN") ?? pick("HF_TOKEN");
   }
 
   const envMap: Record<string, string> = {
@@ -296,10 +307,12 @@ export function resolveEnvApiKey(provider: string): EnvApiKeyResult | null {
     cerebras: "CEREBRAS_API_KEY",
     xai: "XAI_API_KEY",
     openrouter: "OPENROUTER_API_KEY",
+    litellm: "LITELLM_API_KEY",
     "vercel-ai-gateway": "AI_GATEWAY_API_KEY",
     "cloudflare-ai-gateway": "CLOUDFLARE_AI_GATEWAY_API_KEY",
     moonshot: "MOONSHOT_API_KEY",
     minimax: "MINIMAX_API_KEY",
+    nvidia: "NVIDIA_API_KEY",
     xiaomi: "XIAOMI_API_KEY",
     dmxapi: "DMXAPI_API_KEY",
     synthetic: "SYNTHETIC_API_KEY",
@@ -309,6 +322,8 @@ export function resolveEnvApiKey(provider: string): EnvApiKeyResult | null {
     together: "TOGETHER_API_KEY",
     qianfan: "QIANFAN_API_KEY",
     ollama: "OLLAMA_API_KEY",
+    vllm: "VLLM_API_KEY",
+    kilocode: "KILOCODE_API_KEY",
   };
   const envVar = envMap[normalized];
   if (!envVar) {

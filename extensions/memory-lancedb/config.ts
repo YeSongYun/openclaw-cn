@@ -5,18 +5,22 @@ import { join } from "node:path";
 export type MemoryConfig = {
   embedding: {
     provider: "openai";
-    model?: string;
+    model: string;
     apiKey: string;
+    baseUrl?: string;
+    dimensions?: number;
   };
   dbPath?: string;
   autoCapture?: boolean;
   autoRecall?: boolean;
+  captureMaxChars?: number;
 };
 
 export const MEMORY_CATEGORIES = ["preference", "fact", "decision", "entity", "other"] as const;
 export type MemoryCategory = (typeof MEMORY_CATEGORIES)[number];
 
 const DEFAULT_MODEL = "text-embedding-3-small";
+export const DEFAULT_CAPTURE_MAX_CHARS = 500;
 const LEGACY_STATE_DIRS: string[] = [];
 
 function resolveDefaultDbPath(): string {
@@ -56,13 +60,13 @@ function assertAllowedKeys(value: Record<string, unknown>, allowed: string[], la
   if (unknown.length === 0) {
     return;
   }
-  throw new Error(`${label} 包含未知键: ${unknown.join(", ")}`);
+  throw new Error(`${label} has unknown keys: ${unknown.join(", ")}`);
 }
 
 export function vectorDimsForModel(model: string): number {
   const dims = EMBEDDING_DIMENSIONS[model];
   if (!dims) {
-    throw new Error(`不支持的嵌入模型: ${model}`);
+    throw new Error(`Unsupported embedding model: ${model}`);
   }
   return dims;
 }
@@ -71,7 +75,7 @@ function resolveEnvVars(value: string): string {
   return value.replace(/\$\{([^}]+)\}/g, (_, envVar) => {
     const envValue = process.env[envVar];
     if (!envValue) {
-      throw new Error(`环境变量 ${envVar} 未设置`);
+      throw new Error(`Environment variable ${envVar} is not set`);
     }
     return envValue;
   });
@@ -79,61 +83,98 @@ function resolveEnvVars(value: string): string {
 
 function resolveEmbeddingModel(embedding: Record<string, unknown>): string {
   const model = typeof embedding.model === "string" ? embedding.model : DEFAULT_MODEL;
-  vectorDimsForModel(model);
+  if (typeof embedding.dimensions !== "number") {
+    vectorDimsForModel(model);
+  }
   return model;
 }
 
 export const memoryConfigSchema = {
   parse(value: unknown): MemoryConfig {
     if (!value || typeof value !== "object" || Array.isArray(value)) {
-      throw new Error("需要 memory 配置");
+      throw new Error("memory config required");
     }
     const cfg = value as Record<string, unknown>;
-    assertAllowedKeys(cfg, ["embedding", "dbPath", "autoCapture", "autoRecall"], "memory 配置");
+    assertAllowedKeys(
+      cfg,
+      ["embedding", "dbPath", "autoCapture", "autoRecall", "captureMaxChars"],
+      "memory config",
+    );
 
     const embedding = cfg.embedding as Record<string, unknown> | undefined;
     if (!embedding || typeof embedding.apiKey !== "string") {
-      throw new Error("embedding.apiKey 为必填项");
+      throw new Error("embedding.apiKey is required");
     }
-    assertAllowedKeys(embedding, ["apiKey", "model"], "embedding 配置");
+    assertAllowedKeys(embedding, ["apiKey", "model", "baseUrl", "dimensions"], "embedding config");
 
     const model = resolveEmbeddingModel(embedding);
+
+    const captureMaxChars =
+      typeof cfg.captureMaxChars === "number" ? Math.floor(cfg.captureMaxChars) : undefined;
+    if (
+      typeof captureMaxChars === "number" &&
+      (captureMaxChars < 100 || captureMaxChars > 10_000)
+    ) {
+      throw new Error("captureMaxChars must be between 100 and 10000");
+    }
 
     return {
       embedding: {
         provider: "openai",
         model,
         apiKey: resolveEnvVars(embedding.apiKey),
+        baseUrl:
+          typeof embedding.baseUrl === "string" ? resolveEnvVars(embedding.baseUrl) : undefined,
+        dimensions: typeof embedding.dimensions === "number" ? embedding.dimensions : undefined,
       },
       dbPath: typeof cfg.dbPath === "string" ? cfg.dbPath : DEFAULT_DB_PATH,
-      autoCapture: cfg.autoCapture !== false,
+      autoCapture: cfg.autoCapture === true,
       autoRecall: cfg.autoRecall !== false,
+      captureMaxChars: captureMaxChars ?? DEFAULT_CAPTURE_MAX_CHARS,
     };
   },
   uiHints: {
     "embedding.apiKey": {
-      label: "OpenAI API 密钥",
+      label: "OpenAI API Key",
       sensitive: true,
       placeholder: "sk-proj-...",
-      help: "用于 OpenAI 嵌入的 API 密钥（或使用 ${OPENAI_API_KEY}）",
+      help: "API key for OpenAI embeddings (or use ${OPENAI_API_KEY})",
+    },
+    "embedding.baseUrl": {
+      label: "Base URL",
+      placeholder: "https://api.openai.com/v1",
+      help: "Base URL for compatible providers (e.g. http://localhost:11434/v1)",
+      advanced: true,
+    },
+    "embedding.dimensions": {
+      label: "Dimensions",
+      placeholder: "1536",
+      help: "Vector dimensions for custom models (required for non-standard models)",
+      advanced: true,
     },
     "embedding.model": {
-      label: "嵌入模型",
+      label: "Embedding Model",
       placeholder: DEFAULT_MODEL,
-      help: "使用的 OpenAI 嵌入模型",
+      help: "OpenAI embedding model to use",
     },
     dbPath: {
-      label: "数据库路径",
+      label: "Database Path",
       placeholder: "~/.openclaw/memory/lancedb",
       advanced: true,
     },
     autoCapture: {
-      label: "自动捕获",
-      help: "自动从对话中捕获重要信息",
+      label: "Auto-Capture",
+      help: "Automatically capture important information from conversations",
     },
     autoRecall: {
-      label: "自动回忆",
-      help: "自动将相关记忆注入上下文",
+      label: "Auto-Recall",
+      help: "Automatically inject relevant memories into context",
+    },
+    captureMaxChars: {
+      label: "Capture Max Chars",
+      help: "Maximum message length eligible for auto-capture",
+      advanced: true,
+      placeholder: String(DEFAULT_CAPTURE_MAX_CHARS),
     },
   },
 };

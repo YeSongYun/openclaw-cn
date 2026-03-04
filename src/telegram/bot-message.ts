@@ -21,7 +21,6 @@ type TelegramMessageProcessorDeps = Omit<
   streamMode: TelegramStreamMode;
   textLimit: number;
   opts: Pick<TelegramBotOptions, "token">;
-  resolveBotTopicsEnabled: (ctx: TelegramContext) => boolean | Promise<boolean>;
 };
 
 export const createTelegramMessageProcessor = (deps: TelegramMessageProcessorDeps) => {
@@ -40,12 +39,12 @@ export const createTelegramMessageProcessor = (deps: TelegramMessageProcessorDep
     resolveGroupActivation,
     resolveGroupRequireMention,
     resolveTelegramGroupConfig,
+    sendChatActionHandler,
     runtime,
     replyToMode,
     streamMode,
     textLimit,
     opts,
-    resolveBotTopicsEnabled,
   } = deps;
 
   return async (
@@ -53,10 +52,12 @@ export const createTelegramMessageProcessor = (deps: TelegramMessageProcessorDep
     allMedia: TelegramMediaRef[],
     storeAllowFrom: string[],
     options?: { messageIdOverride?: string; forceWasMentioned?: boolean },
+    replyMedia?: TelegramMediaRef[],
   ) => {
     const context = await buildTelegramMessageContext({
       primaryCtx,
       allMedia,
+      replyMedia,
       storeAllowFrom,
       options,
       bot,
@@ -72,6 +73,7 @@ export const createTelegramMessageProcessor = (deps: TelegramMessageProcessorDep
       resolveGroupActivation,
       resolveGroupRequireMention,
       resolveTelegramGroupConfig,
+      sendChatActionHandler,
     });
     if (!context) {
       return;
@@ -86,7 +88,6 @@ export const createTelegramMessageProcessor = (deps: TelegramMessageProcessorDep
       textLimit,
       telegramCfg,
       opts,
-      resolveBotTopicsEnabled,
     });
   };
 };

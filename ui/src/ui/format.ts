@@ -1,20 +1,19 @@
 import { formatDurationHuman } from "../../../src/infra/format-time/format-duration.ts";
 import { formatRelativeTimestamp } from "../../../src/infra/format-time/format-relative.ts";
-import { stripReasoningTagsFromText } from "../../../src/shared/text/reasoning-tags.js";
-import { t } from "../i18n/index.ts";
+import { stripAssistantInternalScaffolding } from "../../../src/shared/text/assistant-visible-text.js";
 
 export { formatRelativeTimestamp, formatDurationHuman };
 
 export function formatMs(ms?: number | null): string {
   if (!ms && ms !== 0) {
-    return t("common.na", "n/a");
+    return "n/a";
   }
   return new Date(ms).toLocaleString();
 }
 
 export function formatList(values?: Array<string | null | undefined>): string {
   if (!values || values.length === 0) {
-    return t("format.none", "none");
+    return "none";
   }
   return values.filter((v): v is string => Boolean(v && v.trim())).join(", ");
 }
@@ -57,5 +56,5 @@ export function parseList(input: string): string[] {
 }
 
 export function stripThinkingTags(value: string): string {
-  return stripReasoningTagsFromText(value, { mode: "preserve", trim: "start" });
+  return stripAssistantInternalScaffolding(value);
 }

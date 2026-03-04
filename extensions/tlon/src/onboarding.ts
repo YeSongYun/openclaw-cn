@@ -8,7 +8,9 @@ import {
   type WizardPrompter,
 } from "openclaw/plugin-sdk";
 import type { TlonResolvedAccount } from "./types.js";
+import { buildTlonAccountFields } from "./account-fields.js";
 import { listTlonAccountIds, resolveTlonAccount } from "./types.js";
+import { isBlockedUrbitHostname, validateUrbitBaseUrl } from "./urbit/base-url.js";
 
 const channel = "tlon" as const;
 
@@ -24,6 +26,7 @@ function applyAccountConfig(params: {
     ship?: string;
     url?: string;
     code?: string;
+    allowPrivateNetwork?: boolean;
     groupChannels?: string[];
     dmAllowlist?: string[];
     autoDiscoverChannels?: boolean;
@@ -32,6 +35,11 @@ function applyAccountConfig(params: {
   const { cfg, accountId, input } = params;
   const useDefault = accountId === DEFAULT_ACCOUNT_ID;
   const base = cfg.channels?.tlon ?? {};
+  const nextValues = {
+    enabled: true,
+    ...(input.name ? { name: input.name } : {}),
+    ...buildTlonAccountFields(input),
+  };
 
   if (useDefault) {
     return {
@@ -40,16 +48,7 @@ function applyAccountConfig(params: {
         ...cfg.channels,
         tlon: {
           ...base,
-          enabled: true,
-          ...(input.name ? { name: input.name } : {}),
-          ...(input.ship ? { ship: input.ship } : {}),
-          ...(input.url ? { url: input.url } : {}),
-          ...(input.code ? { code: input.code } : {}),
-          ...(input.groupChannels ? { groupChannels: input.groupChannels } : {}),
-          ...(input.dmAllowlist ? { dmAllowlist: input.dmAllowlist } : {}),
-          ...(typeof input.autoDiscoverChannels === "boolean"
-            ? { autoDiscoverChannels: input.autoDiscoverChannels }
-            : {}),
+          ...nextValues,
         },
       },
     };
@@ -68,16 +67,7 @@ function applyAccountConfig(params: {
             ...(base as { accounts?: Record<string, Record<string, unknown>> }).accounts?.[
               accountId
             ],
-            enabled: true,
-            ...(input.name ? { name: input.name } : {}),
-            ...(input.ship ? { ship: input.ship } : {}),
-            ...(input.url ? { url: input.url } : {}),
-            ...(input.code ? { code: input.code } : {}),
-            ...(input.groupChannels ? { groupChannels: input.groupChannels } : {}),
-            ...(input.dmAllowlist ? { dmAllowlist: input.dmAllowlist } : {}),
-            ...(typeof input.autoDiscoverChannels === "boolean"
-              ? { autoDiscoverChannels: input.autoDiscoverChannels }
-              : {}),
+            ...nextValues,
           },
         },
       },
@@ -88,12 +78,13 @@ function applyAccountConfig(params: {
 async function noteTlonHelp(prompter: WizardPrompter): Promise<void> {
   await prompter.note(
     [
-      "你需要 Urbit 飞船 URL 和登录代码。",
-      "URL 示例：https://your-ship-host",
-      "飞船示例：~sampel-palnet",
+      "You need your Urbit ship URL and login code.",
+      "Example URL: https://your-ship-host",
+      "Example ship: ~sampel-palnet",
+      "If your ship URL is on a private network (LAN/localhost), you must explicitly allow it during setup.",
       `Docs: ${formatDocsLink("/channels/tlon", "channels/tlon")}`,
     ].join("\n"),
-    "Tlon 设置",
+    "Tlon setup",
   );
 }
 
@@ -116,8 +107,8 @@ export const tlonOnboardingAdapter: ChannelOnboardingAdapter = {
     return {
       channel,
       configured,
-      statusLines: [`Tlon：${configured ? "已配置" : "需要设置"}`],
-      selectionHint: configured ? "已配置" : "Urbit 即时通讯",
+      statusLines: [`Tlon: ${configured ? "configured" : "needs setup"}`],
+      selectionHint: configured ? "configured" : "urbit messenger",
       quickstartScore: configured ? 1 : 4,
     };
   },
@@ -141,35 +132,58 @@ export const tlonOnboardingAdapter: ChannelOnboardingAdapter = {
     await noteTlonHelp(prompter);
 
     const ship = await prompter.text({
-      message: "飞船名称",
+      message: "Ship name",
       placeholder: "~sampel-palnet",
       initialValue: resolved.ship ?? undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "必填"),
+      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
     });
 
     const url = await prompter.text({
-      message: "飞船 URL",
+      message: "Ship URL",
       placeholder: "https://your-ship-host",
       initialValue: resolved.url ?? undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "必填"),
+      validate: (value) => {
+        const next = validateUrbitBaseUrl(String(value ?? ""));
+        if (!next.ok) {
+          return next.error;
+        }
+        return undefined;
+      },
     });
 
+    const validatedUrl = validateUrbitBaseUrl(String(url).trim());
+    if (!validatedUrl.ok) {
+      throw new Error(`Invalid URL: ${validatedUrl.error}`);
+    }
+
+    let allowPrivateNetwork = resolved.allowPrivateNetwork ?? false;
+    if (isBlockedUrbitHostname(validatedUrl.hostname)) {
+      allowPrivateNetwork = await prompter.confirm({
+        message:
+          "Ship URL looks like a private/internal host. Allow private network access? (SSRF risk)",
+        initialValue: allowPrivateNetwork,
+      });
+      if (!allowPrivateNetwork) {
+        throw new Error("Refusing private/internal Ship URL without explicit approval");
+      }
+    }
+
     const code = await prompter.text({
-      message: "登录代码",
+      message: "Login code",
       placeholder: "lidlut-tabwed-pillex-ridrup",
       initialValue: resolved.code ?? undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "必填"),
+      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
     });
 
     const wantsGroupChannels = await prompter.confirm({
-      message: "手动添加群组频道？（可选）",
+      message: "Add group channels manually? (optional)",
       initialValue: false,
     });
 
     let groupChannels: string[] | undefined;
     if (wantsGroupChannels) {
       const entry = await prompter.text({
-        message: "群组频道（逗号分隔）",
+        message: "Group channels (comma-separated)",
         placeholder: "chat/~host-ship/general, chat/~host-ship/support",
       });
       const parsed = parseList(String(entry ?? ""));
@@ -177,14 +191,14 @@ export const tlonOnboardingAdapter: ChannelOnboardingAdapter = {
     }
 
     const wantsAllowlist = await prompter.confirm({
-      message: "是否使用白名单限制私信？",
+      message: "Restrict DMs with an allowlist?",
       initialValue: false,
     });
 
     let dmAllowlist: string[] | undefined;
     if (wantsAllowlist) {
       const entry = await prompter.text({
-        message: "私信白名单（逗号分隔的飞船名称）",
+        message: "DM allowlist (comma-separated ship names)",
         placeholder: "~zod, ~nec",
       });
       const parsed = parseList(String(entry ?? ""));
@@ -192,7 +206,7 @@ export const tlonOnboardingAdapter: ChannelOnboardingAdapter = {
     }
 
     const autoDiscoverChannels = await prompter.confirm({
-      message: "是否启用群组频道自动发现？",
+      message: "Enable auto-discovery of group channels?",
       initialValue: resolved.autoDiscoverChannels ?? true,
     });
 
@@ -203,6 +217,7 @@ export const tlonOnboardingAdapter: ChannelOnboardingAdapter = {
         ship: String(ship).trim(),
         url: String(url).trim(),
         code: String(code).trim(),
+        allowPrivateNetwork,
         groupChannels,
         dmAllowlist,
         autoDiscoverChannels,
