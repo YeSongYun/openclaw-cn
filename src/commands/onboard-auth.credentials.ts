@@ -471,6 +471,18 @@ export function setQianfanApiKey(
   });
 }
 
+export function setDmxapiApiKey(
+  key: SecretInput,
+  agentDir?: string,
+  options?: ApiKeyStorageOptions,
+) {
+  upsertAuthProfile({
+    profileId: "dmxapi:default",
+    credential: buildApiKeyCredential("dmxapi", key, undefined, options),
+    agentDir: resolveAuthAgentDir(agentDir),
+  });
+}
+
 export function setXaiApiKey(key: SecretInput, agentDir?: string, options?: ApiKeyStorageOptions) {
   upsertAuthProfile({
     profileId: "xai:default",

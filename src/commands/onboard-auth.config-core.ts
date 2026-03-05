@@ -1,9 +1,11 @@
+import { DMXAPI_DEFAULT_MODEL_REF } from "../agents/dmxapi-models.js";
 import {
   buildHuggingfaceModelDefinition,
   HUGGINGFACE_BASE_URL,
   HUGGINGFACE_MODEL_CATALOG,
 } from "../agents/huggingface-models.js";
 import {
+  buildDmxapiProvider,
   buildKilocodeProvider,
   buildKimiCodingProvider,
   buildQianfanProvider,
@@ -572,4 +574,33 @@ export function applyQianfanProviderConfig(cfg: OpenClawConfig): OpenClawConfig 
 export function applyQianfanConfig(cfg: OpenClawConfig): OpenClawConfig {
   const next = applyQianfanProviderConfig(cfg);
   return applyAgentDefaultModelPrimary(next, QIANFAN_DEFAULT_MODEL_REF);
+}
+
+/**
+ * Apply DMXAPI provider configuration without changing the default model.
+ * Registers all DMXAPI models (Claude, GPT-5, Gemini) and sets up the provider.
+ */
+export function applyDmxapiProviderConfig(cfg: OpenClawConfig): OpenClawConfig {
+  const models = { ...cfg.agents?.defaults?.models };
+  models[DMXAPI_DEFAULT_MODEL_REF] = {
+    ...models[DMXAPI_DEFAULT_MODEL_REF],
+    alias: models[DMXAPI_DEFAULT_MODEL_REF]?.alias ?? "Claude Opus 4.6",
+  };
+  const defaultProvider = buildDmxapiProvider();
+  return applyProviderConfigWithModelCatalog(cfg, {
+    agentModels: models,
+    providerId: "dmxapi",
+    api: "anthropic-messages",
+    baseUrl: defaultProvider.baseUrl,
+    catalogModels: defaultProvider.models ?? [],
+  });
+}
+
+/**
+ * Apply DMXAPI provider configuration AND set DMXAPI as the default model.
+ * Use this when DMXAPI is the primary provider choice during onboarding.
+ */
+export function applyDmxapiConfig(cfg: OpenClawConfig): OpenClawConfig {
+  const next = applyDmxapiProviderConfig(cfg);
+  return applyAgentDefaultModelPrimary(next, DMXAPI_DEFAULT_MODEL_REF);
 }

@@ -1,4 +1,5 @@
 import type { ModelDefinitionConfig } from "../config/types.js";
+import type { ModelApi } from "../config/types.models.js";
 
 export const DMXAPI_DEFAULT_BASE_URL = "https://www.dmxapi.cn";
 export const DMXAPI_DEFAULT_MODEL_ID = "claude-opus-4-6";
@@ -99,6 +100,70 @@ export const DMXAPI_MODEL_CATALOG = [
     contextWindow: 128000,
     maxTokens: 8192,
   },
+  // Claude 系列补充
+  {
+    id: "claude-sonnet-4-6",
+    name: "Claude Sonnet 4.6",
+    reasoning: false,
+    input: ["text", "image"] as const,
+    contextWindow: 200000,
+    maxTokens: 8192,
+  },
+  // -cc 代理模型补充
+  {
+    id: "glm-5-cc",
+    name: "GLM 5 CC",
+    reasoning: false,
+    input: ["text", "image"] as const,
+    contextWindow: 128000,
+    maxTokens: 8192,
+  },
+  {
+    id: "hunyuan-2.0-thinking-20251109-cc",
+    name: "Hunyuan 2.0 Thinking CC",
+    reasoning: true,
+    input: ["text", "image"] as const,
+    contextWindow: 128000,
+    maxTokens: 8192,
+  },
+  // GPT-5 系列 → openai-responses
+  {
+    id: "gpt-5.3-codex",
+    name: "GPT-5.3 Codex",
+    api: "openai-responses" as const,
+    reasoning: false,
+    input: ["text", "image"] as const,
+    contextWindow: 128000,
+    maxTokens: 8192,
+  },
+  {
+    id: "gpt-5.2",
+    name: "GPT-5.2",
+    api: "openai-responses" as const,
+    reasoning: false,
+    input: ["text", "image"] as const,
+    contextWindow: 128000,
+    maxTokens: 8192,
+  },
+  // Gemini 系列 → google-generative-ai
+  {
+    id: "gemini-3.1-pro-preview",
+    name: "Gemini 3.1 Pro Preview",
+    api: "google-generative-ai" as const,
+    reasoning: false,
+    input: ["text", "image"] as const,
+    contextWindow: 128000,
+    maxTokens: 8192,
+  },
+  {
+    id: "gemini-3-flash-preview",
+    name: "Gemini 3 Flash Preview",
+    api: "google-generative-ai" as const,
+    reasoning: false,
+    input: ["text", "image"] as const,
+    contextWindow: 128000,
+    maxTokens: 8192,
+  },
 ] as const;
 
 export type DmxapiCatalogEntry = (typeof DMXAPI_MODEL_CATALOG)[number];
@@ -106,6 +171,7 @@ export type DmxapiCatalogEntry = (typeof DMXAPI_MODEL_CATALOG)[number];
 export interface DmxapiModelEntry {
   id: string;
   name: string;
+  api?: ModelApi;
   reasoning: boolean;
   input: readonly ("text" | "image")[];
   contextWindow: number;
@@ -116,6 +182,7 @@ export function buildDmxapiModelDefinition(entry: DmxapiModelEntry): ModelDefini
   return {
     id: entry.id,
     name: entry.name,
+    ...(entry.api ? { api: entry.api } : {}),
     reasoning: entry.reasoning,
     input: [...entry.input],
     cost: DMXAPI_DEFAULT_COST,

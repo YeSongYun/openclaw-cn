@@ -25,6 +25,7 @@ type OnboardProviderAuthOptionKey = keyof Pick<
   | "qianfanApiKey"
   | "volcengineApiKey"
   | "byteplusApiKey"
+  | "dmxapiApiKey"
 >;
 
 export type OnboardProviderAuthFlag = {
@@ -197,5 +198,12 @@ export const ONBOARD_PROVIDER_AUTH_FLAGS: ReadonlyArray<OnboardProviderAuthFlag>
     cliFlag: "--byteplus-api-key",
     cliOption: "--byteplus-api-key <key>",
     description: "BytePlus API key",
+  },
+  {
+    optionKey: "dmxapiApiKey",
+    authChoice: "dmxapi-api-key",
+    cliFlag: "--dmxapi-api-key",
+    cliOption: "--dmxapi-api-key <key>",
+    description: "DMXAPI API key",
   },
 ];

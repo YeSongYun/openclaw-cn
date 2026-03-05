@@ -26,7 +26,7 @@ const AUTH_CHOICE_GROUP_DEFS: {
   {
     value: "dmxapi",
     label: "DMXAPI",
-    hint: "Claude 代理 (v1/messages)",
+    hint: "多模型代理（Claude / GPT / Gemini）",
     choices: ["dmxapi-api-key"],
   },
   {
@@ -306,7 +306,7 @@ const BASE_AUTH_CHOICE_OPTIONS: ReadonlyArray<AuthChoiceOption> = [
   {
     value: "dmxapi-api-key",
     label: "DMXAPI API key",
-    hint: "Claude 代理，使用 v1/messages 接口",
+    hint: "DMXAPI 多模型代理，自动按模型选择 API 格式",
   },
   { value: "custom-api-key", label: "Custom Provider" },
 ];

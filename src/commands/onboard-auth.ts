@@ -3,10 +3,13 @@ export {
   SYNTHETIC_DEFAULT_MODEL_REF,
 } from "../agents/synthetic-models.js";
 export { VENICE_DEFAULT_MODEL_ID, VENICE_DEFAULT_MODEL_REF } from "../agents/venice-models.js";
+export { DMXAPI_DEFAULT_MODEL_REF } from "../agents/dmxapi-models.js";
 export {
   applyAuthProfileConfig,
   applyCloudflareAiGatewayConfig,
   applyCloudflareAiGatewayProviderConfig,
+  applyDmxapiConfig,
+  applyDmxapiProviderConfig,
   applyHuggingfaceConfig,
   applyHuggingfaceProviderConfig,
   applyKilocodeConfig,
@@ -65,6 +68,7 @@ export {
   setAnthropicApiKey,
   setCloudflareAiGatewayConfig,
   setByteplusApiKey,
+  setDmxapiApiKey,
   setQianfanApiKey,
   setGeminiApiKey,
   setKilocodeApiKey,
