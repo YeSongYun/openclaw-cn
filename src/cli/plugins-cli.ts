@@ -1,9 +1,8 @@
-import type { Command } from "commander";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import type { Command } from "commander";
 import type { OpenClawConfig } from "../config/config.js";
-import type { PluginRecord } from "../plugins/registry.js";
 import { loadConfig, writeConfigFile } from "../config/config.js";
 import { resolveStateDir } from "../config/paths.js";
 import { resolveArchiveKind } from "../infra/archive.js";
@@ -12,6 +11,7 @@ import { enablePluginInConfig } from "../plugins/enable.js";
 import { installPluginFromNpmSpec, installPluginFromPath } from "../plugins/install.js";
 import { recordPluginInstall } from "../plugins/installs.js";
 import { clearPluginManifestRegistryCache } from "../plugins/manifest-registry.js";
+import type { PluginRecord } from "../plugins/registry.js";
 import { applyExclusiveSlotSelection } from "../plugins/slots.js";
 import { resolvePluginSourceRoots, formatPluginSourceForTable } from "../plugins/source-display.js";
 import { buildPluginStatusReport } from "../plugins/status.js";
@@ -449,11 +449,39 @@ export function registerPluginsCli(program: Command) {
           renderTable({
             width: tableWidth,
             columns: [
-              { key: "Name", header: "Name", minWidth: 14, flex: true },
-              { key: "ID", header: "ID", minWidth: 10, flex: true },
-              { key: "Status", header: "Status", minWidth: 10 },
-              { key: "Source", header: "Source", minWidth: 26, flex: true },
-              { key: "Version", header: "Version", minWidth: 8 },
+              {
+                key: "Name",
+                header: "Name",
+                headerI18n: { ns: "cli", key: "table.name" },
+                minWidth: 14,
+                flex: true,
+              },
+              {
+                key: "ID",
+                header: "ID",
+                headerI18n: { ns: "cli", key: "table.id" },
+                minWidth: 10,
+                flex: true,
+              },
+              {
+                key: "Status",
+                header: "Status",
+                headerI18n: { ns: "cli", key: "table.status" },
+                minWidth: 10,
+              },
+              {
+                key: "Source",
+                header: "Source",
+                headerI18n: { ns: "cli", key: "table.source" },
+                minWidth: 26,
+                flex: true,
+              },
+              {
+                key: "Version",
+                header: "Version",
+                headerI18n: { ns: "cli", key: "table.version" },
+                minWidth: 8,
+              },
             ],
             rows,
           }).trimEnd(),

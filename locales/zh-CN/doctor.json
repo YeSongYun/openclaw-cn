@@ -32,6 +32,11 @@
 
   "auth.profiles.title": "认证配置",
   "auth.profiles.updatePrompt": "现在更新配置中的 Anthropic OAuth 配置文件 ID？",
+  "auth.profiles.deprecated.title": "认证配置",
+  "auth.profiles.deprecated.body": "检测到已废弃的外部 CLI 认证配置（不再支持）：",
+  "auth.cooldowns.title": "认证配置冷却中",
+  "auth.oauth.errors.title": "OAuth 刷新错误",
+  "auth.model.title": "模型认证",
 
   "runFix.hint": "运行 \"{cmd}\" 以应用更改。"
 }

@@ -232,12 +232,43 @@ export function registerDevicesCli(program: Command) {
             renderTable({
               width: tableWidth,
               columns: [
-                { key: "Request", header: "Request", minWidth: 10 },
-                { key: "Device", header: "Device", minWidth: 16, flex: true },
-                { key: "Role", header: "Role", minWidth: 8 },
-                { key: "IP", header: "IP", minWidth: 12 },
-                { key: "Age", header: "Age", minWidth: 8 },
-                { key: "Flags", header: "Flags", minWidth: 8 },
+                {
+                  key: "Request",
+                  header: "Request",
+                  headerI18n: { ns: "cli", key: "table.request" },
+                  minWidth: 10,
+                },
+                {
+                  key: "Device",
+                  header: "Device",
+                  headerI18n: { ns: "cli", key: "table.device" },
+                  minWidth: 16,
+                  flex: true,
+                },
+                {
+                  key: "Role",
+                  header: "Role",
+                  headerI18n: { ns: "cli", key: "table.role" },
+                  minWidth: 8,
+                },
+                {
+                  key: "IP",
+                  header: "IP",
+                  headerI18n: { ns: "cli", key: "table.ip" },
+                  minWidth: 12,
+                },
+                {
+                  key: "Age",
+                  header: "Age",
+                  headerI18n: { ns: "cli", key: "table.age" },
+                  minWidth: 8,
+                },
+                {
+                  key: "Flags",
+                  header: "Flags",
+                  headerI18n: { ns: "cli", key: "table.flags" },
+                  minWidth: 8,
+                },
               ],
               rows: list.pending.map((req) => ({
                 Request: req.requestId,
@@ -259,11 +290,40 @@ export function registerDevicesCli(program: Command) {
             renderTable({
               width: tableWidth,
               columns: [
-                { key: "Device", header: "Device", minWidth: 16, flex: true },
-                { key: "Roles", header: "Roles", minWidth: 12, flex: true },
-                { key: "Scopes", header: "Scopes", minWidth: 12, flex: true },
-                { key: "Tokens", header: "Tokens", minWidth: 12, flex: true },
-                { key: "IP", header: "IP", minWidth: 12 },
+                {
+                  key: "Device",
+                  header: "Device",
+                  headerI18n: { ns: "cli", key: "table.device" },
+                  minWidth: 16,
+                  flex: true,
+                },
+                {
+                  key: "Roles",
+                  header: "Roles",
+                  headerI18n: { ns: "cli", key: "table.roles" },
+                  minWidth: 12,
+                  flex: true,
+                },
+                {
+                  key: "Scopes",
+                  header: "Scopes",
+                  headerI18n: { ns: "cli", key: "table.scopes" },
+                  minWidth: 12,
+                  flex: true,
+                },
+                {
+                  key: "Tokens",
+                  header: "Tokens",
+                  headerI18n: { ns: "cli", key: "table.tokens" },
+                  minWidth: 12,
+                  flex: true,
+                },
+                {
+                  key: "IP",
+                  header: "IP",
+                  headerI18n: { ns: "cli", key: "table.ip" },
+                  minWidth: 12,
+                },
               ],
               rows: list.paired.map((device) => ({
                 Device: device.displayName || device.deviceId,

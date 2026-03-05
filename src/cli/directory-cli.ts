@@ -54,8 +54,20 @@ function printDirectoryList(params: {
     renderTable({
       width: tableWidth,
       columns: [
-        { key: "ID", header: "ID", minWidth: 16, flex: true },
-        { key: "Name", header: "Name", minWidth: 18, flex: true },
+        {
+          key: "ID",
+          header: "ID",
+          headerI18n: { ns: "cli", key: "table.id" },
+          minWidth: 16,
+          flex: true,
+        },
+        {
+          key: "Name",
+          header: "Name",
+          headerI18n: { ns: "cli", key: "table.name" },
+          minWidth: 18,
+          flex: true,
+        },
       ],
       rows: buildRows(params.entries),
     }).trimEnd(),

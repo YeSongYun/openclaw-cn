@@ -1,5 +1,4 @@
 import path from "node:path";
-import type { RuntimeEnv } from "../../runtime.js";
 import { resolveOpenClawAgentDir } from "../../agents/agent-paths.js";
 import {
   resolveAgentDir,
@@ -38,6 +37,7 @@ import {
   type UsageProviderId,
 } from "../../infra/provider-usage.js";
 import { getShellEnvAppliedKeys, shouldEnableShellEnvFallback } from "../../infra/shell-env.js";
+import type { RuntimeEnv } from "../../runtime.js";
 import { renderTable } from "../../terminal/table.js";
 import { colorize, theme } from "../../terminal/theme.js";
 import { shortenHomePath } from "../../utils.js";
@@ -669,9 +669,24 @@ export async function modelsStatusCommand(
         renderTable({
           width: tableWidth,
           columns: [
-            { key: "Model", header: "Model", minWidth: 18 },
-            { key: "Profile", header: "Profile", minWidth: 24 },
-            { key: "Status", header: "Status", minWidth: 12 },
+            {
+              key: "Model",
+              header: "Model",
+              headerI18n: { ns: "cli", key: "table.model" },
+              minWidth: 18,
+            },
+            {
+              key: "Profile",
+              header: "Profile",
+              headerI18n: { ns: "cli", key: "table.profile" },
+              minWidth: 24,
+            },
+            {
+              key: "Status",
+              header: "Status",
+              headerI18n: { ns: "cli", key: "table.status" },
+              minWidth: 12,
+            },
           ],
           rows,
         }).trimEnd(),

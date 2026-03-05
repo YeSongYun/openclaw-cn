@@ -1,6 +1,6 @@
-import type { PendingRequest } from "./types.js";
 import { formatTimeAgo } from "../../infra/format-time/format-relative.ts";
 import { renderTable } from "../../terminal/table.js";
+import type { PendingRequest } from "./types.js";
 
 export function renderPendingPairingRequestsTable(params: {
   pending: PendingRequest[];
@@ -26,11 +26,32 @@ export function renderPendingPairingRequestsTable(params: {
     table: renderTable({
       width: tableWidth,
       columns: [
-        { key: "Request", header: "Request", minWidth: 8 },
-        { key: "Node", header: "Node", minWidth: 14, flex: true },
-        { key: "IP", header: "IP", minWidth: 10 },
-        { key: "Requested", header: "Requested", minWidth: 12 },
-        { key: "Repair", header: "Repair", minWidth: 6 },
+        {
+          key: "Request",
+          header: "Request",
+          headerI18n: { ns: "cli", key: "table.request" },
+          minWidth: 8,
+        },
+        {
+          key: "Node",
+          header: "Node",
+          headerI18n: { ns: "cli", key: "table.node" },
+          minWidth: 14,
+          flex: true,
+        },
+        { key: "IP", header: "IP", headerI18n: { ns: "cli", key: "table.ip" }, minWidth: 10 },
+        {
+          key: "Requested",
+          header: "Requested",
+          headerI18n: { ns: "cli", key: "table.requested" },
+          minWidth: 12,
+        },
+        {
+          key: "Repair",
+          header: "Repair",
+          headerI18n: { ns: "cli", key: "table.repair" },
+          minWidth: 6,
+        },
       ],
       rows,
     }).trimEnd(),

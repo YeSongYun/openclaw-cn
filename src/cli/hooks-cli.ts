@@ -1,10 +1,9 @@
-import type { Command } from "commander";
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
-import type { OpenClawConfig } from "../config/config.js";
-import type { HookEntry } from "../hooks/types.js";
+import type { Command } from "commander";
 import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "../agents/agent-scope.js";
+import type { OpenClawConfig } from "../config/config.js";
 import { loadConfig, writeConfigFile } from "../config/io.js";
 import {
   buildWorkspaceHookStatus,
@@ -17,6 +16,7 @@ import {
   resolveHookInstallDir,
 } from "../hooks/install.js";
 import { recordHookInstall } from "../hooks/installs.js";
+import type { HookEntry } from "../hooks/types.js";
 import { loadWorkspaceHookEntries } from "../hooks/workspace.js";
 import { resolveArchiveKind } from "../infra/archive.js";
 import { buildPluginStatusReport } from "../plugins/status.js";
@@ -286,13 +286,42 @@ export function formatHooksList(report: HookStatusReport, opts: HooksListOptions
   });
 
   const columns = [
-    { key: "Status", header: "Status", minWidth: 10 },
-    { key: "Hook", header: "Hook", minWidth: 18, flex: true },
-    { key: "Description", header: "Description", minWidth: 24, flex: true },
-    { key: "Source", header: "Source", minWidth: 12, flex: true },
+    {
+      key: "Status",
+      header: "Status",
+      headerI18n: { ns: "cli", key: "table.status" },
+      minWidth: 10,
+    },
+    {
+      key: "Hook",
+      header: "Hook",
+      headerI18n: { ns: "cli", key: "table.hook" },
+      minWidth: 18,
+      flex: true,
+    },
+    {
+      key: "Description",
+      header: "Description",
+      headerI18n: { ns: "cli", key: "table.description" },
+      minWidth: 24,
+      flex: true,
+    },
+    {
+      key: "Source",
+      header: "Source",
+      headerI18n: { ns: "cli", key: "table.source" },
+      minWidth: 12,
+      flex: true,
+    },
   ];
   if (opts.verbose) {
-    columns.push({ key: "Missing", header: "Missing", minWidth: 18, flex: true });
+    columns.push({
+      key: "Missing",
+      header: "Missing",
+      headerI18n: { ns: "cli", key: "table.missing" },
+      minWidth: 18,
+      flex: true,
+    });
   }
 
   const lines: string[] = [];

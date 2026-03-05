@@ -1,7 +1,7 @@
-import type { Command } from "commander";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import type { Command } from "commander";
 import { loadConfig } from "../config/config.js";
 import { pickPrimaryTailnetIPv4, pickPrimaryTailnetIPv6 } from "../infra/tailnet.js";
 import { getWideAreaZonePath, resolveWideAreaDiscoveryDomain } from "../infra/widearea-dns.js";
@@ -139,8 +139,19 @@ export function registerDnsCli(program: Command) {
         renderTable({
           width: tableWidth,
           columns: [
-            { key: "Key", header: "Key", minWidth: 18 },
-            { key: "Value", header: "Value", minWidth: 24, flex: true },
+            {
+              key: "Key",
+              header: "Key",
+              headerI18n: { ns: "cli", key: "table.key" },
+              minWidth: 18,
+            },
+            {
+              key: "Value",
+              header: "Value",
+              headerI18n: { ns: "cli", key: "table.value" },
+              minWidth: 24,
+              flex: true,
+            },
           ],
           rows: [
             { Key: "Domain", Value: wideAreaDomain },

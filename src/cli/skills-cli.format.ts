@@ -108,13 +108,41 @@ export function formatSkillsList(report: SkillStatusReport, opts: SkillsListOpti
   });
 
   const columns = [
-    { key: "Status", header: "Status", minWidth: 10 },
-    { key: "Skill", header: "Skill", minWidth: 18, flex: true },
-    { key: "Description", header: "Description", minWidth: 24, flex: true },
-    { key: "Source", header: "Source", minWidth: 10 },
+    {
+      key: "Status",
+      header: "Status",
+      headerI18n: { ns: "cli", key: "table.status" },
+      minWidth: 10,
+    },
+    {
+      key: "Skill",
+      header: "Skill",
+      headerI18n: { ns: "cli", key: "table.skill" },
+      minWidth: 18,
+      flex: true,
+    },
+    {
+      key: "Description",
+      header: "Description",
+      headerI18n: { ns: "cli", key: "table.description" },
+      minWidth: 24,
+      flex: true,
+    },
+    {
+      key: "Source",
+      header: "Source",
+      headerI18n: { ns: "cli", key: "table.source" },
+      minWidth: 10,
+    },
   ];
   if (opts.verbose) {
-    columns.push({ key: "Missing", header: "Missing", minWidth: 18, flex: true });
+    columns.push({
+      key: "Missing",
+      header: "Missing",
+      headerI18n: { ns: "cli", key: "table.missing" },
+      minWidth: 18,
+      flex: true,
+    });
   }
 
   const lines: string[] = [];

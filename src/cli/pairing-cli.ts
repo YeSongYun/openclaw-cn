@@ -96,10 +96,32 @@ export function registerPairingCli(program: Command) {
         renderTable({
           width: tableWidth,
           columns: [
-            { key: "Code", header: "Code", minWidth: 10 },
-            { key: "ID", header: idLabel, minWidth: 12, flex: true },
-            { key: "Meta", header: "Meta", minWidth: 8, flex: true },
-            { key: "Requested", header: "Requested", minWidth: 12 },
+            {
+              key: "Code",
+              header: "Code",
+              headerI18n: { ns: "cli", key: "table.code" },
+              minWidth: 10,
+            },
+            {
+              key: "ID",
+              header: idLabel,
+              headerI18n: { ns: "cli", key: "table.id" },
+              minWidth: 12,
+              flex: true,
+            },
+            {
+              key: "Meta",
+              header: "Meta",
+              headerI18n: { ns: "cli", key: "table.meta" },
+              minWidth: 8,
+              flex: true,
+            },
+            {
+              key: "Requested",
+              header: "Requested",
+              headerI18n: { ns: "cli", key: "table.requested" },
+              minWidth: 12,
+            },
           ],
           rows: requests.map((r) => ({
             Code: r.code,

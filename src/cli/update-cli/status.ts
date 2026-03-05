@@ -113,8 +113,14 @@ export async function updateStatusCommand(opts: UpdateStatusOptions): Promise<vo
     renderTable({
       width: tableWidth,
       columns: [
-        { key: "Item", header: "Item", minWidth: 10 },
-        { key: "Value", header: "Value", flex: true, minWidth: 24 },
+        { key: "Item", header: "Item", headerI18n: { ns: "cli", key: "table.item" }, minWidth: 10 },
+        {
+          key: "Value",
+          header: "Value",
+          headerI18n: { ns: "cli", key: "table.value" },
+          flex: true,
+          minWidth: 24,
+        },
       ],
       rows,
     }).trimEnd(),

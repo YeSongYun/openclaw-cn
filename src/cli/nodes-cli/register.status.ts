@@ -1,5 +1,4 @@
 import type { Command } from "commander";
-import type { NodesRpcOpts } from "./types.js";
 import { formatTimeAgo } from "../../infra/format-time/format-relative.ts";
 import { defaultRuntime } from "../../runtime.js";
 import { renderTable } from "../../terminal/table.js";
@@ -9,6 +8,7 @@ import { getNodesTheme, runNodesCommand } from "./cli-utils.js";
 import { formatPermissions, parseNodeList, parsePairingList } from "./format.js";
 import { renderPendingPairingRequestsTable } from "./pairing-render.js";
 import { callGatewayCli, nodesCallOpts, resolveNodeId } from "./rpc.js";
+import type { NodesRpcOpts } from "./types.js";
 
 function formatVersionLabel(raw: string) {
   const trimmed = raw.trim();
@@ -197,12 +197,45 @@ export function registerNodesStatusCommands(nodes: Command) {
             renderTable({
               width: tableWidth,
               columns: [
-                { key: "Node", header: "Node", minWidth: 14, flex: true },
-                { key: "ID", header: "ID", minWidth: 10 },
-                { key: "IP", header: "IP", minWidth: 10 },
-                { key: "Detail", header: "Detail", minWidth: 18, flex: true },
-                { key: "Status", header: "Status", minWidth: 18 },
-                { key: "Caps", header: "Caps", minWidth: 12, flex: true },
+                {
+                  key: "Node",
+                  header: "Node",
+                  headerI18n: { ns: "cli", key: "table.node" },
+                  minWidth: 14,
+                  flex: true,
+                },
+                {
+                  key: "ID",
+                  header: "ID",
+                  headerI18n: { ns: "cli", key: "table.id" },
+                  minWidth: 10,
+                },
+                {
+                  key: "IP",
+                  header: "IP",
+                  headerI18n: { ns: "cli", key: "table.ip" },
+                  minWidth: 10,
+                },
+                {
+                  key: "Detail",
+                  header: "Detail",
+                  headerI18n: { ns: "cli", key: "table.detail" },
+                  minWidth: 18,
+                  flex: true,
+                },
+                {
+                  key: "Status",
+                  header: "Status",
+                  headerI18n: { ns: "cli", key: "table.status" },
+                  minWidth: 18,
+                },
+                {
+                  key: "Caps",
+                  header: "Caps",
+                  headerI18n: { ns: "cli", key: "table.caps" },
+                  minWidth: 12,
+                  flex: true,
+                },
               ],
               rows,
             }).trimEnd(),
@@ -275,8 +308,19 @@ export function registerNodesStatusCommands(nodes: Command) {
             renderTable({
               width: tableWidth,
               columns: [
-                { key: "Field", header: "Field", minWidth: 8 },
-                { key: "Value", header: "Value", minWidth: 24, flex: true },
+                {
+                  key: "Field",
+                  header: "Field",
+                  headerI18n: { ns: "cli", key: "table.field" },
+                  minWidth: 8,
+                },
+                {
+                  key: "Value",
+                  header: "Value",
+                  headerI18n: { ns: "cli", key: "table.value" },
+                  minWidth: 24,
+                  flex: true,
+                },
               ],
               rows,
             }).trimEnd(),
@@ -393,10 +437,31 @@ export function registerNodesStatusCommands(nodes: Command) {
               renderTable({
                 width: tableWidth,
                 columns: [
-                  { key: "Node", header: "Node", minWidth: 14, flex: true },
-                  { key: "Id", header: "ID", minWidth: 10 },
-                  { key: "IP", header: "IP", minWidth: 10 },
-                  { key: "LastConnect", header: "Last Connect", minWidth: 14 },
+                  {
+                    key: "Node",
+                    header: "Node",
+                    headerI18n: { ns: "cli", key: "table.node" },
+                    minWidth: 14,
+                    flex: true,
+                  },
+                  {
+                    key: "Id",
+                    header: "ID",
+                    headerI18n: { ns: "cli", key: "table.id" },
+                    minWidth: 10,
+                  },
+                  {
+                    key: "IP",
+                    header: "IP",
+                    headerI18n: { ns: "cli", key: "table.ip" },
+                    minWidth: 10,
+                  },
+                  {
+                    key: "LastConnect",
+                    header: "Last Connect",
+                    headerI18n: { ns: "cli", key: "table.lastConnect" },
+                    minWidth: 14,
+                  },
                 ],
                 rows: pairedRows,
               }).trimEnd(),

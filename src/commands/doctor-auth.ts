@@ -1,5 +1,3 @@
-import type { OpenClawConfig } from "../config/config.js";
-import type { DoctorPrompter } from "./doctor-prompter.js";
 import {
   buildAuthHealthSummary,
   DEFAULT_OAUTH_WARN_MS,
@@ -15,7 +13,10 @@ import {
 } from "../agents/auth-profiles.js";
 import { updateAuthProfileStoreWithLock } from "../agents/auth-profiles/store.js";
 import { formatCliCommand } from "../cli/command-format.js";
+import type { OpenClawConfig } from "../config/config.js";
+import { t } from "../i18n/index.js";
 import { note } from "../terminal/note.js";
+import type { DoctorPrompter } from "./doctor-prompter.js";
 
 export async function maybeRepairAnthropicOAuthProfileId(
   cfg: OpenClawConfig,
@@ -32,7 +33,10 @@ export async function maybeRepairAnthropicOAuthProfileId(
     return cfg;
   }
 
-  note(repair.changes.map((c) => `- ${c}`).join("\n"), "Auth profiles");
+  note(
+    repair.changes.map((c) => `- ${c}`).join("\n"),
+    t("doctor", "auth.profiles.title", "Auth profiles"),
+  );
   const apply = await prompter.confirm({
     message: "Update Anthropic OAuth profile id in config now?",
     initialValue: true,
@@ -139,7 +143,7 @@ export async function maybeRemoveDeprecatedCliAuthProfiles(
       )}`,
     );
   }
-  note(lines.join("\n"), "Auth profiles");
+  note(lines.join("\n"), t("doctor", "auth.profiles.deprecated.title", "Auth profiles"));
 
   const shouldRemove = await prompter.confirmRepair({
     message: "Remove deprecated CLI auth profiles now?",
@@ -193,7 +197,7 @@ export async function maybeRemoveDeprecatedCliAuthProfiles(
       Array.from(deprecated.values())
         .map((id) => `- removed ${id} from config`)
         .join("\n"),
-      "Doctor changes",
+      t("doctor", "doctor.changes.title", "Doctor changes"),
     );
   }
   return pruned.next;
@@ -274,7 +278,7 @@ export async function noteAuthProfileHealth(params: {
   })();
 
   if (unusable.length > 0) {
-    note(unusable.join("\n"), "Auth profile cooldowns");
+    note(unusable.join("\n"), t("doctor", "auth.cooldowns.title", "Auth profile cooldowns"));
   }
 
   let summary = buildAuthHealthSummary({
@@ -320,7 +324,7 @@ export async function noteAuthProfileHealth(params: {
       }
     }
     if (errors.length > 0) {
-      note(errors.join("\n"), "OAuth refresh errors");
+      note(errors.join("\n"), t("doctor", "auth.oauth.errors.title", "OAuth refresh errors"));
     }
     summary = buildAuthHealthSummary({
       store: ensureAuthProfileStore(undefined, {
@@ -344,7 +348,7 @@ export async function noteAuthProfileHealth(params: {
           }),
         )
         .join("\n"),
-      "Model auth",
+      t("doctor", "auth.model.title", "Model auth"),
     );
   }
 }

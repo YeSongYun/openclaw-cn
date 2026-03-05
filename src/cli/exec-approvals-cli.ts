@@ -1,7 +1,6 @@
+import fs from "node:fs/promises";
 import type { Command } from "commander";
 import JSON5 from "json5";
-import fs from "node:fs/promises";
-import type { NodesRpcOpts } from "./nodes-cli/types.js";
 import {
   readExecApprovalsSnapshot,
   saveExecApprovals,
@@ -16,6 +15,7 @@ import { isRich, theme } from "../terminal/theme.js";
 import { describeUnknownError } from "./gateway-cli/shared.js";
 import { callGatewayFromCli } from "./gateway-rpc.js";
 import { nodesCallOpts, resolveNodeId } from "./nodes-cli/rpc.js";
+import type { NodesRpcOpts } from "./nodes-cli/types.js";
 
 type ExecApprovalsSnapshot = {
   path: string;
@@ -201,8 +201,19 @@ function renderApprovalsSnapshot(snapshot: ExecApprovalsSnapshot, targetLabel: s
     renderTable({
       width: tableWidth,
       columns: [
-        { key: "Field", header: "Field", minWidth: 8 },
-        { key: "Value", header: "Value", minWidth: 24, flex: true },
+        {
+          key: "Field",
+          header: "Field",
+          headerI18n: { ns: "cli", key: "table.field" },
+          minWidth: 8,
+        },
+        {
+          key: "Value",
+          header: "Value",
+          headerI18n: { ns: "cli", key: "table.value" },
+          minWidth: 24,
+          flex: true,
+        },
       ],
       rows: summaryRows,
     }).trimEnd(),
@@ -220,10 +231,31 @@ function renderApprovalsSnapshot(snapshot: ExecApprovalsSnapshot, targetLabel: s
     renderTable({
       width: tableWidth,
       columns: [
-        { key: "Target", header: "Target", minWidth: 10 },
-        { key: "Agent", header: "Agent", minWidth: 8 },
-        { key: "Pattern", header: "Pattern", minWidth: 20, flex: true },
-        { key: "LastUsed", header: "Last Used", minWidth: 10 },
+        {
+          key: "Target",
+          header: "Target",
+          headerI18n: { ns: "cli", key: "table.target" },
+          minWidth: 10,
+        },
+        {
+          key: "Agent",
+          header: "Agent",
+          headerI18n: { ns: "cli", key: "table.agent" },
+          minWidth: 8,
+        },
+        {
+          key: "Pattern",
+          header: "Pattern",
+          headerI18n: { ns: "cli", key: "table.pattern" },
+          minWidth: 20,
+          flex: true,
+        },
+        {
+          key: "LastUsed",
+          header: "Last Used",
+          headerI18n: { ns: "cli", key: "table.lastUsed" },
+          minWidth: 10,
+        },
       ],
       rows: allowlistRows,
     }).trimEnd(),

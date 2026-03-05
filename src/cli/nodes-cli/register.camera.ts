@@ -1,5 +1,4 @@
 import type { Command } from "commander";
-import type { NodesRpcOpts } from "./types.js";
 import { defaultRuntime } from "../../runtime.js";
 import { renderTable } from "../../terminal/table.js";
 import { shortenHomePath } from "../../utils.js";
@@ -20,6 +19,7 @@ import {
   resolveNode,
   resolveNodeId,
 } from "./rpc.js";
+import type { NodesRpcOpts } from "./types.js";
 
 const parseFacing = (value: string): CameraFacing => {
   const v = String(value ?? "")
@@ -82,9 +82,26 @@ export function registerNodesCameraCommands(nodes: Command) {
             renderTable({
               width: tableWidth,
               columns: [
-                { key: "Name", header: "Name", minWidth: 14, flex: true },
-                { key: "Position", header: "Position", minWidth: 10 },
-                { key: "ID", header: "ID", minWidth: 10, flex: true },
+                {
+                  key: "Name",
+                  header: "Name",
+                  headerI18n: { ns: "cli", key: "table.name" },
+                  minWidth: 14,
+                  flex: true,
+                },
+                {
+                  key: "Position",
+                  header: "Position",
+                  headerI18n: { ns: "cli", key: "table.position" },
+                  minWidth: 10,
+                },
+                {
+                  key: "ID",
+                  header: "ID",
+                  headerI18n: { ns: "cli", key: "table.id" },
+                  minWidth: 10,
+                  flex: true,
+                },
               ],
               rows,
             }).trimEnd(),
