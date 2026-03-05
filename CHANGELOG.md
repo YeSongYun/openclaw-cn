@@ -2,6 +2,17 @@
 
 Docs: https://docs.openclaw.ai
 
+## 1.2.2
+
+### Changes
+
+- i18n: 实现终端 CLI 系统化汉化（doctor、health-format、19 个表格全覆盖）
+- i18n: getLocale() 支持 LANG/LC_ALL 环境变量；预加载常用命名空间
+
+### Fixes
+
+- ui: 移除已废弃的 initI18n 调用
+
 ## 1.2.1
 
 ### Changes
