@@ -59,7 +59,7 @@ export const FIELD_LABELS: Record<string, string> = {
   agents: "Agents",
   "agents.defaults": "Agent Defaults",
   "agents.list": "Agent List",
-  gateway: "Gateway",
+  gateway: "网关",
   "gateway.port": "Gateway Port",
   "gateway.mode": "Gateway Mode",
   "gateway.bind": "Gateway Bind Mode",

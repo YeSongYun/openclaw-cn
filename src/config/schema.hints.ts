@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { ConfigUiHints } from "../shared/config-ui-hints-types.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
+import type { ConfigUiHints } from "../shared/config-ui-hints-types.js";
 import { FIELD_HELP } from "./schema.help.js";
 import { FIELD_LABELS } from "./schema.labels.js";
 import { applyDerivedTags } from "./schema.tags.js";
@@ -16,7 +16,7 @@ const GROUP_LABELS: Record<string, string> = {
   cli: "CLI",
   diagnostics: "Diagnostics",
   logging: "Logging",
-  gateway: "Gateway",
+  gateway: "网关",
   nodeHost: "Node Host",
   agents: "Agents",
   tools: "Tools",

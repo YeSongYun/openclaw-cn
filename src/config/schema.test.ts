@@ -107,9 +107,9 @@ describe("config schema", () => {
     const res = buildConfigSchema(pluginUiHintInput);
 
     expect(res.uiHints["plugins.entries.voice-call"]?.label).toBe("Voice Call");
-    expect(res.uiHints["plugins.entries.voice-call.config"]?.label).toBe("Voice Call Config");
+    expect(res.uiHints["plugins.entries.voice-call.config"]?.label).toBe("Voice Call 配置");
     expect(res.uiHints["plugins.entries.voice-call.config.twilio.authToken"]?.label).toBe(
-      "Auth Token",
+      "Twilio 认证令牌",
     );
     expect(res.uiHints["plugins.entries.voice-call.config.twilio.authToken"]?.sensitive).toBe(true);
   });
