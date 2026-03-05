@@ -2,6 +2,16 @@
 
 Docs: https://docs.openclaw.ai
 
+## 1.2.1
+
+### Changes
+
+- 同步上游 openclaw/openclaw 至 2026.3.2，新增多个 AI provider（Chutes、vLLM、Mistral、Volcano Engine、BytePlus、Kilo Gateway、Hugging Face、LiteLLM）
+
+### Fixes
+
+- test: 修正汉化引发的测试断言和插件发现问题
+
 ## 1.2.0
 
 ### Changes
