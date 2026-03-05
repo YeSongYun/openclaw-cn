@@ -1,8 +1,8 @@
 const KEY = "openclaw.control.settings.v1";
 
-import type { ThemeMode } from "./theme.ts";
 import { isSupportedLocale } from "../i18n/index.ts";
 import { inferBasePathFromPathname, normalizeBasePath } from "./navigation.ts";
+import type { ThemeMode } from "./theme.ts";
 
 export type UiSettings = {
   gatewayUrl: string;

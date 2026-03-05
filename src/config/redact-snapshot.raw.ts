@@ -1,5 +1,5 @@
-import JSON5 from "json5";
 import { isDeepStrictEqual } from "node:util";
+import JSON5 from "json5";
 
 export function replaceSensitiveValuesInRaw(params: {
   raw: string;

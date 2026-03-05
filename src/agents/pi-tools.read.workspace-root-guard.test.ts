@@ -1,7 +1,7 @@
 import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { AnyAgentTool } from "./pi-tools.types.js";
 import { wrapToolWorkspaceRootGuardWithOptions } from "./pi-tools.read.js";
+import type { AnyAgentTool } from "./pi-tools.types.js";
 
 const mocks = vi.hoisted(() => ({
   assertSandboxPath: vi.fn(async () => ({ resolved: "/tmp/root", relative: "" })),

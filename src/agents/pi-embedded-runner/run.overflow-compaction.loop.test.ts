@@ -6,7 +6,6 @@ vi.mock("../../utils.js", () => ({
   resolveUserPath: vi.fn((p: string) => p),
 }));
 
-import type { EmbeddedRunAttemptResult } from "./run/types.js";
 import { log } from "./logger.js";
 import { runEmbeddedPiAgent } from "./run.js";
 import {
@@ -23,6 +22,7 @@ import {
   mockedTruncateOversizedToolResultsInSession,
   overflowBaseRunParams as baseParams,
 } from "./run.overflow-compaction.shared-test.js";
+import type { EmbeddedRunAttemptResult } from "./run/types.js";
 
 const mockedIsCompactionFailureError = vi.mocked(isCompactionFailureError);
 const mockedIsLikelyContextOverflowError = vi.mocked(isLikelyContextOverflowError);

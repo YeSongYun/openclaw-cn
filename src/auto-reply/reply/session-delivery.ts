@@ -1,5 +1,4 @@
 import type { SessionEntry } from "../../config/sessions.js";
-import type { MsgContext } from "../templating.js";
 import { buildAgentMainSessionKey } from "../../routing/session-key.js";
 import { parseAgentSessionKey } from "../../sessions/session-key-utils.js";
 import {
@@ -12,6 +11,7 @@ import {
   isDeliverableMessageChannel,
   normalizeMessageChannel,
 } from "../../utils/message-channel.js";
+import type { MsgContext } from "../templating.js";
 
 export type LegacyMainDeliveryRetirement = {
   key: string;

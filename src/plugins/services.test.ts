@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenClawPluginService, OpenClawPluginServiceContext } from "./types.js";
 import { createEmptyPluginRegistry } from "./registry.js";
+import type { OpenClawPluginService, OpenClawPluginServiceContext } from "./types.js";
 
 const mockedLogger = vi.hoisted(() => ({
   info: vi.fn<(msg: string) => void>(),

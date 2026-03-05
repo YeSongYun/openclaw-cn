@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { CronJob } from "./types.js";
 import { resolveCronDeliveryPlan, resolveFailureDestination } from "./delivery.js";
+import type { CronJob } from "./types.js";
 
 function makeJob(overrides: Partial<CronJob>): CronJob {
   const now = Date.now();

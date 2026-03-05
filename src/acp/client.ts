@@ -1,3 +1,10 @@
+import { spawn, type ChildProcess } from "node:child_process";
+import fs from "node:fs";
+import { homedir } from "node:os";
+import path from "node:path";
+import * as readline from "node:readline";
+import { Readable, Writable } from "node:stream";
+import { fileURLToPath } from "node:url";
 import {
   ClientSideConnection,
   PROTOCOL_VERSION,
@@ -6,13 +13,6 @@ import {
   type RequestPermissionResponse,
   type SessionNotification,
 } from "@agentclientprotocol/sdk";
-import { spawn, type ChildProcess } from "node:child_process";
-import fs from "node:fs";
-import { homedir } from "node:os";
-import path from "node:path";
-import * as readline from "node:readline";
-import { Readable, Writable } from "node:stream";
-import { fileURLToPath } from "node:url";
 import { isKnownCoreToolId } from "../agents/tool-catalog.js";
 import { ensureOpenClawCliOnPath } from "../infra/path-env.js";
 import {

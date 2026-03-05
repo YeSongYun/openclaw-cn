@@ -1,3 +1,5 @@
+import fsp from "node:fs/promises";
+import path from "node:path";
 import type {
   ChannelAccountSnapshot,
   ChannelDirectoryEntry,
@@ -8,8 +10,6 @@ import type {
   OpenClawConfig,
   GroupToolPolicyConfig,
 } from "openclaw/plugin-sdk";
-import fsp from "node:fs/promises";
-import path from "node:path";
 import {
   applyAccountNameToChannelSection,
   buildChannelConfigSchema,

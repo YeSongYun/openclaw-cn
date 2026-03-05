@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import type { OpenClawConfig } from "../../config/config.js";
 import {
   resetMemoryToolMockState,
   setMemoryBackend,
@@ -7,6 +6,7 @@ import {
   setMemorySearchImpl,
   type MemoryReadParams,
 } from "../../../test/helpers/memory-tool-manager-mock.js";
+import type { OpenClawConfig } from "../../config/config.js";
 import { createMemoryGetTool, createMemorySearchTool } from "./memory-tool.js";
 
 function asOpenClawConfig(config: Partial<OpenClawConfig>): OpenClawConfig {

@@ -1,6 +1,5 @@
 import type { ClawdbotConfig, RuntimeEnv } from "openclaw/plugin-sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ResolvedFeishuAccount } from "./types.js";
 import { hasControlCommand } from "../../../src/auto-reply/command-detection.js";
 import {
   createInboundDebouncer,
@@ -12,6 +11,7 @@ import * as dedup from "./dedup.js";
 import { monitorSingleAccount } from "./monitor.account.js";
 import { resolveReactionSyntheticEvent, type FeishuReactionCreatedEvent } from "./monitor.js";
 import { setFeishuRuntime } from "./runtime.js";
+import type { ResolvedFeishuAccount } from "./types.js";
 
 const handleFeishuMessageMock = vi.hoisted(() => vi.fn(async (_params: { event?: unknown }) => {}));
 const createEventDispatcherMock = vi.hoisted(() => vi.fn());

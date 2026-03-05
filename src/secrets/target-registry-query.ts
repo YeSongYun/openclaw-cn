@@ -1,9 +1,4 @@
 import type { OpenClawConfig } from "../config/config.js";
-import type {
-  DiscoveredConfigSecretTarget,
-  ResolvedPlanTarget,
-  SecretTargetRegistryEntry,
-} from "./target-registry-types.js";
 import { getPath } from "./path-utils.js";
 import { SECRET_TARGET_REGISTRY } from "./target-registry-data.js";
 import {
@@ -13,6 +8,11 @@ import {
   matchPathTokens,
   type CompiledTargetRegistryEntry,
 } from "./target-registry-pattern.js";
+import type {
+  DiscoveredConfigSecretTarget,
+  ResolvedPlanTarget,
+  SecretTargetRegistryEntry,
+} from "./target-registry-types.js";
 
 const COMPILED_SECRET_TARGET_REGISTRY = SECRET_TARGET_REGISTRY.map(compileTargetRegistryEntry);
 const OPENCLAW_COMPILED_SECRET_TARGETS = COMPILED_SECRET_TARGET_REGISTRY.filter(

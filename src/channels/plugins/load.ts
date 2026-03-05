@@ -1,5 +1,5 @@
-import type { ChannelId, ChannelPlugin } from "./types.js";
 import { createChannelRegistryLoader } from "./registry-loader.js";
+import type { ChannelId, ChannelPlugin } from "./types.js";
 
 const loadPluginFromRegistry = createChannelRegistryLoader<ChannelPlugin>((entry) => entry.plugin);
 

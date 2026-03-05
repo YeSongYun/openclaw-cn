@@ -1,5 +1,5 @@
-import type { SandboxWorkspaceAccess } from "./types.js";
 import { SANDBOX_AGENT_WORKSPACE_MOUNT } from "./constants.js";
+import type { SandboxWorkspaceAccess } from "./types.js";
 
 function mainWorkspaceMountSuffix(access: SandboxWorkspaceAccess): "" | ":ro" {
   return access === "rw" ? "" : ":ro";

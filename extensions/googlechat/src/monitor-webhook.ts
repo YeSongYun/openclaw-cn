@@ -6,6 +6,7 @@ import {
   resolveWebhookTargets,
   type WebhookInFlightLimiter,
 } from "openclaw/plugin-sdk";
+import { verifyGoogleChatRequest } from "./auth.js";
 import type { WebhookTarget } from "./monitor-types.js";
 import type {
   GoogleChatEvent,
@@ -13,7 +14,6 @@ import type {
   GoogleChatSpace,
   GoogleChatUser,
 } from "./types.js";
-import { verifyGoogleChatRequest } from "./auth.js";
 
 function extractBearerToken(header: unknown): string {
   const authHeader = Array.isArray(header) ? String(header[0] ?? "") : String(header ?? "");

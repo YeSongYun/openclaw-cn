@@ -1,11 +1,11 @@
 import type { OpenClawConfig } from "../../config/config.js";
-import type { AuthProfileStore } from "./types.js";
 import {
   findNormalizedProviderValue,
   normalizeProviderId,
   normalizeProviderIdForAuth,
 } from "../model-selection.js";
 import { dedupeProfileIds, listProfilesForProvider } from "./profiles.js";
+import type { AuthProfileStore } from "./types.js";
 import {
   clearExpiredCooldowns,
   isProfileInCooldown,

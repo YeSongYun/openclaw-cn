@@ -4,8 +4,8 @@ import {
   normalizeAccountId,
   normalizeOptionalAccountId,
 } from "openclaw/plugin-sdk/account-id";
-import type { MattermostAccountConfig, MattermostChatMode } from "../types.js";
 import { normalizeResolvedSecretInputString, normalizeSecretInputString } from "../secret-input.js";
+import type { MattermostAccountConfig, MattermostChatMode } from "../types.js";
 import { normalizeMattermostBaseUrl } from "./client.js";
 
 export type MattermostTokenSource = "env" | "config" | "none";

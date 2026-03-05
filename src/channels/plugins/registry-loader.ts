@@ -1,6 +1,6 @@
 import type { PluginChannelRegistration, PluginRegistry } from "../../plugins/registry.js";
-import type { ChannelId } from "./types.js";
 import { getActivePluginRegistry } from "../../plugins/runtime.js";
+import type { ChannelId } from "./types.js";
 
 type ChannelRegistryValueResolver<TValue> = (
   entry: PluginChannelRegistration,

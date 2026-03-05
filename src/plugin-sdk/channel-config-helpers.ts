@@ -1,5 +1,5 @@
-import type { OpenClawConfig } from "../config/config.js";
 import { normalizeWhatsAppAllowFromEntries } from "../channels/plugins/normalize/whatsapp.js";
+import type { OpenClawConfig } from "../config/config.js";
 import { resolveIMessageAccount } from "../imessage/accounts.js";
 import { normalizeAccountId } from "../routing/session-key.js";
 import { resolveWhatsAppAccount } from "../web/accounts.js";

@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { OpenClawConfig } from "../config/config.js";
+import { DEFAULT_OLLAMA_EMBEDDING_MODEL } from "./embeddings-ollama.js";
 import type {
   EmbeddingProvider,
   EmbeddingProviderResult,
@@ -10,7 +11,6 @@ import type {
   OllamaEmbeddingClient,
   OpenAiEmbeddingClient,
 } from "./embeddings.js";
-import { DEFAULT_OLLAMA_EMBEDDING_MODEL } from "./embeddings-ollama.js";
 import { getMemorySearchManager, type MemoryIndexManager } from "./index.js";
 
 const { createEmbeddingProviderMock } = vi.hoisted(() => ({

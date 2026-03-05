@@ -1,5 +1,5 @@
-import type { ThreadBindingRecord } from "./thread-bindings.types.js";
 import { SYSTEM_MARK } from "../../infra/system-message.js";
+import type { ThreadBindingRecord } from "./thread-bindings.types.js";
 
 const THREAD_BINDING_PERSONA_MAX_CHARS = 80;
 

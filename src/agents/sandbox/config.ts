@@ -1,11 +1,4 @@
 import type { OpenClawConfig } from "../../config/config.js";
-import type {
-  SandboxBrowserConfig,
-  SandboxConfig,
-  SandboxDockerConfig,
-  SandboxPruneConfig,
-  SandboxScope,
-} from "./types.js";
 import { resolveAgentConfig } from "../agent-scope.js";
 import {
   DEFAULT_SANDBOX_BROWSER_AUTOSTART_TIMEOUT_MS,
@@ -23,6 +16,13 @@ import {
   DEFAULT_SANDBOX_WORKSPACE_ROOT,
 } from "./constants.js";
 import { resolveSandboxToolPolicyForAgent } from "./tool-policy.js";
+import type {
+  SandboxBrowserConfig,
+  SandboxConfig,
+  SandboxDockerConfig,
+  SandboxPruneConfig,
+  SandboxScope,
+} from "./types.js";
 
 export const DANGEROUS_SANDBOX_DOCKER_BOOLEAN_KEYS = [
   "dangerouslyAllowReservedContainerTargets",

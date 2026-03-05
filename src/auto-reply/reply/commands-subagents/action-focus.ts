@@ -1,4 +1,3 @@
-import type { CommandHandlerResult } from "../commands-types.js";
 import {
   resolveAcpSessionCwd,
   resolveAcpThreadSessionDetailLines,
@@ -11,6 +10,7 @@ import {
   resolveThreadBindingThreadName,
 } from "../../../discord/monitor/thread-bindings.js";
 import { getSessionBindingService } from "../../../infra/outbound/session-binding-service.js";
+import type { CommandHandlerResult } from "../commands-types.js";
 import {
   type SubagentsCommandContext,
   isDiscordSurface,

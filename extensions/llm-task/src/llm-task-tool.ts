@@ -1,7 +1,7 @@
-import { Type } from "@sinclair/typebox";
-import Ajv from "ajv";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { Type } from "@sinclair/typebox";
+import Ajv from "ajv";
 import { resolvePreferredOpenClawTmpDir } from "openclaw/plugin-sdk";
 // NOTE: This extension is intended to be bundled with OpenClaw.
 // When running from source (tests/dev), OpenClaw internals live under src/.

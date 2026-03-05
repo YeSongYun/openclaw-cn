@@ -1,4 +1,3 @@
-import type { Snapshot } from "../protocol/index.js";
 import { resolveDefaultAgentId } from "../../agents/agent-scope.js";
 import { getHealthSnapshot, type HealthSummary } from "../../commands/health.js";
 import { CONFIG_PATH, STATE_DIR, loadConfig } from "../../config/config.js";
@@ -7,6 +6,7 @@ import { listSystemPresence } from "../../infra/system-presence.js";
 import { getUpdateAvailable } from "../../infra/update-startup.js";
 import { normalizeMainKey } from "../../routing/session-key.js";
 import { resolveGatewayAuth } from "../auth.js";
+import type { Snapshot } from "../protocol/index.js";
 
 let presenceVersion = 1;
 let healthVersion = 1;

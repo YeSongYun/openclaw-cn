@@ -1,5 +1,5 @@
-import type { ConfigValidationIssue } from "./types.js";
 import { sanitizeTerminalText } from "../terminal/safe-text.js";
+import type { ConfigValidationIssue } from "./types.js";
 
 type ConfigIssueLineInput = {
   path?: string | null;

@@ -1,6 +1,4 @@
 import crypto from "node:crypto";
-import type { AcpRuntimeSessionMode } from "../acp/runtime/types.js";
-import type { OpenClawConfig } from "../config/config.js";
 import { getAcpSessionManager } from "../acp/control-plane/manager.js";
 import {
   cleanupFailedAcpSpawn,
@@ -11,6 +9,7 @@ import {
   resolveAcpSessionCwd,
   resolveAcpThreadSessionDetailLines,
 } from "../acp/runtime/session-identifiers.js";
+import type { AcpRuntimeSessionMode } from "../acp/runtime/types.js";
 import {
   resolveThreadBindingIntroText,
   resolveThreadBindingThreadName,
@@ -22,6 +21,7 @@ import {
   resolveThreadBindingMaxAgeMsForChannel,
   resolveThreadBindingSpawnPolicy,
 } from "../channels/thread-bindings-policy.js";
+import type { OpenClawConfig } from "../config/config.js";
 import { loadConfig } from "../config/config.js";
 import { callGateway } from "../gateway/call.js";
 import { resolveConversationIdFromTargets } from "../infra/outbound/conversation-id.js";

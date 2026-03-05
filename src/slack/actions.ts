@@ -1,11 +1,11 @@
 import type { Block, KnownBlock, WebClient } from "@slack/web-api";
-import type { SlackMediaResult } from "./monitor/media.js";
 import { loadConfig } from "../config/config.js";
 import { logVerbose } from "../globals.js";
 import { resolveSlackAccount } from "./accounts.js";
 import { buildSlackBlocksFallbackText } from "./blocks-fallback.js";
 import { validateSlackBlocksArray } from "./blocks-input.js";
 import { createSlackWebClient } from "./client.js";
+import type { SlackMediaResult } from "./monitor/media.js";
 import { resolveSlackMedia } from "./monitor/media.js";
 import { sendMessageSlack } from "./send.js";
 import { resolveSlackBotToken } from "./token.js";

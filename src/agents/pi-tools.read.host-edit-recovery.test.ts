@@ -1,4 +1,3 @@
-import type { EditToolOptions } from "@mariozechner/pi-coding-agent";
 /**
  * Tests for edit tool post-write recovery: when the upstream library throws after
  * having already written the file (e.g. generateDiffString fails), we catch and
@@ -7,6 +6,7 @@ import type { EditToolOptions } from "@mariozechner/pi-coding-agent";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import type { EditToolOptions } from "@mariozechner/pi-coding-agent";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({

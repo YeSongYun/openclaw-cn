@@ -1,9 +1,9 @@
-import type { SkillBinTrustEntry } from "../infra/exec-approvals.js";
 import { resolveBrowserConfig } from "../browser/config.js";
 import { loadConfig, type OpenClawConfig } from "../config/config.js";
 import { normalizeSecretInputString, resolveSecretInputRef } from "../config/types.secrets.js";
 import { GatewayClient } from "../gateway/client.js";
 import { loadOrCreateDeviceIdentity } from "../infra/device-identity.js";
+import type { SkillBinTrustEntry } from "../infra/exec-approvals.js";
 import { resolveExecutableFromPathEnv } from "../infra/executable-path.js";
 import { getMachineDisplayName } from "../infra/machine-name.js";
 import {

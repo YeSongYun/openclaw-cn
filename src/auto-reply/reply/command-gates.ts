@@ -1,8 +1,8 @@
 import type { CommandFlagKey } from "../../config/commands.js";
-import type { ReplyPayload } from "../types.js";
-import type { CommandHandlerResult, HandleCommandsParams } from "./commands-types.js";
 import { isCommandFlagEnabled } from "../../config/commands.js";
 import { logVerbose } from "../../globals.js";
+import type { ReplyPayload } from "../types.js";
+import type { CommandHandlerResult, HandleCommandsParams } from "./commands-types.js";
 
 export function rejectUnauthorizedCommand(
   params: HandleCommandsParams,

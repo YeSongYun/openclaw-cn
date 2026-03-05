@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import type { RuntimeEnv } from "../runtime.js";
 import { loadConfig } from "../config/config.js";
 import {
   capEntryCount,
@@ -13,6 +12,7 @@ import {
   type SessionEntry,
   type SessionMaintenanceApplyReport,
 } from "../config/sessions.js";
+import type { RuntimeEnv } from "../runtime.js";
 import { isRich, theme } from "../terminal/theme.js";
 import {
   resolveSessionStoreTargetsOrExit,

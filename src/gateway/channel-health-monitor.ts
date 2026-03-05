@@ -1,11 +1,11 @@
 import type { ChannelId } from "../channels/plugins/types.js";
-import type { ChannelManager } from "./server-channels.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
 import {
   evaluateChannelHealth,
   resolveChannelRestartReason,
   type ChannelHealthPolicy,
 } from "./channel-health-policy.js";
+import type { ChannelManager } from "./server-channels.js";
 
 const log = createSubsystemLogger("gateway/health-monitor");
 

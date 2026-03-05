@@ -1,8 +1,7 @@
-import type { OpenClawConfig } from "../config/config.js";
-import type { HeartbeatStatus, SessionStatus, StatusSummary } from "./status.types.js";
 import { resolveContextTokensForModel } from "../agents/context.js";
 import { DEFAULT_CONTEXT_TOKENS, DEFAULT_MODEL, DEFAULT_PROVIDER } from "../agents/defaults.js";
 import { resolveConfiguredModelRef } from "../agents/model-selection.js";
+import type { OpenClawConfig } from "../config/config.js";
 import { loadConfig } from "../config/config.js";
 import {
   loadSessionStore,
@@ -21,6 +20,7 @@ import { resolveHeartbeatSummaryForAgent } from "../infra/heartbeat-runner.js";
 import { peekSystemEvents } from "../infra/system-events.js";
 import { parseAgentSessionKey } from "../routing/session-key.js";
 import { resolveLinkChannelContext } from "./status.link-channel.js";
+import type { HeartbeatStatus, SessionStatus, StatusSummary } from "./status.types.js";
 
 const buildFlags = (entry?: SessionEntry): string[] => {
   if (!entry) {

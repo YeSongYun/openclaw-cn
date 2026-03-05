@@ -1,7 +1,6 @@
 import type { PluginRuntime } from "openclaw/plugin-sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "./test-mocks.js";
-import type { BlueBubblesAttachment } from "./types.js";
 import { downloadBlueBubblesAttachment, sendBlueBubblesAttachment } from "./attachments.js";
 import { getCachedBlueBubblesPrivateApiStatus } from "./probe.js";
 import { setBlueBubblesRuntime } from "./runtime.js";
@@ -11,6 +10,7 @@ import {
   mockBlueBubblesPrivateApiStatus,
   mockBlueBubblesPrivateApiStatusOnce,
 } from "./test-harness.js";
+import type { BlueBubblesAttachment } from "./types.js";
 
 const mockFetch = vi.fn();
 const fetchRemoteMediaMock = vi.fn(

@@ -7,6 +7,9 @@
  * 3. before_agent_start remains a legacy compatibility fallback
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createHookRunner } from "./hooks.js";
+import { addTestHook, TEST_PLUGIN_AGENT_CTX } from "./hooks.test-helpers.js";
+import { createEmptyPluginRegistry, type PluginRegistry } from "./registry.js";
 import type {
   PluginHookAgentContext,
   PluginHookBeforeModelResolveEvent,
@@ -15,9 +18,6 @@ import type {
   PluginHookBeforePromptBuildResult,
   PluginHookRegistration,
 } from "./types.js";
-import { createHookRunner } from "./hooks.js";
-import { addTestHook, TEST_PLUGIN_AGENT_CTX } from "./hooks.test-helpers.js";
-import { createEmptyPluginRegistry, type PluginRegistry } from "./registry.js";
 
 function addBeforeModelResolveHook(
   registry: PluginRegistry,

@@ -1,7 +1,7 @@
 import type { ChannelAccountSnapshot } from "openclaw/plugin-sdk";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ResolvedGoogleChatAccount } from "./accounts.js";
 import { createStartAccountContext } from "../../test-utils/start-account-context.js";
+import type { ResolvedGoogleChatAccount } from "./accounts.js";
 
 const hoisted = vi.hoisted(() => ({
   startGoogleChatMonitor: vi.fn(),

@@ -1,6 +1,5 @@
-import type { SubagentRunOutcome } from "./subagent-announce.js";
-import type { SubagentRunRecord } from "./subagent-registry.types.js";
 import { getGlobalHookRunner } from "../plugins/hook-runner-global.js";
+import type { SubagentRunOutcome } from "./subagent-announce.js";
 import {
   SUBAGENT_ENDED_OUTCOME_ERROR,
   SUBAGENT_ENDED_OUTCOME_OK,
@@ -9,6 +8,7 @@ import {
   type SubagentLifecycleEndedOutcome,
   type SubagentLifecycleEndedReason,
 } from "./subagent-lifecycle-events.js";
+import type { SubagentRunRecord } from "./subagent-registry.types.js";
 
 export function runOutcomesEqual(
   a: SubagentRunOutcome | undefined,

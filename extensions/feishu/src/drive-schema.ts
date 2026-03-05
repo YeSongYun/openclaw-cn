@@ -14,9 +14,7 @@ const FileType = Type.Union([
 export const FeishuDriveSchema = Type.Union([
   Type.Object({
     action: Type.Literal("list"),
-    folder_token: Type.Optional(
-      Type.String({ description: "文件夹令牌（可选，省略则为根目录）" }),
-    ),
+    folder_token: Type.Optional(Type.String({ description: "文件夹令牌（可选，省略则为根目录）" })),
   }),
   Type.Object({
     action: Type.Literal("info"),

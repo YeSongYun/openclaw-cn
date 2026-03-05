@@ -1,5 +1,5 @@
-import { Command } from "commander";
 import path from "node:path";
+import { Command } from "commander";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { withEnvAsync } from "../test-utils/env.js";
 

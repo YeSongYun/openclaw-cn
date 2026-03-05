@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import type { ResponseUsageMode, SessionInfo, SessionScope } from "./tui-types.js";
 import { loadConfig } from "../config/config.js";
 import {
   buildGatewayConnectionDetails,
@@ -17,6 +16,7 @@ import {
 } from "../gateway/protocol/index.js";
 import { GATEWAY_CLIENT_MODES, GATEWAY_CLIENT_NAMES } from "../utils/message-channel.js";
 import { VERSION } from "../version.js";
+import type { ResponseUsageMode, SessionInfo, SessionScope } from "./tui-types.js";
 
 export type GatewayConnectionOptions = {
   url?: string;

@@ -13,9 +13,9 @@ import {
   hasConfiguredSecretInput,
   promptSingleChannelSecretInput,
 } from "openclaw/plugin-sdk";
-import type { FeishuConfig } from "./types.js";
 import { resolveFeishuCredentials } from "./accounts.js";
 import { probeFeishu } from "./probe.js";
+import type { FeishuConfig } from "./types.js";
 
 const channel = "feishu" as const;
 

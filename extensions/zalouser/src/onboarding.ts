@@ -1,11 +1,11 @@
+import fsp from "node:fs/promises";
+import path from "node:path";
 import type {
   ChannelOnboardingAdapter,
   ChannelOnboardingDmPolicy,
   OpenClawConfig,
   WizardPrompter,
 } from "openclaw/plugin-sdk";
-import fsp from "node:fs/promises";
-import path from "node:path";
 import {
   addWildcardAllowFrom,
   DEFAULT_ACCOUNT_ID,

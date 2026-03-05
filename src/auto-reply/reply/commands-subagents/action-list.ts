@@ -1,5 +1,5 @@
-import type { CommandHandlerResult } from "../commands-types.js";
 import { loadSessionStore, resolveStorePath } from "../../../config/sessions.js";
+import type { CommandHandlerResult } from "../commands-types.js";
 import { sortSubagentRuns } from "../subagents-utils.js";
 import {
   type SessionStoreCache,

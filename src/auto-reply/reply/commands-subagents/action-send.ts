@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import type { CommandHandlerResult } from "../commands-types.js";
 import { AGENT_LANE_SUBAGENT } from "../../../agents/lanes.js";
 import { abortEmbeddedPiRun } from "../../../agents/pi-embedded.js";
 import {
@@ -11,6 +10,7 @@ import { loadSessionStore, resolveStorePath } from "../../../config/sessions.js"
 import { callGateway } from "../../../gateway/call.js";
 import { logVerbose } from "../../../globals.js";
 import { INTERNAL_MESSAGE_CHANNEL } from "../../../utils/message-channel.js";
+import type { CommandHandlerResult } from "../commands-types.js";
 import { clearSessionQueues } from "../queue.js";
 import { formatRunLabel } from "../subagents-utils.js";
 import {

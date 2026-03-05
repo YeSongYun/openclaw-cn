@@ -1,7 +1,4 @@
 import { randomUUID } from "node:crypto";
-import type { OpenClawConfig } from "../../../config/config.js";
-import type { SessionAcpMeta } from "../../../config/sessions/types.js";
-import type { CommandHandlerResult, HandleCommandsParams } from "../commands-types.js";
 import { getAcpSessionManager } from "../../../acp/control-plane/manager.js";
 import {
   cleanupFailedAcpSpawn,
@@ -29,11 +26,14 @@ import {
   resolveThreadBindingMaxAgeMsForChannel,
   resolveThreadBindingSpawnPolicy,
 } from "../../../channels/thread-bindings-policy.js";
+import type { OpenClawConfig } from "../../../config/config.js";
+import type { SessionAcpMeta } from "../../../config/sessions/types.js";
 import { callGateway } from "../../../gateway/call.js";
 import {
   getSessionBindingService,
   type SessionBindingRecord,
 } from "../../../infra/outbound/session-binding-service.js";
+import type { CommandHandlerResult, HandleCommandsParams } from "../commands-types.js";
 import {
   resolveAcpCommandAccountId,
   resolveAcpCommandBindingContext,

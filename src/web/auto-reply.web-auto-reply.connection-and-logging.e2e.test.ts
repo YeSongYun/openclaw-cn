@@ -2,9 +2,8 @@ import "./test-helpers.js";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
-import type { WebInboundMessage } from "./inbound.js";
 import { escapeRegExp, formatEnvelopeTimestamp } from "../../test/helpers/envelope-timestamp.js";
+import type { OpenClawConfig } from "../config/config.js";
 import { setLoggerOverride } from "../logging.js";
 import { withEnvAsync } from "../test-utils/env.js";
 import {
@@ -16,6 +15,7 @@ import {
   resetLoadConfigMock,
   setLoadConfigMock,
 } from "./auto-reply.test-harness.js";
+import type { WebInboundMessage } from "./inbound.js";
 
 installWebAutoReplyTestHomeHooks();
 

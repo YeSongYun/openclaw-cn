@@ -1,5 +1,5 @@
-import type { SlackFile, SlackMessageEvent } from "../../types.js";
 import { logVerbose } from "../../../globals.js";
+import type { SlackFile, SlackMessageEvent } from "../../types.js";
 import {
   MAX_SLACK_MEDIA_FILES,
   resolveSlackAttachmentContent,

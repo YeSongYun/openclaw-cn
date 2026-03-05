@@ -1,4 +1,3 @@
-import type { GatewayRequestHandlers } from "./types.js";
 import { readConfigFileSnapshot } from "../../config/config.js";
 import { redactConfigObject } from "../../config/redact-snapshot.js";
 import { buildTalkConfigResponse } from "../../config/talk.js";
@@ -9,6 +8,7 @@ import {
   validateTalkConfigParams,
   validateTalkModeParams,
 } from "../protocol/index.js";
+import type { GatewayRequestHandlers } from "./types.js";
 
 const ADMIN_SCOPE = "operator.admin";
 const TALK_SECRETS_SCOPE = "operator.talk.secrets";

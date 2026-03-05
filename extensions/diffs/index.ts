@@ -1,5 +1,5 @@
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
 import path from "node:path";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
 import { resolvePreferredOpenClawTmpDir } from "openclaw/plugin-sdk";
 import {
   diffsPluginConfigSchema,

@@ -1,7 +1,7 @@
 import { html, nothing } from "lit";
+import { t } from "../../i18n/index.ts";
 import type { ChannelAccountSnapshot } from "../types.ts";
 import type { ChannelKey, ChannelsProps } from "./channels.types.ts";
-import { t } from "../../i18n/index.ts";
 
 export function channelEnabled(key: ChannelKey, props: ChannelsProps) {
   const snapshot = props.snapshot;

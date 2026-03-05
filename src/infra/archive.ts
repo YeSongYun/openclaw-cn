@@ -1,9 +1,9 @@
 import type { FileHandle } from "node:fs/promises";
-import JSZip from "jszip";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
+import JSZip from "jszip";
 import * as tar from "tar";
 import {
   resolveArchiveOutputPath,

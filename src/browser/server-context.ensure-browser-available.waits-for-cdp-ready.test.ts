@@ -3,8 +3,8 @@ import { EventEmitter } from "node:events";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import "./server-context.chrome-test-harness.js";
 import type { RunningChrome } from "./chrome.js";
-import type { BrowserServerState } from "./server-context.js";
 import * as chromeModule from "./chrome.js";
+import type { BrowserServerState } from "./server-context.js";
 import { createBrowserRouteContext } from "./server-context.js";
 
 function makeBrowserState(): BrowserServerState {

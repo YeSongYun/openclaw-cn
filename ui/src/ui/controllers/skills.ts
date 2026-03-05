@@ -1,6 +1,6 @@
+import { t } from "../../i18n/index.ts";
 import type { GatewayBrowserClient } from "../gateway.ts";
 import type { SkillStatusReport } from "../types.ts";
-import { t } from "../../i18n/index.ts";
 
 export type SkillsState = {
   client: GatewayBrowserClient | null;

@@ -1,7 +1,6 @@
 import fs from "node:fs/promises";
 import { describe, expect, it, vi } from "vitest";
 import type { HeartbeatRunResult } from "../infra/heartbeat-wake.js";
-import type { CronJob, CronJobState } from "./types.js";
 import * as schedule from "./schedule.js";
 import {
   createAbortAwareIsolatedRunner,
@@ -27,6 +26,7 @@ import {
   onTimer,
   runMissedJobs,
 } from "./service/timer.js";
+import type { CronJob, CronJobState } from "./types.js";
 
 const FAST_TIMEOUT_SECONDS = 0.0025;
 

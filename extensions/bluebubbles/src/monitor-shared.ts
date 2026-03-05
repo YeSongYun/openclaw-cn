@@ -1,7 +1,7 @@
 import { normalizeWebhookPath, type OpenClawConfig } from "openclaw/plugin-sdk";
 import type { ResolvedBlueBubblesAccount } from "./accounts.js";
-import type { BlueBubblesAccountConfig } from "./types.js";
 import { getBlueBubblesRuntime } from "./runtime.js";
+import type { BlueBubblesAccountConfig } from "./types.js";
 
 export { normalizeWebhookPath };
 

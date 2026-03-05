@@ -8,8 +8,8 @@ import {
   normalizeAccountId,
   normalizeOptionalAccountId,
 } from "openclaw/plugin-sdk/account-id";
-import type { CoreConfig, NextcloudTalkAccountConfig } from "./types.js";
 import { normalizeResolvedSecretInputString } from "./secret-input.js";
+import type { CoreConfig, NextcloudTalkAccountConfig } from "./types.js";
 
 function isTruthyEnvValue(value?: string): boolean {
   const normalized = (value ?? "").trim().toLowerCase();

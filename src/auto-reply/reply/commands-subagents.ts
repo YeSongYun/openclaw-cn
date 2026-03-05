@@ -1,4 +1,3 @@
-import type { CommandHandler } from "./commands-types.js";
 import { listSubagentRunsForRequester } from "../../agents/subagent-registry.js";
 import { logVerbose } from "../../globals.js";
 import { handleSubagentsAgentsAction } from "./commands-subagents/action-agents.js";
@@ -19,6 +18,7 @@ import {
   resolveSubagentsAction,
   stopWithText,
 } from "./commands-subagents/shared.js";
+import type { CommandHandler } from "./commands-types.js";
 
 export { extractMessageText };
 

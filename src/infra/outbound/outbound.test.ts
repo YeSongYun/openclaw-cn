@@ -4,7 +4,6 @@ import path from "node:path";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReplyPayload } from "../../auto-reply/types.js";
 import type { OpenClawConfig } from "../../config/config.js";
-import type { OutboundDeliveryJson } from "./format.js";
 import { typedCases } from "../../test-utils/typed-cases.js";
 import {
   ackDelivery,
@@ -21,6 +20,7 @@ import {
 } from "./delivery-queue.js";
 import { DirectoryCache } from "./directory-cache.js";
 import { buildOutboundResultEnvelope } from "./envelope.js";
+import type { OutboundDeliveryJson } from "./format.js";
 import {
   buildOutboundDeliveryJson,
   formatGatewaySummary,

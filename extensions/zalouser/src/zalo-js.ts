@@ -4,6 +4,8 @@ import fsp from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { loadOutboundMediaFromUrl } from "openclaw/plugin-sdk";
+import { normalizeZaloReactionIcon } from "./reaction.js";
+import { getZalouserRuntime } from "./runtime.js";
 import type {
   ZaloAuthStatus,
   ZaloEventMessage,
@@ -16,8 +18,6 @@ import type {
   ZcaFriend,
   ZcaUserInfo,
 } from "./types.js";
-import { normalizeZaloReactionIcon } from "./reaction.js";
-import { getZalouserRuntime } from "./runtime.js";
 import {
   LoginQRCallbackEventType,
   ThreadType,

@@ -1,5 +1,4 @@
 import { createRequire } from "node:module";
-import type { PluginRuntime } from "./types.js";
 import { resolveStateDir } from "../../config/paths.js";
 import { transcribeAudioFile } from "../../media-understanding/transcribe-audio.js";
 import { textToSpeechTelephony } from "../../tts/tts.js";
@@ -10,6 +9,7 @@ import { createRuntimeLogging } from "./runtime-logging.js";
 import { createRuntimeMedia } from "./runtime-media.js";
 import { createRuntimeSystem } from "./runtime-system.js";
 import { createRuntimeTools } from "./runtime-tools.js";
+import type { PluginRuntime } from "./types.js";
 
 let cachedVersion: string | null = null;
 

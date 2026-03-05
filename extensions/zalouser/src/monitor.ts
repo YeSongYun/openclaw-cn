@@ -18,7 +18,6 @@ import {
   summarizeMapping,
   warnMissingProviderGroupPolicyFallbackOnce,
 } from "openclaw/plugin-sdk";
-import type { ResolvedZalouserAccount, ZaloInboundMessage } from "./types.js";
 import {
   buildZalouserGroupCandidates,
   findZalouserGroupEntry,
@@ -32,6 +31,7 @@ import {
   sendSeenZalouser,
   sendTypingZalouser,
 } from "./send.js";
+import type { ResolvedZalouserAccount, ZaloInboundMessage } from "./types.js";
 import {
   listZaloFriends,
   listZaloGroups,

@@ -1,5 +1,5 @@
-import type { SsrFPolicy } from "openclaw/plugin-sdk";
 import { lookup } from "node:dns/promises";
+import type { SsrFPolicy } from "openclaw/plugin-sdk";
 import {
   buildHostnameAllowlistPolicyFromSuffixAllowlist,
   isHttpsUrlAllowedByHostnameSuffixAllowlist,
