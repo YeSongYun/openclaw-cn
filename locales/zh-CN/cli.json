@@ -35,11 +35,15 @@
   "help.commands": "命令:",
   "help.examples": "示例:",
   "help.docs": "文档:",
+  "help.commandsHint": "命令后缀 * 表示有子命令。运行 <command> --help 查看详情。",
 
   "option.dev": "开发配置：将状态隔离在 ~/.openclaw-dev 下，默认网关端口 19001，并偏移派生端口（浏览器/画布）",
   "option.profile": "使用命名配置（将 OPENCLAW_STATE_DIR/OPENCLAW_CONFIG_PATH 隔离在 ~/.openclaw-<name> 下）",
   "option.noColor": "禁用 ANSI 颜色",
+  "option.logLevel": "全局日志级别覆盖（文件 + 控制台）",
+  "option.help": "显示命令帮助信息",
 
+  "example.modelsHelp": "显示 models 命令的详细帮助。",
   "example.channelsLogin": "链接个人 WhatsApp Web 并显示二维码和连接日志。",
   "example.messageSend": "通过 Web 会话发送并打印 JSON 结果。",
   "example.gatewayPort": "在本地运行 WebSocket 网关。",
@@ -90,6 +94,9 @@
   "cmd.sessions": "列出存储的会话",
   "cmd.browser": "管理 OpenClaw 的专用浏览器（Chrome/Chromium）",
   "cmd.help": "显示命令帮助",
+  "cmd.qr": "生成 iOS 配对二维码/设置码",
+  "cmd.clawbot": "旧版 clawbot 命令别名",
+  "cmd.secrets": "密钥运行时重新加载控制",
   "cmd.completion": "生成 Shell 自动补全脚本",
 
   "cmd.daemon.manage": "管理网关服务（launchd/systemd/schtasks）",
