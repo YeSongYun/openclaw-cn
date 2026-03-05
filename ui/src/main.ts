@@ -1,5 +1,4 @@
 import "./styles.css";
-import { initI18n } from "./i18n/index.ts";
+import "./i18n/index.ts";
 
-await initI18n();
-import("./ui/app.ts");
+void import("./ui/app.ts");
