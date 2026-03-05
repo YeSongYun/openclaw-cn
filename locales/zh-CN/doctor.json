@@ -1,0 +1,37 @@
+{
+  "title": "OpenClaw 诊断",
+  "complete": "诊断完成。",
+
+  "gateway.title": "网关",
+  "gateway.notRunning": "网关未运行。",
+  "gateway.connection.title": "网关连接",
+  "gateway.mode.fix": "修复：运行 {configureCmd} 并设置网关模式（local/remote）。",
+  "gateway.mode.fixDirect": "或直接设置：{setCmd}",
+  "gateway.mode.missingConfig": "缺少配置文件：请先运行 {setupCmd}。",
+
+  "gateway.auth.title": "网关认证",
+  "gateway.auth.missing": "网关认证未开启或缺少令牌。令牌认证现在是推荐的默认方式（包括回环地址）。",
+  "gateway.auth.configured": "网关令牌已配置。",
+  "gateway.auth.generatePrompt": "立即生成并配置网关令牌？",
+
+  "legacy.title": "检测到旧版状态",
+  "legacy.migratePrompt": "立即迁移旧版状态（会话/代理/WhatsApp 认证）？",
+  "doctor.changes.title": "诊断更改",
+  "doctor.warnings.title": "诊断警告",
+
+  "hooks.title": "钩子",
+  "hooks.gmail.unresolved": "- hooks.gmail.model \"{model}\" 无法解析",
+  "hooks.gmail.notAllowed": "- hooks.gmail.model \"{model}\" 不在 agents.defaults.models 白名单中（将使用主模型代替）",
+  "hooks.gmail.notInCatalog": "- hooks.gmail.model \"{model}\" 不在模型目录中（运行时可能失败）",
+
+  "systemd.linger.reason": "网关作为 systemd 用户服务运行。若未启用 linger，systemd 在注销/空闲时会终止用户会话并杀死网关。",
+
+  "workspace.title": "工作区",
+
+  "channel.warnings.title": "频道警告",
+
+  "auth.profiles.title": "认证配置",
+  "auth.profiles.updatePrompt": "现在更新配置中的 Anthropic OAuth 配置文件 ID？",
+
+  "runFix.hint": "运行 \"{cmd}\" 以应用更改。"
+}

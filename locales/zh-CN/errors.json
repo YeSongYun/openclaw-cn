@@ -1,0 +1,19 @@
+{
+  "healthCheck.failed": "健康检查失败",
+  "healthCheck.failedPlain": "健康检查失败：{error}",
+
+  "gateway.notRunning": "网关未运行。",
+  "gateway.closed": "网关已关闭。",
+  "gateway.connectionFailed": "无法连接到网关。",
+  "gateway.authFailed": "网关认证失败。",
+  "gateway.timeout": "网关请求超时。",
+
+  "config.notFound": "未找到配置文件：{path}",
+  "config.invalid": "配置文件无效：{path}",
+
+  "channel.notFound": "未找到频道：{channel}",
+  "channel.notConnected": "频道未连接：{channel}",
+
+  "general.failed": "操作失败：{reason}",
+  "general.unknown": "发生未知错误。"
+}

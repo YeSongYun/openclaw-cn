@@ -1,8 +1,9 @@
 import type { OpenClawConfig } from "../config/config.js";
-import type { DoctorMemoryStatusPayload } from "../gateway/server-methods/doctor.js";
-import type { RuntimeEnv } from "../runtime.js";
 import { buildGatewayConnectionDetails, callGateway } from "../gateway/call.js";
+import type { DoctorMemoryStatusPayload } from "../gateway/server-methods/doctor.js";
+import { t } from "../i18n/index.js";
 import { collectChannelStatusIssues } from "../infra/channels-status-issues.js";
+import type { RuntimeEnv } from "../runtime.js";
 import { note } from "../terminal/note.js";
 import { formatHealthCheckFailure } from "./health-format.js";
 import { healthCommand } from "./health.js";
@@ -28,8 +29,11 @@ export async function checkGatewayHealth(params: {
   } catch (err) {
     const message = String(err);
     if (message.includes("gateway closed")) {
-      note("Gateway not running.", "Gateway");
-      note(gatewayDetails.message, "Gateway connection");
+      note(
+        t("doctor", "gateway.notRunning", "Gateway not running."),
+        t("doctor", "gateway.title", "Gateway"),
+      );
+      note(gatewayDetails.message, t("doctor", "gateway.connection.title", "Gateway connection"));
     } else {
       params.runtime.error(formatHealthCheckFailure(err));
     }
@@ -53,7 +57,7 @@ export async function checkGatewayHealth(params: {
                 }`,
             )
             .join("\n"),
-          "Channel warnings",
+          t("doctor", "channel.warnings.title", "Channel warnings"),
         );
       }
     } catch {

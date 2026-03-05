@@ -1,7 +1,5 @@
-import { intro as clackIntro, outro as clackOutro } from "@clack/prompts";
 import fs from "node:fs";
-import type { OpenClawConfig } from "../config/config.js";
-import type { RuntimeEnv } from "../runtime.js";
+import { intro as clackIntro, outro as clackOutro } from "@clack/prompts";
 import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "../agents/agent-scope.js";
 import { DEFAULT_MODEL, DEFAULT_PROVIDER } from "../agents/defaults.js";
 import { loadModelCatalog } from "../agents/model-catalog.js";
@@ -11,13 +9,17 @@ import {
   resolveHooksGmailModel,
 } from "../agents/model-selection.js";
 import { formatCliCommand } from "../cli/command-format.js";
+import type { OpenClawConfig } from "../config/config.js";
 import { CONFIG_PATH, readConfigFileSnapshot, writeConfigFile } from "../config/config.js";
 import { logConfigUpdated } from "../config/logging.js";
 import { resolveGatewayService } from "../daemon/service.js";
 import { resolveGatewayAuth } from "../gateway/auth.js";
 import { buildGatewayConnectionDetails } from "../gateway/call.js";
+import { t, ti } from "../i18n/index.js";
 import { resolveOpenClawPackageRoot } from "../infra/openclaw-root.js";
+import type { RuntimeEnv } from "../runtime.js";
 import { defaultRuntime } from "../runtime.js";
+import { noteT } from "../terminal/i18n-note.js";
 import { note } from "../terminal/note.js";
 import { stylePromptTitle } from "../terminal/prompt-style.js";
 import { shortenHomePath } from "../utils.js";
@@ -72,7 +74,7 @@ export async function doctorCommand(
 ) {
   const prompter = createDoctorPrompter({ runtime, options });
   printWizardHeader(runtime);
-  intro("OpenClaw doctor");
+  intro(t("doctor", "title", "OpenClaw doctor"));
 
   const root = await resolveOpenClawPackageRoot({
     moduleUrl: import.meta.url,
@@ -106,15 +108,27 @@ export async function doctorCommand(
 
   const configPath = configResult.path ?? CONFIG_PATH;
   if (!cfg.gateway?.mode) {
+    const configureCmd = formatCliCommand("openclaw configure");
+    const setCmd = formatCliCommand("openclaw config set gateway.mode local");
     const lines = [
       "gateway.mode is unset; gateway start will be blocked.",
-      `Fix: run ${formatCliCommand("openclaw configure")} and set Gateway mode (local/remote).`,
-      `Or set directly: ${formatCliCommand("openclaw config set gateway.mode local")}`,
+      ti(
+        "doctor",
+        "gateway.mode.fix",
+        "Fix: run {configureCmd} and set Gateway mode (local/remote).",
+        { configureCmd },
+      ),
+      ti("doctor", "gateway.mode.fixDirect", "Or set directly: {setCmd}", { setCmd }),
     ];
     if (!fs.existsSync(configPath)) {
-      lines.push(`Missing config: run ${formatCliCommand("openclaw setup")} first.`);
+      const setupCmd = formatCliCommand("openclaw setup");
+      lines.push(
+        ti("doctor", "gateway.mode.missingConfig", "Missing config: run {setupCmd} first.", {
+          setupCmd,
+        }),
+      );
     }
-    note(lines.join("\n"), "Gateway");
+    note(lines.join("\n"), t("doctor", "gateway.title", "Gateway"));
   }
 
   cfg = await maybeRepairAnthropicOAuthProfileId(cfg, prompter);
@@ -135,8 +149,11 @@ export async function doctorCommand(
     });
     const needsToken = auth.mode !== "password" && (auth.mode !== "token" || !auth.token);
     if (needsToken) {
-      note(
+      noteT(
+        "doctor",
+        "gateway.auth.missing",
         "Gateway auth is off or missing a token. Token auth is now the recommended default (including loopback).",
+        "gateway.auth.title",
         "Gateway auth",
       );
       const shouldSetToken =
@@ -161,14 +178,20 @@ export async function doctorCommand(
             },
           },
         };
-        note("Gateway token configured.", "Gateway auth");
+        noteT(
+          "doctor",
+          "gateway.auth.configured",
+          "Gateway token configured.",
+          "gateway.auth.title",
+          "Gateway auth",
+        );
       }
     }
   }
 
   const legacyState = await detectLegacyStateMigrations({ cfg });
   if (legacyState.preview.length > 0) {
-    note(legacyState.preview.join("\n"), "Legacy state detected");
+    note(legacyState.preview.join("\n"), t("doctor", "legacy.title", "Legacy state detected"));
     const migrate =
       options.nonInteractive === true
         ? true
@@ -181,10 +204,10 @@ export async function doctorCommand(
         detected: legacyState,
       });
       if (migrated.changes.length > 0) {
-        note(migrated.changes.join("\n"), "Doctor changes");
+        note(migrated.changes.join("\n"), t("doctor", "doctor.changes.title", "Doctor changes"));
       }
       if (migrated.warnings.length > 0) {
-        note(migrated.warnings.join("\n"), "Doctor warnings");
+        note(migrated.warnings.join("\n"), t("doctor", "doctor.warnings.title", "Doctor warnings"));
       }
     }
   }
@@ -212,7 +235,15 @@ export async function doctorCommand(
       defaultProvider: DEFAULT_PROVIDER,
     });
     if (!hooksModelRef) {
-      note(`- hooks.gmail.model "${cfg.hooks.gmail.model}" could not be resolved`, "Hooks");
+      note(
+        ti(
+          "doctor",
+          "hooks.gmail.unresolved",
+          `- hooks.gmail.model "{model}" could not be resolved`,
+          { model: cfg.hooks.gmail.model },
+        ),
+        t("doctor", "hooks.title", "Hooks"),
+      );
     } else {
       const { provider: defaultProvider, model: defaultModel } = resolveConfiguredModelRef({
         cfg,
@@ -230,16 +261,26 @@ export async function doctorCommand(
       const warnings: string[] = [];
       if (!status.allowed) {
         warnings.push(
-          `- hooks.gmail.model "${status.key}" not in agents.defaults.models allowlist (will use primary instead)`,
+          ti(
+            "doctor",
+            "hooks.gmail.notAllowed",
+            `- hooks.gmail.model "{model}" not in agents.defaults.models allowlist (will use primary instead)`,
+            { model: status.key },
+          ),
         );
       }
       if (!status.inCatalog) {
         warnings.push(
-          `- hooks.gmail.model "${status.key}" not in the model catalog (may fail at runtime)`,
+          ti(
+            "doctor",
+            "hooks.gmail.notInCatalog",
+            `- hooks.gmail.model "{model}" not in the model catalog (may fail at runtime)`,
+            { model: status.key },
+          ),
         );
       }
       if (warnings.length > 0) {
-        note(warnings.join("\n"), "Hooks");
+        note(warnings.join("\n"), t("doctor", "hooks.title", "Hooks"));
       }
     }
   }
@@ -309,7 +350,8 @@ export async function doctorCommand(
       runtime.log(`Backup: ${shortenHomePath(backupPath)}`);
     }
   } else if (!prompter.shouldRepair) {
-    runtime.log(`Run "${formatCliCommand("openclaw doctor --fix")}" to apply changes.`);
+    const cmd = formatCliCommand("openclaw doctor --fix");
+    runtime.log(ti("doctor", "runFix.hint", `Run "{cmd}" to apply changes.`, { cmd }));
   }
 
   if (options.workspaceSuggestions !== false) {
@@ -329,5 +371,5 @@ export async function doctorCommand(
     }
   }
 
-  outro("Doctor complete.");
+  outro(t("doctor", "complete", "Doctor complete."));
 }

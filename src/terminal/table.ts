@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.js";
 import { displayString } from "../utils.js";
 import { visibleWidth } from "./ansi.js";
 
@@ -6,6 +7,8 @@ type Align = "left" | "right" | "center";
 export type TableColumn = {
   key: string;
   header: string;
+  /** 可选 i18n 配置，若提供则在渲染时翻译列标题（向后兼容，不设即用 header 原文） */
+  headerI18n?: { ns: string; key: string };
   align?: Align;
   minWidth?: number;
   maxWidth?: number;
@@ -242,7 +245,9 @@ export function renderTable(opts: RenderTableOptions): string {
   const border = opts.border ?? "unicode";
   if (border === "none") {
     const columns = opts.columns;
-    const header = columns.map((c) => c.header).join(" | ");
+    const header = columns
+      .map((c) => (c.headerI18n ? t(c.headerI18n.ns, c.headerI18n.key, c.header) : c.header))
+      .join(" | ");
     const lines = [header, ...rows.map((r) => columns.map((c) => r[c.key] ?? "").join(" | "))];
     return `${lines.join("\n")}\n`;
   }
@@ -392,7 +397,13 @@ export function renderTable(opts: RenderTableOptions): string {
   const padStr = repeat(" ", padding);
 
   const renderRow = (record: Record<string, string>, isHeader = false) => {
-    const cells = columns.map((c) => (isHeader ? c.header : (record[c.key] ?? "")));
+    const cells = columns.map((c) => {
+      if (isHeader) {
+        // 若定义了 headerI18n，则翻译列标题，否则使用原始 header
+        return c.headerI18n ? t(c.headerI18n.ns, c.headerI18n.key, c.header) : c.header;
+      }
+      return record[c.key] ?? "";
+    });
     const wrapped = cells.map((cell, i) => wrapLine(cell, contentWidthFor(i)));
     const height = Math.max(...wrapped.map((w) => w.length));
     const out: string[] = [];
