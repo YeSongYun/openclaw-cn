@@ -2,6 +2,12 @@
 
 Docs: https://docs.openclaw.ai
 
+## 1.2.5
+
+### Changes
+
+- feat(i18n): 全面汉化 onboard 向导（security/config/gateway/setup 全流程）
+
 ## 1.2.4
 
 ### Changes
