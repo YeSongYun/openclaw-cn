@@ -12,10 +12,10 @@ import type { GatewayBindMode, GatewayTailscaleMode, OpenClawConfig } from "../c
 import { ensureControlUiAllowedOriginsForNonLoopbackBind } from "../config/gateway-control-ui-origins.js";
 import type { SecretInput } from "../config/types.secrets.js";
 import {
+  getTailscaleDocsNote,
+  getTailscaleExposureOptions,
+  getTailscaleMissingBinNote,
   maybeAddTailnetOriginToControlUiAllowedOrigins,
-  TAILSCALE_DOCS_LINES,
-  TAILSCALE_EXPOSURE_OPTIONS,
-  TAILSCALE_MISSING_BIN_NOTE_LINES,
 } from "../gateway/gateway-config-prompts.shared.js";
 import { DEFAULT_DANGEROUS_NODE_COMMANDS } from "../gateway/node-command-policy.js";
 import { tw } from "../i18n/index.js";
@@ -117,7 +117,7 @@ export async function configureGatewayForOnboarding(
       ? quickstartGateway.tailscaleMode
       : await prompter.select<GatewayWizardSettings["tailscaleMode"]>({
           message: tw("gatewayConfig.tailscaleExposure", "Tailscale exposure"),
-          options: [...TAILSCALE_EXPOSURE_OPTIONS],
+          options: getTailscaleExposureOptions(),
         });
 
   // Detect Tailscale binary before proceeding with serve/funnel setup.
@@ -127,7 +127,7 @@ export async function configureGatewayForOnboarding(
     tailscaleBin = await findTailscaleBinary();
     if (!tailscaleBin) {
       await prompter.note(
-        TAILSCALE_MISSING_BIN_NOTE_LINES.join("\n"),
+        getTailscaleMissingBinNote(),
         tw("gatewayConfig.tailscaleWarning", "Tailscale Warning"),
       );
     }
@@ -135,10 +135,7 @@ export async function configureGatewayForOnboarding(
 
   let tailscaleResetOnExit = flow === "quickstart" ? quickstartGateway.tailscaleResetOnExit : false;
   if (tailscaleMode !== "off" && flow !== "quickstart") {
-    await prompter.note(
-      TAILSCALE_DOCS_LINES.join("\n"),
-      tw("gatewayConfig.tailscaleDocs", "Tailscale"),
-    );
+    await prompter.note(getTailscaleDocsNote(), tw("gatewayConfig.tailscaleDocs", "Tailscale"));
     tailscaleResetOnExit = Boolean(
       await prompter.confirm({
         message: tw("gatewayConfig.tailscaleResetOnExit", "Reset Tailscale serve/funnel on exit?"),

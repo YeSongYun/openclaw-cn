@@ -1,34 +1,55 @@
 import type { OpenClawConfig } from "../config/config.js";
+import { t } from "../i18n/index.js";
 import { getTailnetHostname } from "../infra/tailscale.js";
 import { isIpv6Address, parseCanonicalIpAddress } from "../shared/net/ip.js";
 
-export const TAILSCALE_EXPOSURE_OPTIONS = [
-  { value: "off", label: "Off", hint: "No Tailscale exposure" },
-  {
-    value: "serve",
-    label: "Serve",
-    hint: "Private HTTPS for your tailnet (devices on Tailscale)",
-  },
-  {
-    value: "funnel",
-    label: "Funnel",
-    hint: "Public HTTPS via Tailscale Funnel (internet)",
-  },
-] as const;
+export function getTailscaleExposureOptions(): Array<{
+  value: "off" | "serve" | "funnel";
+  label: string;
+  hint: string;
+}> {
+  return [
+    {
+      value: "off",
+      label: t("configure", "gateway.tailscaleOffLabel", "Off"),
+      hint: t("configure", "gateway.tailscaleOffHint", "No Tailscale exposure"),
+    },
+    {
+      value: "serve",
+      label: t("configure", "gateway.tailscaleServeLabel", "Serve"),
+      hint: t(
+        "configure",
+        "gateway.tailscaleServeHint",
+        "Private HTTPS for your tailnet (devices on Tailscale)",
+      ),
+    },
+    {
+      value: "funnel",
+      label: t("configure", "gateway.tailscaleFunnelLabel", "Funnel"),
+      hint: t(
+        "configure",
+        "gateway.tailscaleFunnelHint",
+        "Public HTTPS via Tailscale Funnel (internet)",
+      ),
+    },
+  ];
+}
 
-export const TAILSCALE_MISSING_BIN_NOTE_LINES = [
-  "Tailscale binary not found in PATH or /Applications.",
-  "Ensure Tailscale is installed from:",
-  "  https://tailscale.com/download/mac",
-  "",
-  "You can continue setup, but serve/funnel will fail at runtime.",
-] as const;
+export function getTailscaleMissingBinNote(): string {
+  return t(
+    "configure",
+    "gateway.tailscaleMissingBin",
+    "Tailscale binary not found in PATH or /Applications.\nEnsure Tailscale is installed from:\n  https://tailscale.com/download/mac\n\nYou can continue setup, but serve/funnel will fail at runtime.",
+  );
+}
 
-export const TAILSCALE_DOCS_LINES = [
-  "Docs:",
-  "https://docs.openclaw.ai/gateway/tailscale",
-  "https://docs.openclaw.ai/web",
-] as const;
+export function getTailscaleDocsNote(): string {
+  return t(
+    "configure",
+    "gateway.tailscaleDocs",
+    "Docs:\nhttps://docs.openclaw.ai/gateway/tailscale\nhttps://docs.openclaw.ai/web",
+  );
+}
 
 function normalizeTailnetHostForUrl(rawHost: string): string | null {
   const trimmed = rawHost.trim().replace(/\.$/, "");

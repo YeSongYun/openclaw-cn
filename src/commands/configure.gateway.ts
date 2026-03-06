@@ -1,10 +1,10 @@
 import type { OpenClawConfig } from "../config/config.js";
 import { resolveGatewayPort } from "../config/config.js";
 import {
+  getTailscaleDocsNote,
+  getTailscaleExposureOptions,
+  getTailscaleMissingBinNote,
   maybeAddTailnetOriginToControlUiAllowedOrigins,
-  TAILSCALE_DOCS_LINES,
-  TAILSCALE_EXPOSURE_OPTIONS,
-  TAILSCALE_MISSING_BIN_NOTE_LINES,
 } from "../gateway/gateway-config-prompts.shared.js";
 import { tcfg } from "../i18n/index.js";
 import { findTailscaleBinary } from "../infra/tailscale.js";
@@ -124,7 +124,7 @@ export async function promptGatewayConfig(
   let tailscaleMode = guardCancel(
     await select({
       message: tcfg("gateway.tailscaleExposure", "Tailscale exposure"),
-      options: [...TAILSCALE_EXPOSURE_OPTIONS],
+      options: getTailscaleExposureOptions(),
     }),
     runtime,
   );
@@ -135,16 +135,13 @@ export async function promptGatewayConfig(
   if (tailscaleMode !== "off") {
     tailscaleBin = await findTailscaleBinary();
     if (!tailscaleBin) {
-      note(
-        TAILSCALE_MISSING_BIN_NOTE_LINES.join("\n"),
-        tcfg("gateway.tailscaleWarning", "Tailscale Warning"),
-      );
+      note(getTailscaleMissingBinNote(), tcfg("gateway.tailscaleWarning", "Tailscale Warning"));
     }
   }
 
   let tailscaleResetOnExit = false;
   if (tailscaleMode !== "off") {
-    note(TAILSCALE_DOCS_LINES.join("\n"), tcfg("gateway.tailscaleTitle", "Tailscale"));
+    note(getTailscaleDocsNote(), tcfg("gateway.tailscaleTitle", "Tailscale"));
     tailscaleResetOnExit = Boolean(
       guardCancel(
         await confirm({

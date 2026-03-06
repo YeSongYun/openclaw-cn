@@ -79,5 +79,13 @@
   "wizard.probeLocalNotDetected": "未检测到网关（{url}）",
   "wizard.probeRemoteReachable": "网关可达（{url}）",
   "wizard.probeRemoteUnreachable": "已配置但无法访问（{url}）",
-  "config.invalidRun": "配置无效。运行 `{cmd}` 修复它，然后重新运行配置向导。"
+  "config.invalidRun": "配置无效。运行 `{cmd}` 修复它，然后重新运行配置向导。",
+  "gateway.tailscaleOffLabel": "关闭",
+  "gateway.tailscaleOffHint": "不通过 Tailscale 公开",
+  "gateway.tailscaleServeLabel": "Serve",
+  "gateway.tailscaleServeHint": "仅限 Tailnet 内的私有 HTTPS（Tailscale 设备）",
+  "gateway.tailscaleFunnelLabel": "Funnel",
+  "gateway.tailscaleFunnelHint": "通过 Tailscale Funnel 公开的公共 HTTPS（互联网）",
+  "gateway.tailscaleMissingBin": "在 PATH 或 /Applications 中未找到 Tailscale 二进制文件。\n请确保已安装 Tailscale：\n  https://tailscale.com/download/mac\n\n您可以继续设置，但运行时 serve/funnel 将失败。",
+  "gateway.tailscaleDocs": "文档：\nhttps://docs.openclaw.ai/gateway/tailscale\nhttps://docs.openclaw.ai/web"
 }
