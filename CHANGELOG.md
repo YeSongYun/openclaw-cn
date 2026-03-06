@@ -2,6 +2,14 @@
 
 Docs: https://docs.openclaw.ai
 
+## 1.2.3
+
+### Changes
+
+- feat(dmxapi): 全模型配置支持——onboard 流程新增 Claude Sonnet 4.6、GPT-5（openai-responses）、Gemini（google-generative-ai）等 7 个模型
+- feat(dmxapi): 注册 dmxapi-api-key onboard handler，支持 `--dmxapi-api-key` CLI 标志
+- feat(dmxapi): 更新 DMXAPI hint 文案为多模型代理描述
+
 ## 1.2.2
 
 ### Changes
