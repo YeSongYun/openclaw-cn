@@ -3,6 +3,7 @@ import { resolveChannelDefaultAccountId } from "../channels/plugins/helpers.js";
 import { getChannelPlugin } from "../channels/plugins/index.js";
 import { loadConfig } from "../config/config.js";
 import { danger } from "../globals.js";
+import { tc } from "../i18n/index.js";
 import { resolveMessageChannelSelection } from "../infra/outbound/channel-selection.js";
 import { defaultRuntime } from "../runtime.js";
 import { formatDocsLink } from "../terminal/links.js";
@@ -175,7 +176,7 @@ export function registerDirectoryCli(program: Command) {
           return;
         }
         if (!result) {
-          defaultRuntime.log(theme.muted("Not available."));
+          defaultRuntime.log(theme.muted(tc("directory.notAvailable", "Not available.")));
           return;
         }
         const tableWidth = Math.max(60, (process.stdout.columns ?? 120) - 1);
@@ -207,8 +208,8 @@ export function registerDirectoryCli(program: Command) {
           opts,
           action: "listPeers",
           unsupported: "peers",
-          title: "Peers",
-          emptyMessage: "No peers found.",
+          title: tc("directory.peersTitle", "Peers"),
+          emptyMessage: tc("directory.noPeers", "No peers found."),
         });
       } catch (err) {
         defaultRuntime.error(danger(String(err)));
@@ -226,8 +227,8 @@ export function registerDirectoryCli(program: Command) {
           opts,
           action: "listGroups",
           unsupported: "groups",
-          title: "Groups",
-          emptyMessage: "No groups found.",
+          title: tc("directory.groupsTitle", "Groups"),
+          emptyMessage: tc("directory.noGroups", "No groups found."),
         });
       } catch (err) {
         defaultRuntime.error(danger(String(err)));
@@ -268,8 +269,8 @@ export function registerDirectoryCli(program: Command) {
           return;
         }
         printDirectoryList({
-          title: "Group Members",
-          emptyMessage: "No group members found.",
+          title: tc("directory.groupMembersTitle", "Group Members"),
+          emptyMessage: tc("directory.noGroupMembers", "No group members found."),
           entries: result,
         });
       } catch (err) {

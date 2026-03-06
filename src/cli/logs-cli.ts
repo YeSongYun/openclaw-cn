@@ -1,6 +1,7 @@
 import { setTimeout as delay } from "node:timers/promises";
 import type { Command } from "commander";
 import { buildGatewayConnectionDetails } from "../gateway/call.js";
+import { tc, tci } from "../i18n/index.js";
 import { parseLogLine } from "../logging/parse-log-line.js";
 import { formatLocalIsoWithOffset, isValidTimeZone } from "../logging/timestamps.js";
 import { formatDocsLink } from "../terminal/links.js";
@@ -164,8 +165,13 @@ function emitGatewayError(
   errorLine: (text: string) => boolean,
 ) {
   const details = buildGatewayConnectionDetails({ url: opts.url });
-  const message = "Gateway not reachable. Is it running and accessible?";
-  const hint = `Hint: run \`${formatCliCommand("openclaw doctor")}\`.`;
+  const message = tc(
+    "logs.gatewayUnreachable",
+    "Gateway not reachable. Is it running and accessible?",
+  );
+  const hint = tci("logs.hint", `Hint: run \`{cmd}\`.`, {
+    cmd: formatCliCommand("openclaw doctor"),
+  });
   const errorText = err instanceof Error ? err.message : String(err);
 
   if (mode === "json") {
@@ -304,12 +310,12 @@ export function registerLogsCli(program: Command) {
           }
         }
         if (payload.truncated) {
-          if (!errorLine("Log tail truncated (increase --max-bytes).")) {
+          if (!errorLine(tc("logs.truncated", "Log tail truncated (increase --max-bytes)."))) {
             return;
           }
         }
         if (payload.reset) {
-          if (!errorLine("Log cursor reset (file rotated).")) {
+          if (!errorLine(tc("logs.cursorReset", "Log cursor reset (file rotated)."))) {
             return;
           }
         }

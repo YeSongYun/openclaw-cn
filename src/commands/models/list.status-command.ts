@@ -30,6 +30,7 @@ import {
   resolveAgentModelFallbackValues,
   resolveAgentModelPrimaryValue,
 } from "../../config/model-input.js";
+import { tc } from "../../i18n/index.js";
 import {
   formatUsageWindowSummary,
   loadProviderUsageSummary,
@@ -236,7 +237,7 @@ export async function modelsStatusCommand(
   let probeSummary: AuthProbeSummary | undefined;
   if (opts.probe) {
     probeSummary = await withProgressTotals(
-      { label: "Probing auth profiles…", total: 1 },
+      { label: tc("model.probingAuth", "Probing auth profiles…"), total: 1 },
       async (update) => {
         return await runAuthProbes({
           cfg,

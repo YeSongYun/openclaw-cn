@@ -2,6 +2,7 @@ import fs from "node:fs";
 import { confirm } from "@clack/prompts";
 import type { Command } from "commander";
 import { danger } from "../globals.js";
+import { tc, tci } from "../i18n/index.js";
 import { defaultRuntime } from "../runtime.js";
 import { runSecretsApply } from "../secrets/apply.js";
 import { resolveSecretsAuditExitCode, runSecretsAudit } from "../secrets/audit.js";
@@ -68,10 +69,14 @@ export function registerSecretsCli(program: Command) {
         (result as { warningCount?: unknown } | undefined)?.warningCount ?? 0,
       );
       if (Number.isFinite(warningCount) && warningCount > 0) {
-        defaultRuntime.log(`Secrets reloaded with ${warningCount} warning(s).`);
+        defaultRuntime.log(
+          tci("secrets.reloadedWithWarnings", `Secrets reloaded with ${warningCount} warning(s).`, {
+            count: String(warningCount),
+          }),
+        );
         return;
       }
-      defaultRuntime.log("Secrets reloaded.");
+      defaultRuntime.log(tc("secrets.reloaded", "Secrets reloaded."));
     } catch (err) {
       defaultRuntime.error(danger(String(err)));
       defaultRuntime.exit(1);
@@ -173,7 +178,7 @@ export function registerSecretsCli(program: Command) {
         let shouldApply = Boolean(opts.apply);
         if (!shouldApply && !opts.json) {
           const approved = await confirm({
-            message: "Apply this plan now?",
+            message: tc("secrets.applyPlanNow", "Apply this plan now?"),
             initialValue: true,
           });
           if (typeof approved === "boolean") {
@@ -184,12 +189,14 @@ export function registerSecretsCli(program: Command) {
           const needsIrreversiblePrompt = Boolean(opts.apply);
           if (needsIrreversiblePrompt && !opts.yes && !opts.json) {
             const confirmed = await confirm({
-              message:
+              message: tc(
+                "secrets.applyIrreversible",
                 "This migration is one-way for migrated plaintext values. Continue with apply?",
+              ),
               initialValue: true,
             });
             if (confirmed !== true) {
-              defaultRuntime.log("Apply cancelled.");
+              defaultRuntime.log(tc("secrets.applyCancelled", "Apply cancelled."));
               return;
             }
           }
@@ -203,8 +210,12 @@ export function registerSecretsCli(program: Command) {
           }
           defaultRuntime.log(
             result.changed
-              ? `Secrets applied. Updated ${result.changedFiles.length} file(s).`
-              : "Secrets apply: no changes.",
+              ? tci(
+                  "secrets.applied",
+                  `Secrets applied. Updated ${result.changedFiles.length} file(s).`,
+                  { count: String(result.changedFiles.length) },
+                )
+              : tc("secrets.applyNoChanges", "Secrets apply: no changes."),
           );
         }
       } catch (err) {
@@ -233,15 +244,23 @@ export function registerSecretsCli(program: Command) {
         if (opts.dryRun) {
           defaultRuntime.log(
             result.changed
-              ? `Secrets apply dry run: ${result.changedFiles.length} file(s) would change.`
-              : "Secrets apply dry run: no changes.",
+              ? tci(
+                  "secrets.applyDryRun",
+                  `Secrets apply dry run: ${result.changedFiles.length} file(s) would change.`,
+                  { count: String(result.changedFiles.length) },
+                )
+              : tc("secrets.applyDryRunNoChanges", "Secrets apply dry run: no changes."),
           );
           return;
         }
         defaultRuntime.log(
           result.changed
-            ? `Secrets applied. Updated ${result.changedFiles.length} file(s).`
-            : "Secrets apply: no changes.",
+            ? tci(
+                "secrets.applied",
+                `Secrets applied. Updated ${result.changedFiles.length} file(s).`,
+                { count: String(result.changedFiles.length) },
+              )
+            : tc("secrets.applyNoChanges", "Secrets apply: no changes."),
         );
       } catch (err) {
         defaultRuntime.error(danger(String(err)));

@@ -25,5 +25,9 @@
   "remove.noDeleteSupport": "频道 {channel} 不支持删除。",
   "remove.noDisableSupport": "频道 {channel} 不支持禁用。",
   "remove.deleted": "已删除 {channel} 账户 \"{accountId}\"。",
-  "remove.disabled": "已禁用 {channel} 账户 \"{accountId}\"。"
+  "remove.disabled": "已禁用 {channel} 账户 \"{accountId}\"。",
+
+  "list.chatChannels": "聊天频道：",
+  "list.authProviders": "认证提供商（OAuth + API 密钥）：",
+  "list.fetchingUsage": "正在获取使用量快照…"
 }

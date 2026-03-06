@@ -3,6 +3,7 @@ import { listChannelPlugins } from "../../channels/plugins/index.js";
 import { buildChannelAccountSnapshot } from "../../channels/plugins/status.js";
 import type { ChannelAccountSnapshot, ChannelPlugin } from "../../channels/plugins/types.js";
 import { withProgress } from "../../cli/progress.js";
+import { tch } from "../../i18n/index.js";
 import { formatUsageReportLines, loadProviderUsageSummary } from "../../infra/provider-usage.js";
 import { defaultRuntime, type RuntimeEnv } from "../../runtime.js";
 import { formatDocsLink } from "../../terminal/links.js";
@@ -91,7 +92,11 @@ async function loadUsageWithProgress(
 ): Promise<Awaited<ReturnType<typeof loadProviderUsageSummary>> | null> {
   try {
     return await withProgress(
-      { label: "Fetching usage snapshot…", indeterminate: true, enabled: true },
+      {
+        label: tch("list.fetchingUsage", "Fetching usage snapshot…"),
+        indeterminate: true,
+        enabled: true,
+      },
       async () => await loadProviderUsageSummary(),
     );
   } catch (err) {
@@ -131,7 +136,7 @@ export async function channelsListCommand(
   }
 
   const lines: string[] = [];
-  lines.push(theme.heading("Chat channels:"));
+  lines.push(theme.heading(tch("list.chatChannels", "Chat channels:")));
 
   for (const plugin of plugins) {
     const accounts = plugin.config.listAccountIds(cfg);
@@ -154,7 +159,7 @@ export async function channelsListCommand(
   }
 
   lines.push("");
-  lines.push(theme.heading("Auth providers (OAuth + API keys):"));
+  lines.push(theme.heading(tch("list.authProviders", "Auth providers (OAuth + API keys):")));
   if (authProfiles.length === 0) {
     lines.push(theme.muted("- none"));
   } else {

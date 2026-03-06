@@ -2,6 +2,7 @@ import type { Command } from "commander";
 import { runAcpClientInteractive } from "../acp/client.js";
 import { readSecretFromFile } from "../acp/secret-file.js";
 import { serveAcpGateway } from "../acp/server.js";
+import { tc } from "../i18n/index.js";
 import { defaultRuntime } from "../runtime.js";
 import { formatDocsLink } from "../terminal/links.js";
 import { theme } from "../terminal/theme.js";
@@ -57,14 +58,14 @@ export function registerAcpCli(program: Command) {
           file: opts.tokenFile as string | undefined,
           directFlag: "--token",
           fileFlag: "--token-file",
-          label: "Gateway token",
+          label: tc("acp.gatewayTokenLabel", "Gateway token"),
         });
         const gatewayPassword = resolveSecretOption({
           direct: opts.password as string | undefined,
           file: opts.passwordFile as string | undefined,
           directFlag: "--password",
           fileFlag: "--password-file",
-          label: "Gateway password",
+          label: tc("acp.gatewayPasswordLabel", "Gateway password"),
         });
         if (opts.token) {
           warnSecretCliFlag("--token");

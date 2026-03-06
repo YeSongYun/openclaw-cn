@@ -4,6 +4,7 @@ import type { CliDeps } from "../cli/deps.js";
 import { withProgress } from "../cli/progress.js";
 import { loadConfig } from "../config/config.js";
 import { callGateway, randomIdempotencyKey } from "../gateway/call.js";
+import { tc, tci } from "../i18n/index.js";
 import { normalizeAgentId } from "../routing/session-key.js";
 import type { RuntimeEnv } from "../runtime.js";
 import {
@@ -100,7 +101,11 @@ export async function agentViaGatewayCommand(opts: AgentCliOpts, runtime: Runtim
     const knownAgents = listAgentIds(cfg);
     if (!knownAgents.includes(agentId)) {
       throw new Error(
-        `Unknown agent id "${agentIdRaw}". Use "${formatCliCommand("openclaw agents list")}" to see configured agents.`,
+        tci(
+          "agent.unknownAgent",
+          `Unknown agent id "{id}". Use "{cmd}" to see configured agents.`,
+          { id: agentIdRaw ?? "", cmd: formatCliCommand("openclaw agents list") },
+        ),
       );
     }
   }
@@ -122,7 +127,7 @@ export async function agentViaGatewayCommand(opts: AgentCliOpts, runtime: Runtim
 
   const response = await withProgress(
     {
-      label: "Waiting for agent reply…",
+      label: tc("agent.waitingReply", "Waiting for agent reply…"),
       indeterminate: true,
       enabled: opts.json !== true,
     },
@@ -163,7 +168,9 @@ export async function agentViaGatewayCommand(opts: AgentCliOpts, runtime: Runtim
   const payloads = result?.payloads ?? [];
 
   if (payloads.length === 0) {
-    runtime.log(response?.summary ? String(response.summary) : "No reply from agent.");
+    runtime.log(
+      response?.summary ? String(response.summary) : tc("agent.noReply", "No reply from agent."),
+    );
     return response;
   }
 

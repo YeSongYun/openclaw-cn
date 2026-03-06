@@ -2,6 +2,7 @@ import { formatNodeServiceDescription } from "../daemon/constants.js";
 import { resolveNodeProgramArguments } from "../daemon/program-args.js";
 import { resolvePreferredNodePath } from "../daemon/runtime-paths.js";
 import { buildNodeServiceEnvironment } from "../daemon/service-env.js";
+import { tc } from "../i18n/index.js";
 import { resolveGatewayDevMode } from "./daemon-install-helpers.js";
 import {
   emitNodeRuntimeWarning,
@@ -53,7 +54,7 @@ export async function buildNodeInstallPlan(params: {
     runtime: params.runtime,
     nodeProgram: programArguments[0],
     warn: params.warn,
-    title: "Node daemon runtime",
+    title: tc("daemon.nodeRuntimeTitle", "Node daemon runtime"),
   });
 
   const environment = buildNodeServiceEnvironment({ env: params.env });

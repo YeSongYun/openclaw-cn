@@ -8,6 +8,7 @@ import { loadConfig } from "../config/config.js";
 import { resolveStateDir } from "../config/paths.js";
 import { resolveSessionTranscriptsDirForAgent } from "../config/sessions/paths.js";
 import { setVerbose } from "../globals.js";
+import { tc, tci } from "../i18n/index.js";
 import { getMemorySearchManager, type MemorySearchManagerResult } from "../memory/index.js";
 import { listMemoryFiles, normalizeExtraMemoryPaths } from "../memory/internal.js";
 import { defaultRuntime } from "../runtime.js";
@@ -398,7 +399,9 @@ export async function runMemoryStatus(opts: MemoryCommandOptions) {
               },
             );
           } else if (opts.index && !syncFn) {
-            defaultRuntime.log("Memory backend does not support manual reindex.");
+            defaultRuntime.log(
+              tc("memory.backendNoReindex", "Memory backend does not support manual reindex."),
+            );
           }
         } else {
           await manager.probeVectorAvailability();
@@ -445,7 +448,9 @@ export async function runMemoryStatus(opts: MemoryCommandOptions) {
         ? `${filesIndexed}/? files · ${chunksIndexed} chunks`
         : `${filesIndexed}/${totalFiles} files · ${chunksIndexed} chunks`;
     if (opts.index) {
-      const line = indexError ? `Memory index failed: ${indexError}` : "Memory index complete.";
+      const line = indexError
+        ? tci("memory.indexFailed", `Memory index failed: ${indexError}`, { error: indexError })
+        : tc("memory.indexComplete", "Memory index complete.");
       defaultRuntime.log(line);
     }
     const requestedProvider = status.requestedProvider ?? status.provider;
@@ -687,7 +692,9 @@ export function registerMemoryCli(program: Command) {
                   : `${lastLabel} · elapsed ${elapsed}`;
               };
               if (!syncFn) {
-                defaultRuntime.log("Memory backend does not support manual reindex.");
+                defaultRuntime.log(
+                  tc("memory.backendNoReindex", "Memory backend does not support manual reindex."),
+                );
                 return;
               }
               await withProgressTotals(
@@ -727,7 +734,9 @@ export function registerMemoryCli(program: Command) {
               if (qmdIndexSummary) {
                 defaultRuntime.log(qmdIndexSummary);
               }
-              defaultRuntime.log(`Memory index updated (${agentId}).`);
+              defaultRuntime.log(
+                tci("memory.indexUpdated", `Memory index updated (${agentId}).`, { agentId }),
+              );
             } catch (err) {
               const message = formatErrorMessage(err);
               defaultRuntime.error(`Memory index failed (${agentId}): ${message}`);
@@ -788,7 +797,7 @@ export function registerMemoryCli(program: Command) {
               return;
             }
             if (results.length === 0) {
-              defaultRuntime.log("No matches.");
+              defaultRuntime.log(tc("memory.noMatches", "No matches."));
               return;
             }
             const rich = isRich();

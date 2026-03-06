@@ -181,7 +181,7 @@ export async function maybeRepairGatewayDaemon(params: {
       if (install) {
         const daemonRuntime = await params.prompter.select<GatewayDaemonRuntime>(
           {
-            message: "Gateway service runtime",
+            message: td("gateway.daemon.runtimePrompt", "Gateway service runtime"),
             options: GATEWAY_DAEMON_RUNTIME_OPTIONS,
             initialValue: DEFAULT_GATEWAY_DAEMON_RUNTIME,
           },

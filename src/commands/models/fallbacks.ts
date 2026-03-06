@@ -1,3 +1,4 @@
+import { tc } from "../../i18n/index.js";
 import type { RuntimeEnv } from "../../runtime.js";
 import {
   addFallbackCommand,
@@ -10,12 +11,20 @@ export async function modelsFallbacksListCommand(
   opts: { json?: boolean; plain?: boolean },
   runtime: RuntimeEnv,
 ) {
-  return await listFallbacksCommand({ label: "Fallbacks", key: "model" }, opts, runtime);
+  return await listFallbacksCommand(
+    { label: tc("model.fallbacksLabel", "Fallbacks"), key: "model" },
+    opts,
+    runtime,
+  );
 }
 
 export async function modelsFallbacksAddCommand(modelRaw: string, runtime: RuntimeEnv) {
   return await addFallbackCommand(
-    { label: "Fallbacks", key: "model", logPrefix: "Fallbacks" },
+    {
+      label: tc("model.fallbacksLabel", "Fallbacks"),
+      key: "model",
+      logPrefix: tc("model.fallbacksLogPrefix", "Fallbacks"),
+    },
     modelRaw,
     runtime,
   );
@@ -24,10 +33,10 @@ export async function modelsFallbacksAddCommand(modelRaw: string, runtime: Runti
 export async function modelsFallbacksRemoveCommand(modelRaw: string, runtime: RuntimeEnv) {
   return await removeFallbackCommand(
     {
-      label: "Fallbacks",
+      label: tc("model.fallbacksLabel", "Fallbacks"),
       key: "model",
-      notFoundLabel: "Fallback",
-      logPrefix: "Fallbacks",
+      notFoundLabel: tc("model.fallbackNotFound", "Fallback"),
+      logPrefix: tc("model.fallbacksLogPrefix", "Fallbacks"),
     },
     modelRaw,
     runtime,
@@ -36,7 +45,7 @@ export async function modelsFallbacksRemoveCommand(modelRaw: string, runtime: Ru
 
 export async function modelsFallbacksClearCommand(runtime: RuntimeEnv) {
   return await clearFallbacksCommand(
-    { key: "model", clearedMessage: "Fallback list cleared." },
+    { key: "model", clearedMessage: tc("model.fallbackCleared", "Fallback list cleared.") },
     runtime,
   );
 }

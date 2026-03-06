@@ -14,7 +14,7 @@ import {
 import { updateAuthProfileStoreWithLock } from "../agents/auth-profiles/store.js";
 import { formatCliCommand } from "../cli/command-format.js";
 import type { OpenClawConfig } from "../config/config.js";
-import { t } from "../i18n/index.js";
+import { t, td } from "../i18n/index.js";
 import { note } from "../terminal/note.js";
 import type { DoctorPrompter } from "./doctor-prompter.js";
 
@@ -38,7 +38,10 @@ export async function maybeRepairAnthropicOAuthProfileId(
     t("doctor", "auth.profiles.title", "Auth profiles"),
   );
   const apply = await prompter.confirm({
-    message: "Update Anthropic OAuth profile id in config now?",
+    message: td(
+      "auth.profiles.updateOauthPrompt",
+      "Update Anthropic OAuth profile id in config now?",
+    ),
     initialValue: true,
   });
   if (!apply) {
@@ -146,7 +149,7 @@ export async function maybeRemoveDeprecatedCliAuthProfiles(
   note(lines.join("\n"), t("doctor", "auth.profiles.deprecated.title", "Auth profiles"));
 
   const shouldRemove = await prompter.confirmRepair({
-    message: "Remove deprecated CLI auth profiles now?",
+    message: td("auth.profiles.removeDeprecatedPrompt", "Remove deprecated CLI auth profiles now?"),
     initialValue: true,
   });
   if (!shouldRemove) {
@@ -302,7 +305,10 @@ export async function noteAuthProfileHealth(params: {
   }
 
   const shouldRefresh = await params.prompter.confirmRepair({
-    message: "Refresh expiring OAuth tokens now? (static tokens need re-auth)",
+    message: td(
+      "auth.profiles.refreshPrompt",
+      "Refresh expiring OAuth tokens now? (static tokens need re-auth)",
+    ),
     initialValue: true,
   });
 

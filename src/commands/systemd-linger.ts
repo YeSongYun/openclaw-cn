@@ -3,6 +3,7 @@ import {
   isSystemdUserServiceAvailable,
   readSystemdUserLingerStatus,
 } from "../daemon/systemd.js";
+import { tc, tci } from "../i18n/index.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { note } from "../terminal/note.js";
 
@@ -30,13 +31,22 @@ export async function ensureSystemdUserLingerInteractive(params: {
   const prompter = params.prompter ?? { note };
   const title = params.title ?? "Systemd";
   if (!(await isSystemdUserServiceAvailable())) {
-    await prompter.note("Systemd user services are unavailable. Skipping lingering checks.", title);
+    await prompter.note(
+      tc(
+        "systemd.unavailable",
+        "Systemd user services are unavailable. Skipping lingering checks.",
+      ),
+      title,
+    );
     return;
   }
   const status = await readSystemdUserLingerStatus(env);
   if (!status) {
     await prompter.note(
-      "Unable to read loginctl linger status. Ensure systemd + loginctl are available.",
+      tc(
+        "systemd.readFailed",
+        "Unable to read loginctl linger status. Ensure systemd + loginctl are available.",
+      ),
       title,
     );
     return;
@@ -47,19 +57,33 @@ export async function ensureSystemdUserLingerInteractive(params: {
 
   const reason =
     params.reason ??
-    "Systemd user services stop when you log out or go idle, which kills the Gateway.";
+    tc(
+      "systemd.reason",
+      "Systemd user services stop when you log out or go idle, which kills the Gateway.",
+    );
   const actionNote = params.requireConfirm
-    ? "We can enable lingering now (may require sudo; writes /var/lib/systemd/linger)."
-    : "Enabling lingering now (may require sudo; writes /var/lib/systemd/linger).";
+    ? tc(
+        "systemd.canEnable",
+        "We can enable lingering now (may require sudo; writes /var/lib/systemd/linger).",
+      )
+    : tc(
+        "systemd.enabling",
+        "Enabling lingering now (may require sudo; writes /var/lib/systemd/linger).",
+      );
   await prompter.note(`${reason}\n${actionNote}`, title);
 
   if (params.requireConfirm && prompter.confirm) {
     const ok = await prompter.confirm({
-      message: `Enable systemd lingering for ${status.user}?`,
+      message: tci("systemd.confirmEnable", `Enable systemd lingering for {user}?`, {
+        user: status.user,
+      }),
       initialValue: true,
     });
     if (!ok) {
-      await prompter.note("Without lingering, the Gateway will stop when you log out.", title);
+      await prompter.note(
+        tc("systemd.withoutLinger", "Without lingering, the Gateway will stop when you log out."),
+        title,
+      );
       return;
     }
   }
@@ -69,7 +93,10 @@ export async function ensureSystemdUserLingerInteractive(params: {
     user: status.user,
   });
   if (resultNoSudo.ok) {
-    await prompter.note(`Enabled systemd lingering for ${status.user}.`, title);
+    await prompter.note(
+      tci("systemd.enabled", "Enabled systemd lingering for {user}.", { user: status.user }),
+      title,
+    );
     return;
   }
 
@@ -79,14 +106,24 @@ export async function ensureSystemdUserLingerInteractive(params: {
     sudoMode: "prompt",
   });
   if (result.ok) {
-    await prompter.note(`Enabled systemd lingering for ${status.user}.`, title);
+    await prompter.note(
+      tci("systemd.enabled", "Enabled systemd lingering for {user}.", { user: status.user }),
+      title,
+    );
     return;
   }
 
   params.runtime.error(
-    `Failed to enable lingering: ${result.stderr || result.stdout || "unknown error"}`,
+    tci("systemd.enableFailed", "Failed to enable lingering: {error}", {
+      error: result.stderr || result.stdout || "unknown error",
+    }),
   );
-  await prompter.note(`Run manually: sudo loginctl enable-linger ${status.user}`, title);
+  await prompter.note(
+    tci("systemd.manualHint", "Run manually: sudo loginctl enable-linger {user}", {
+      user: status.user,
+    }),
+    title,
+  );
 }
 
 export async function ensureSystemdUserLingerNonInteractive(params: {
@@ -111,11 +148,19 @@ export async function ensureSystemdUserLingerNonInteractive(params: {
     sudoMode: "non-interactive",
   });
   if (result.ok) {
-    params.runtime.log(`Enabled systemd lingering for ${status.user}.`);
+    params.runtime.log(
+      tci("systemd.nonInteractiveEnabled", "Enabled systemd lingering for {user}.", {
+        user: status.user,
+      }),
+    );
     return;
   }
 
   params.runtime.log(
-    `Systemd lingering is disabled for ${status.user}. Run: sudo loginctl enable-linger ${status.user}`,
+    tci(
+      "systemd.nonInteractiveHint",
+      "Systemd lingering is disabled for {user}. Run: sudo loginctl enable-linger {user}",
+      { user: status.user },
+    ),
   );
 }

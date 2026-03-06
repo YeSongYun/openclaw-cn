@@ -1,6 +1,7 @@
 import { withProgress } from "../cli/progress.js";
 import { loadConfig, resolveGatewayPort } from "../config/config.js";
 import { probeGateway } from "../gateway/probe.js";
+import { tst } from "../i18n/index.js";
 import { discoverGatewayBeacons } from "../infra/bonjour-discovery.js";
 import { resolveSshConfig } from "../infra/ssh-config.js";
 import { parseSshTarget, startSshPortForward } from "../infra/ssh-tunnel.js";
@@ -75,7 +76,7 @@ export async function gatewayStatusCommand(
 
   const { discovery, probed } = await withProgress(
     {
-      label: "Inspecting gateways…",
+      label: tst("gateway.inspecting", "Inspecting gateways…"),
       indeterminate: true,
       enabled: opts.json !== true,
     },
@@ -274,11 +275,11 @@ export async function gatewayStatusCommand(
     return;
   }
 
-  runtime.log(colorize(rich, theme.heading, "Gateway Status"));
+  runtime.log(colorize(rich, theme.heading, tst("gateway.heading", "Gateway Status")));
   runtime.log(
     ok
-      ? `${colorize(rich, theme.success, "Reachable")}: yes`
-      : `${colorize(rich, theme.error, "Reachable")}: no`,
+      ? `${colorize(rich, theme.success, tst("gateway.reachable", "Reachable"))}: yes`
+      : `${colorize(rich, theme.error, tst("gateway.reachable", "Reachable"))}: no`,
   );
   runtime.log(colorize(rich, theme.muted, `Probe budget: ${overallTimeoutMs}ms`));
 
@@ -291,7 +292,7 @@ export async function gatewayStatusCommand(
   }
 
   runtime.log("");
-  runtime.log(colorize(rich, theme.heading, "Discovery (this machine)"));
+  runtime.log(colorize(rich, theme.heading, tst("gateway.discovery", "Discovery (this machine)")));
   const discoveryDomains = wideAreaDomain ? `local. + ${wideAreaDomain}` : "local.";
   runtime.log(
     discovery.length > 0
@@ -309,7 +310,7 @@ export async function gatewayStatusCommand(
   }
 
   runtime.log("");
-  runtime.log(colorize(rich, theme.heading, "Targets"));
+  runtime.log(colorize(rich, theme.heading, tst("gateway.targets", "Targets")));
   for (const p of probed) {
     runtime.log(renderTargetHeader(p.target, rich));
     runtime.log(`  ${renderProbeSummaryLine(p.probe, rich)}`);

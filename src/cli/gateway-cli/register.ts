@@ -2,6 +2,7 @@ import type { Command } from "commander";
 import { gatewayStatusCommand } from "../../commands/gateway-status.js";
 import { formatHealthChannelLines, type HealthSummary } from "../../commands/health.js";
 import { loadConfig } from "../../config/config.js";
+import { tc } from "../../i18n/index.js";
 import { discoverGatewayBeacons } from "../../infra/bonjour-discovery.js";
 import type { CostUsageSummary } from "../../infra/session-cost-usage.js";
 import { resolveWideAreaDiscoveryDomain } from "../../infra/widearea-dns.js";
@@ -173,7 +174,9 @@ export function registerGatewayCli(program: Command) {
           const rich = isRich();
           const obj: Record<string, unknown> = result && typeof result === "object" ? result : {};
           const durationMs = typeof obj.durationMs === "number" ? obj.durationMs : null;
-          defaultRuntime.log(colorize(rich, theme.heading, "Gateway Health"));
+          defaultRuntime.log(
+            colorize(rich, theme.heading, tc("register.gatewayHealth", "Gateway Health")),
+          );
           defaultRuntime.log(
             `${colorize(rich, theme.success, "OK")}${durationMs != null ? ` (${durationMs}ms)` : ""}`,
           );
@@ -219,7 +222,7 @@ export function registerGatewayCli(program: Command) {
         const domains = ["local.", ...(wideAreaDomain ? [wideAreaDomain] : [])];
         const beacons = await withProgress(
           {
-            label: "Scanning for gateways…",
+            label: tc("register.inspectingGateways", "Scanning for gateways…"),
             indeterminate: true,
             enabled: opts.json !== true,
             delayMs: 0,
@@ -255,7 +258,9 @@ export function registerGatewayCli(program: Command) {
         }
 
         const rich = isRich();
-        defaultRuntime.log(colorize(rich, theme.heading, "Gateway Discovery"));
+        defaultRuntime.log(
+          colorize(rich, theme.heading, tc("register.gatewayDiscovery", "Gateway Discovery")),
+        );
         defaultRuntime.log(
           colorize(
             rich,

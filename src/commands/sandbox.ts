@@ -7,6 +7,7 @@ import {
   type SandboxBrowserInfo,
   type SandboxContainerInfo,
 } from "../agents/sandbox.js";
+import { tc } from "../i18n/index.js";
 import type { RuntimeEnv } from "../runtime.js";
 import {
   displayBrowsers,
@@ -74,14 +75,14 @@ export async function sandboxRecreateCommand(
   const filtered = await fetchAndFilterContainers(opts);
 
   if (filtered.containers.length + filtered.browsers.length === 0) {
-    runtime.log("No containers found matching the criteria.");
+    runtime.log(tc("sandbox.noContainers", "No containers found matching the criteria."));
     return;
   }
 
   displayRecreatePreview(filtered.containers, filtered.browsers, runtime);
 
   if (!opts.force && !(await confirmRecreate())) {
-    runtime.log("Cancelled.");
+    runtime.log(tc("sandbox.cancelledRecreate", "Cancelled."));
     return;
   }
 
@@ -143,7 +144,7 @@ function createAgentMatcher(agentId: string) {
 
 async function confirmRecreate(): Promise<boolean> {
   const result = await clackConfirm({
-    message: "This will stop and remove these containers. Continue?",
+    message: tc("sandbox.confirmRecreate", "This will stop and remove these containers. Continue?"),
     initialValue: false,
   });
 
@@ -154,7 +155,7 @@ async function removeContainers(
   filtered: FilteredContainers,
   runtime: RuntimeEnv,
 ): Promise<{ successCount: number; failCount: number }> {
-  runtime.log("\nRemoving containers...\n");
+  runtime.log(`\n${tc("sandbox.removingContainers", "Removing containers...")}\n`);
 
   let successCount = 0;
   let failCount = 0;

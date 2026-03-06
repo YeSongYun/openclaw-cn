@@ -38,5 +38,43 @@
   "help.skills": "技能",
   "help.more": "更多：/commands 查看完整列表",
   "commands.title": "斜杠命令",
-  "commands.pageTitle": "命令 ({current}/{total})"
+  "commands.pageTitle": "命令 ({current}/{total})",
+
+  "scan.label": "正在扫描状态…",
+  "scan.loadConfig": "正在加载配置…",
+  "scan.tailscale": "正在检查 Tailscale…",
+  "scan.updates": "正在检查更新…",
+  "scan.agents": "正在解析代理…",
+  "scan.gateway": "正在探测网关…",
+  "scan.channels": "正在查询频道状态…",
+  "scan.channelsSummary": "正在汇总频道…",
+  "scan.memory": "正在检查记忆…",
+  "scan.sessions": "正在读取会话…",
+  "scan.rendering": "正在渲染…",
+
+  "scanAll.label": "正在扫描 status --all…",
+  "scanAll.services": "正在检查服务…",
+  "scanAll.scanningAgents": "正在扫描代理…",
+  "scanAll.queryGateway": "正在查询网关…",
+  "scanAll.localState": "正在检查本地状态…",
+
+  "cmd.securityAudit": "正在运行安全审计…",
+  "cmd.fetchUsage": "正在获取使用量快照…",
+  "cmd.checkHealth": "正在检查网关健康状态…",
+
+  "heading.status": "OpenClaw 状态",
+  "heading.overview": "概览",
+  "heading.security": "安全审计",
+  "heading.channels": "频道",
+  "heading.sessions": "会话",
+  "heading.systemEvents": "系统事件",
+  "heading.health": "健康状态",
+  "heading.usage": "使用量",
+  "heading.nextSteps": "下一步：",
+
+  "gateway.heading": "网关状态",
+  "gateway.reachable": "可达",
+  "gateway.inspecting": "正在检查网关…",
+  "gateway.discovery": "发现（本机）",
+  "gateway.targets": "目标"
 }

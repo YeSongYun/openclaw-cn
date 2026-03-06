@@ -1,4 +1,5 @@
 import { formatCliCommand } from "../cli/command-format.js";
+import { td, tdi } from "../i18n/index.js";
 import { isTruthyEnvValue } from "../infra/env.js";
 import { runGatewayUpdate } from "../infra/update-runner.js";
 import { runCommandWithTimeout } from "../process/exec.js";
@@ -45,13 +46,16 @@ export async function maybeOfferUpdateBeforeDoctor(params: {
   const git = await detectOpenClawGitCheckout(params.root);
   if (git === "git") {
     const shouldUpdate = await params.confirm({
-      message: "Update OpenClaw from git before running doctor?",
+      message: td("update.gitPrompt", "Update OpenClaw from git before running doctor?"),
       initialValue: true,
     });
     if (!shouldUpdate) {
       return { updated: false };
     }
-    note("Running update (fetch/rebase/build/ui:build/doctor)…", "Update");
+    note(
+      td("update.running", "Running update (fetch/rebase/build/ui:build/doctor)…"),
+      td("update.title", "Update"),
+    );
     const result = await runGatewayUpdate({
       cwd: params.root,
       argv1: process.argv[1],
@@ -65,10 +69,12 @@ export async function maybeOfferUpdateBeforeDoctor(params: {
       ]
         .filter(Boolean)
         .join("\n"),
-      "Update result",
+      td("update.resultTitle", "Update result"),
     );
     if (result.status === "ok") {
-      params.outro("Update completed (doctor already ran as part of the update).");
+      params.outro(
+        td("update.completed", "Update completed (doctor already ran as part of the update)."),
+      );
       return { updated: true, handled: true };
     }
     return { updated: true, handled: false };
@@ -76,11 +82,12 @@ export async function maybeOfferUpdateBeforeDoctor(params: {
 
   if (git === "not-git") {
     note(
-      [
-        "This install is not a git checkout.",
-        `Run \`${formatCliCommand("openclaw update")}\` to update via your package manager (npm/pnpm), then rerun doctor.`,
-      ].join("\n"),
-      "Update",
+      tdi(
+        "update.notGitNote",
+        "This install is not a git checkout.\nRun `{cmd}` to update via your package manager (npm/pnpm), then rerun doctor.",
+        { cmd: formatCliCommand("openclaw update") },
+      ),
+      td("update.title", "Update"),
     );
   }
 

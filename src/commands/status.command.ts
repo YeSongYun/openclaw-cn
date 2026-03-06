@@ -3,6 +3,7 @@ import { withProgress } from "../cli/progress.js";
 import { loadConfig, resolveGatewayPort } from "../config/config.js";
 import { buildGatewayConnectionDetails, callGateway } from "../gateway/call.js";
 import { info } from "../globals.js";
+import { tst } from "../i18n/index.js";
 import { formatTimeAgo } from "../infra/format-time/format-relative.ts";
 import type { HeartbeatEventPayload } from "../infra/heartbeat-events.js";
 import { formatUsageReportLines, loadProviderUsageSummary } from "../infra/provider-usage.js";
@@ -95,7 +96,7 @@ export async function statusCommand(
         await scanStatus({ json: opts.json, timeoutMs: opts.timeoutMs, all: opts.all }, runtime),
         await withProgress(
           {
-            label: "Running security audit…",
+            label: tst("cmd.securityAudit", "Running security audit…"),
             indeterminate: true,
             enabled: true,
           },
@@ -132,7 +133,7 @@ export async function statusCommand(
   const usage = opts.usage
     ? await withProgress(
         {
-          label: "Fetching usage snapshot…",
+          label: tst("cmd.fetchUsage", "Fetching usage snapshot…"),
           indeterminate: true,
           enabled: opts.json !== true,
         },
@@ -142,7 +143,7 @@ export async function statusCommand(
   const health: HealthSummary | undefined = opts.deep
     ? await withProgress(
         {
-          label: "Checking gateway health…",
+          label: tst("cmd.checkHealth", "Checking gateway health…"),
           indeterminate: true,
           enabled: opts.json !== true,
         },
@@ -425,9 +426,9 @@ export async function statusCommand(
     },
   ];
 
-  runtime.log(theme.heading("OpenClaw status"));
+  runtime.log(theme.heading(tst("heading.status", "OpenClaw status")));
   runtime.log("");
-  runtime.log(theme.heading("Overview"));
+  runtime.log(theme.heading(tst("heading.overview", "Overview")));
   runtime.log(
     renderTable({
       width: tableWidth,
@@ -454,7 +455,7 @@ export async function statusCommand(
   }
 
   runtime.log("");
-  runtime.log(theme.heading("Security audit"));
+  runtime.log(theme.heading(tst("heading.security", "Security audit")));
   const fmtSummary = (value: { critical: number; warn: number; info: number }) => {
     const parts = [
       theme.error(`${value.critical} critical`),
@@ -500,7 +501,7 @@ export async function statusCommand(
   runtime.log(theme.muted(`Deep probe: ${formatCliCommand("openclaw security audit --deep")}`));
 
   runtime.log("");
-  runtime.log(theme.heading("Channels"));
+  runtime.log(theme.heading(tst("heading.channels", "Channels")));
   const channelIssuesByChannel = groupChannelIssuesByChannel(channelIssues);
   runtime.log(
     renderTable({
@@ -536,7 +537,7 @@ export async function statusCommand(
   );
 
   runtime.log("");
-  runtime.log(theme.heading("Sessions"));
+  runtime.log(theme.heading(tst("heading.sessions", "Sessions")));
   runtime.log(
     renderTable({
       width: tableWidth,
@@ -570,7 +571,7 @@ export async function statusCommand(
 
   if (summary.queuedSystemEvents.length > 0) {
     runtime.log("");
-    runtime.log(theme.heading("System events"));
+    runtime.log(theme.heading(tst("heading.systemEvents", "System events")));
     runtime.log(
       renderTable({
         width: tableWidth,
@@ -587,7 +588,7 @@ export async function statusCommand(
 
   if (health) {
     runtime.log("");
-    runtime.log(theme.heading("Health"));
+    runtime.log(theme.heading(tst("heading.health", "Health")));
     const rows: Array<Record<string, string>> = [];
     rows.push({
       Item: "Gateway",
@@ -642,7 +643,7 @@ export async function statusCommand(
 
   if (usage) {
     runtime.log("");
-    runtime.log(theme.heading("Usage"));
+    runtime.log(theme.heading(tst("heading.usage", "Usage")));
     for (const line of formatUsageReportLines(usage)) {
       runtime.log(line);
     }
@@ -657,7 +658,7 @@ export async function statusCommand(
     runtime.log(theme.warn(updateHint));
     runtime.log("");
   }
-  runtime.log("Next steps:");
+  runtime.log(tst("heading.nextSteps", "Next steps:"));
   runtime.log(`  Need to share?      ${formatCliCommand("openclaw status --all")}`);
   runtime.log(`  Need to debug live? ${formatCliCommand("openclaw logs --follow")}`);
   if (gatewayReachable) {

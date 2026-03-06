@@ -2,6 +2,7 @@ import { cancel, confirm, isCancel } from "@clack/prompts";
 import { formatCliCommand } from "../cli/command-format.js";
 import { isNixMode } from "../config/config.js";
 import { resolveGatewayService } from "../daemon/service.js";
+import { tc } from "../i18n/index.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { selectStyled } from "../terminal/prompt-select-styled.js";
 import { stylePromptMessage, stylePromptTitle } from "../terminal/prompt-style.js";
@@ -60,28 +61,31 @@ export async function resetCommand(runtime: RuntimeEnv, opts: ResetOptions) {
       return;
     }
     const selection = await selectStyled<ResetScope>({
-      message: "Reset scope",
+      message: tc("reset.scope", "Reset scope"),
       options: [
         {
           value: "config",
-          label: "Config only",
+          label: tc("reset.configOnly", "Config only"),
           hint: "openclaw.json",
         },
         {
           value: "config+creds+sessions",
-          label: "Config + credentials + sessions",
-          hint: "keeps workspace + auth profiles",
+          label: tc("reset.configCredsSession", "Config + credentials + sessions"),
+          hint: tc("reset.configCredsSessionHint", "keeps workspace + auth profiles"),
         },
         {
           value: "full",
-          label: "Full reset",
-          hint: "state dir + workspace",
+          label: tc("reset.fullReset", "Full reset"),
+          hint: tc("reset.fullResetHint", "state dir + workspace"),
         },
       ],
       initialValue: "config+creds+sessions",
     });
     if (isCancel(selection)) {
-      cancel(stylePromptTitle("Reset cancelled.") ?? "Reset cancelled.");
+      cancel(
+        stylePromptTitle(tc("reset.cancelled", "Reset cancelled.")) ??
+          tc("reset.cancelled", "Reset cancelled."),
+      );
       runtime.exit(0);
       return;
     }
@@ -96,10 +100,13 @@ export async function resetCommand(runtime: RuntimeEnv, opts: ResetOptions) {
 
   if (interactive && !opts.yes) {
     const ok = await confirm({
-      message: stylePromptMessage(`Proceed with ${scope} reset?`),
+      message: stylePromptMessage(tc("reset.confirmProceed", `Proceed with ${scope} reset?`)),
     });
     if (isCancel(ok) || !ok) {
-      cancel(stylePromptTitle("Reset cancelled.") ?? "Reset cancelled.");
+      cancel(
+        stylePromptTitle(tc("reset.cancelled", "Reset cancelled.")) ??
+          tc("reset.cancelled", "Reset cancelled."),
+      );
       runtime.exit(0);
       return;
     }

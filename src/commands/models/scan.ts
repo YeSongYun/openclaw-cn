@@ -4,6 +4,7 @@ import { type ModelScanResult, scanOpenRouterModels } from "../../agents/model-s
 import { withProgressTotals } from "../../cli/progress.js";
 import { logConfigUpdated } from "../../config/logging.js";
 import { toAgentModelListLike } from "../../config/model-input.js";
+import { tc, tci } from "../../i18n/index.js";
 import type { RuntimeEnv } from "../../runtime.js";
 import {
   stylePromptHint,
@@ -28,7 +29,10 @@ const multiselect = <T>(params: Parameters<typeof clackMultiselect<T>>[0]) =>
 
 function guardPromptCancel<T>(value: T | symbol, runtime: RuntimeEnv): T {
   if (isCancel(value)) {
-    cancel(stylePromptTitle("Model scan cancelled.") ?? "Model scan cancelled.");
+    cancel(
+      stylePromptTitle(tc("model.scanCancelled", "Model scan cancelled.")) ??
+        tc("model.scanCancelled", "Model scan cancelled."),
+    );
     runtime.exit(0);
     throw new Error("unreachable");
   }
@@ -183,7 +187,7 @@ export async function modelsScanCommand(
   }
   const results = await withProgressTotals(
     {
-      label: "Scanning OpenRouter models...",
+      label: tc("model.scanningModels", "Scanning OpenRouter models..."),
       indeterminate: false,
       enabled: opts.json !== true,
     },
@@ -200,7 +204,9 @@ export async function modelsScanCommand(
           if (phase !== "probe") {
             return;
           }
-          const labelBase = probe ? "Probing models" : "Scanning models";
+          const labelBase = probe
+            ? tc("model.probingModels", "Probing models")
+            : tc("model.scanningModelsLabel", "Scanning models");
           update({
             completed,
             total,
@@ -213,7 +219,11 @@ export async function modelsScanCommand(
   if (!probe) {
     if (!opts.json) {
       runtime.log(
-        `Found ${results.length} OpenRouter free models (metadata only; pass --probe to test tools/images).`,
+        tci(
+          "model.foundModels",
+          `Found ${results.length} OpenRouter free models (metadata only; pass --probe to test tools/images).`,
+          { count: String(results.length) },
+        ),
       );
       printScanTable(sortScanResults(results), runtime);
     } else {
@@ -224,7 +234,7 @@ export async function modelsScanCommand(
 
   const toolOk = results.filter((entry) => entry.tool.ok);
   if (toolOk.length === 0) {
-    throw new Error("No tool-capable OpenRouter free models found.");
+    throw new Error(tc("model.noToolCapable", "No tool-capable OpenRouter free models found."));
   }
 
   const sorted = sortScanResults(results);
@@ -252,7 +262,7 @@ export async function modelsScanCommand(
 
   if (canPrompt) {
     const selection = await multiselect({
-      message: "Select fallback models (ordered)",
+      message: tc("model.selectFallbacks", "Select fallback models (ordered)"),
       options: toolSorted.map((entry) => ({
         value: entry.modelRef,
         label: entry.modelRef,
@@ -264,7 +274,7 @@ export async function modelsScanCommand(
     selected = guardPromptCancel(selection, runtime);
     if (imageSorted.length > 0) {
       const imageSelection = await multiselect({
-        message: "Select image fallback models (ordered)",
+        message: tc("model.selectImageFallbacks", "Select image fallback models (ordered)"),
         options: imageSorted.map((entry) => ({
           value: entry.modelRef,
           label: entry.modelRef,
@@ -276,14 +286,18 @@ export async function modelsScanCommand(
       selectedImages = guardPromptCancel(imageSelection, runtime);
     }
   } else if (!process.stdin.isTTY && !opts.yes && !noInput && !opts.json) {
-    throw new Error("Non-interactive scan: pass --yes to apply defaults.");
+    throw new Error(
+      tc("model.nonInteractiveScan", "Non-interactive scan: pass --yes to apply defaults."),
+    );
   }
 
   if (selected.length === 0) {
-    throw new Error("No models selected for fallbacks.");
+    throw new Error(tc("model.noModelsSelected", "No models selected for fallbacks."));
   }
   if (opts.setImage && selectedImages.length === 0) {
-    throw new Error("No image-capable models selected for image model.");
+    throw new Error(
+      tc("model.noImageModelsSelected", "No image-capable models selected for image model."),
+    );
   }
 
   const _updated = await updateConfig((cfg) => {

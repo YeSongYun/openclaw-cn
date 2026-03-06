@@ -125,5 +125,23 @@
 
   "platform.gatewayMacTitle": "网关 (macOS)",
   "platform.envTitle": "环境",
-  "platform.startupTitle": "启动优化"
+  "platform.startupTitle": "启动优化",
+
+  "auth.profiles.updateOauthPrompt": "现在更新配置中的 Anthropic OAuth 配置文件 ID？",
+  "auth.profiles.removeDeprecatedPrompt": "立即移除已废弃的 CLI 认证配置？",
+  "auth.profiles.refreshPrompt": "刷新即将过期的 OAuth 令牌？（静态令牌需要重新认证）",
+
+  "update.title": "更新",
+  "update.gitPrompt": "在运行 doctor 前从 git 更新 OpenClaw？",
+  "update.running": "正在运行更新（fetch/rebase/build/ui:build/doctor）…",
+  "update.resultTitle": "更新结果",
+  "update.completed": "更新已完成（doctor 已在更新过程中运行）。",
+  "update.notGitNote": "此安装不是 git 检出。\n运行 `{cmd}` 通过包管理器（npm/pnpm）更新，然后重新运行 doctor。",
+
+  "gateway.daemon.runtimePrompt": "网关服务运行时",
+  "gateway.daemon.bootstrapFailed": "{title} LaunchAgent 引导失败：{detail}",
+  "gateway.daemon.stillNotLoaded": "{title} LaunchAgent 修复后仍未加载。",
+  "gateway.lastError": "最近的网关错误：{error}",
+
+  "health.checkingLabel": "正在检查网关健康状态…"
 }

@@ -8,6 +8,7 @@ import { loadConfig } from "../config/config.js";
 import { loadSessionStore, resolveStorePath } from "../config/sessions.js";
 import { buildGatewayConnectionDetails, callGateway } from "../gateway/call.js";
 import { info } from "../globals.js";
+import { td } from "../i18n/index.js";
 import { isTruthyEnvValue } from "../infra/env.js";
 import { formatErrorMessage } from "../infra/errors.js";
 import {
@@ -530,7 +531,7 @@ export async function healthCommand(
   // Always query the running gateway; do not open a direct Baileys socket here.
   const summary = await withProgress(
     {
-      label: "Checking gateway health…",
+      label: td("health.checkingLabel", "Checking gateway health…"),
       indeterminate: true,
       enabled: opts.json !== true,
     },

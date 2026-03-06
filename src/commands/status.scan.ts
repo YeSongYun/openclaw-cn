@@ -5,6 +5,7 @@ import { loadConfig } from "../config/config.js";
 import { buildGatewayConnectionDetails, callGateway } from "../gateway/call.js";
 import { normalizeControlUiBasePath } from "../gateway/control-ui-shared.js";
 import { probeGateway } from "../gateway/probe.js";
+import { tst } from "../i18n/index.js";
 import { collectChannelStatusIssues } from "../infra/channels-status-issues.js";
 import { resolveOsSummary } from "../infra/os-summary.js";
 import { getTailnetHostname } from "../infra/tailscale.js";
@@ -234,12 +235,12 @@ export async function scanStatus(
   }
   return await withProgress(
     {
-      label: "Scanning status…",
+      label: tst("scan.label", "Scanning status…"),
       total: 10,
       enabled: true,
     },
     async (progress) => {
-      progress.setLabel("Loading config…");
+      progress.setLabel(tst("scan.loadConfig", "Loading config…"));
       const loadedRaw = loadConfig();
       const { resolvedConfig: cfg } = await resolveCommandSecretRefsViaGateway({
         config: loadedRaw,
@@ -266,7 +267,7 @@ export async function scanStatus(
       const summaryPromise = deferResult(getStatusSummary({ config: cfg }));
       progress.tick();
 
-      progress.setLabel("Checking Tailscale…");
+      progress.setLabel(tst("scan.tailscale", "Checking Tailscale…"));
       const tailscaleDns = await tailscaleDnsPromise;
       const tailscaleHttpsUrl =
         tailscaleMode !== "off" && tailscaleDns
@@ -274,15 +275,15 @@ export async function scanStatus(
           : null;
       progress.tick();
 
-      progress.setLabel("Checking for updates…");
+      progress.setLabel(tst("scan.updates", "Checking for updates…"));
       const update = unwrapDeferredResult(await updatePromise);
       progress.tick();
 
-      progress.setLabel("Resolving agents…");
+      progress.setLabel(tst("scan.agents", "Resolving agents…"));
       const agentStatus = unwrapDeferredResult(await agentStatusPromise);
       progress.tick();
 
-      progress.setLabel("Probing gateway…");
+      progress.setLabel(tst("scan.gateway", "Probing gateway…"));
       const { gatewayConnection, remoteUrlMissing, gatewayMode, gatewayProbe } =
         await resolveGatewayProbeSnapshot({ cfg, opts });
       const gatewayReachable = gatewayProbe?.ok === true;
@@ -291,12 +292,12 @@ export async function scanStatus(
         : null;
       progress.tick();
 
-      progress.setLabel("Querying channel status…");
+      progress.setLabel(tst("scan.channels", "Querying channel status…"));
       const channelsStatus = await resolveChannelsStatus({ gatewayReachable, opts });
       const channelIssues = channelsStatus ? collectChannelStatusIssues(channelsStatus) : [];
       progress.tick();
 
-      progress.setLabel("Summarizing channels…");
+      progress.setLabel(tst("scan.channelsSummary", "Summarizing channels…"));
       const channels = await buildChannelsTable(cfg, {
         // Show token previews in regular status; keep `status --all` redacted.
         // Set `CLAWDBOT_SHOW_SECRETS=0` to force redaction.
@@ -304,16 +305,16 @@ export async function scanStatus(
       });
       progress.tick();
 
-      progress.setLabel("Checking memory…");
+      progress.setLabel(tst("scan.memory", "Checking memory…"));
       const memoryPlugin = resolveMemoryPluginStatus(cfg);
       const memory = await resolveMemoryStatusSnapshot({ cfg, agentStatus, memoryPlugin });
       progress.tick();
 
-      progress.setLabel("Reading sessions…");
+      progress.setLabel(tst("scan.sessions", "Reading sessions…"));
       const summary = unwrapDeferredResult(await summaryPromise);
       progress.tick();
 
-      progress.setLabel("Rendering…");
+      progress.setLabel(tst("scan.rendering", "Rendering…"));
       progress.tick();
 
       return {
