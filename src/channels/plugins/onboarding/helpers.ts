@@ -5,6 +5,7 @@ import {
 import type { OpenClawConfig } from "../../../config/config.js";
 import type { DmPolicy, GroupPolicy } from "../../../config/types.js";
 import type { SecretInput } from "../../../config/types.secrets.js";
+import { tch, tchi } from "../../../i18n/index.js";
 import { promptAccountId as promptAccountIdSdk } from "../../../plugin-sdk/onboarding.js";
 import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "../../../routing/session-key.js";
 import type { WizardPrompter } from "../../../wizard/prompts.js";
@@ -396,7 +397,8 @@ export async function promptSingleChannelToken(params: {
     String(
       await params.prompter.text({
         message: params.inputPrompt,
-        validate: (value) => (value?.trim() ? undefined : "Required"),
+        validate: (value) =>
+          value?.trim() ? undefined : tch("onboard.helpers.required", "Required"),
       }),
     ).trim();
 
@@ -447,11 +449,23 @@ export async function promptSingleChannelSecretInput(params: {
     prompter: params.prompter as WizardPrompter,
     explicitMode: params.secretInputMode,
     copy: {
-      modeMessage: `How do you want to provide this ${params.credentialLabel}?`,
-      plaintextLabel: `Enter ${params.credentialLabel}`,
-      plaintextHint: "Stores the credential directly in OpenClaw config",
-      refLabel: "Use external secret provider",
-      refHint: "Stores a reference to env or configured external secret providers",
+      modeMessage: tchi(
+        "onboard.helpers.modeMessage",
+        `How do you want to provide this ${params.credentialLabel}?`,
+        { label: params.credentialLabel },
+      ),
+      plaintextLabel: tchi("onboard.helpers.plaintextLabel", `Enter ${params.credentialLabel}`, {
+        label: params.credentialLabel,
+      }),
+      plaintextHint: tch(
+        "onboard.helpers.plaintextHint",
+        "Stores the credential directly in OpenClaw config",
+      ),
+      refLabel: tch("onboard.helpers.refLabel", "Use external secret provider"),
+      refHint: tch(
+        "onboard.helpers.refHint",
+        "Stores a reference to env or configured external secret providers",
+      ),
     },
   });
 
@@ -490,12 +504,20 @@ export async function promptSingleChannelSecretInput(params: {
     prompter: params.prompter as WizardPrompter,
     preferredEnvVar: params.preferredEnvVar,
     copy: {
-      sourceMessage: `Where is this ${params.credentialLabel} stored?`,
+      sourceMessage: tchi(
+        "onboard.helpers.sourceMessage",
+        `Where is this ${params.credentialLabel} stored?`,
+        { label: params.credentialLabel },
+      ),
       envVarPlaceholder: params.preferredEnvVar ?? "OPENCLAW_SECRET",
-      envVarFormatError:
+      envVarFormatError: tch(
+        "onboard.helpers.envVarFormatError",
         'Use an env var name like "OPENCLAW_SECRET" (uppercase letters, numbers, underscores).',
-      noProvidersMessage:
+      ),
+      noProvidersMessage: tch(
+        "onboard.helpers.noProvidersMessage",
         "No file/exec secret providers are configured yet. Add one under secrets.providers, or select Environment variable.",
+      ),
     },
   });
   return {
@@ -539,7 +561,7 @@ export async function promptParsedAllowFromForScopedChannel(params: {
     validate: (value) => {
       const raw = String(value ?? "").trim();
       if (!raw) {
-        return "Required";
+        return tch("onboard.helpers.required", "Required");
       }
       return params.parseEntries(raw).error;
     },
@@ -568,7 +590,13 @@ export async function noteChannelLookupSummary(params: {
     lines.push(`${section.title}: ${section.values.join(", ")}`);
   }
   if (params.unresolved && params.unresolved.length > 0) {
-    lines.push(`Unresolved (kept as typed): ${params.unresolved.join(", ")}`);
+    lines.push(
+      tchi(
+        "onboard.helpers.unresolvedKept",
+        `Unresolved (kept as typed): ${params.unresolved.join(", ")}`,
+        { entries: params.unresolved.join(", ") },
+      ),
+    );
   }
   if (lines.length > 0) {
     await params.prompter.note(lines.join("\n"), params.label);
@@ -581,7 +609,11 @@ export async function noteChannelLookupFailure(params: {
   error: unknown;
 }): Promise<void> {
   await params.prompter.note(
-    `Channel lookup failed; keeping entries as typed. ${String(params.error)}`,
+    tchi(
+      "onboard.helpers.lookupFailed",
+      `Channel lookup failed; keeping entries as typed. ${String(params.error)}`,
+      { error: String(params.error) },
+    ),
     params.label,
   );
 }
@@ -609,7 +641,8 @@ export async function promptResolvedAllowFrom(params: {
       message: params.message,
       placeholder: params.placeholder,
       initialValue: params.existing[0] ? String(params.existing[0]) : undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+      validate: (value) =>
+        String(value ?? "").trim() ? undefined : tch("onboard.helpers.required", "Required"),
     });
     const parts = params.parseInputs(String(entry));
     if (!params.token) {
@@ -628,13 +661,20 @@ export async function promptResolvedAllowFrom(params: {
       })
       .catch(() => null);
     if (!results) {
-      await params.prompter.note("Failed to resolve usernames. Try again.", params.label);
+      await params.prompter.note(
+        tch("onboard.helpers.resolveFailed", "Failed to resolve usernames. Try again."),
+        params.label,
+      );
       continue;
     }
     const unresolved = results.filter((res) => !res.resolved || !res.id);
     if (unresolved.length > 0) {
       await params.prompter.note(
-        `Could not resolve: ${unresolved.map((res) => res.input).join(", ")}`,
+        tchi(
+          "onboard.helpers.couldNotResolve",
+          `Could not resolve: ${unresolved.map((res) => res.input).join(", ")}`,
+          { entries: unresolved.map((res) => res.input).join(", ") },
+        ),
         params.label,
       );
       continue;

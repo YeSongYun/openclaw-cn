@@ -1,3 +1,4 @@
+import { tch, tchi } from "../../../i18n/index.js";
 import type { WizardPrompter } from "../../../wizard/prompts.js";
 import { splitOnboardingEntries } from "./helpers.js";
 
@@ -22,17 +23,25 @@ export async function promptChannelAccessPolicy(params: {
   allowDisabled?: boolean;
 }): Promise<ChannelAccessPolicy> {
   const options: Array<{ value: ChannelAccessPolicy; label: string }> = [
-    { value: "allowlist", label: "白名单（推荐）" },
+    { value: "allowlist", label: tch("onboard.access.policyAllowlist", "Allowlist (recommended)") },
   ];
   if (params.allowOpen !== false) {
-    options.push({ value: "open", label: "开放（允许所有频道）" });
+    options.push({
+      value: "open",
+      label: tch("onboard.access.policyOpen", "Open (allow all channels)"),
+    });
   }
   if (params.allowDisabled !== false) {
-    options.push({ value: "disabled", label: "禁用（阻止所有频道）" });
+    options.push({
+      value: "disabled",
+      label: tch("onboard.access.policyDisabled", "Disabled (block all channels)"),
+    });
   }
   const initialValue = params.currentPolicy ?? "allowlist";
   return await params.prompter.select({
-    message: `${params.label} 访问权限`,
+    message: tchi("onboard.access.policyMessage", `${params.label} access`, {
+      label: params.label,
+    }),
     options,
     initialValue,
   });
@@ -49,7 +58,13 @@ export async function promptChannelAllowlist(params: {
       ? formatAllowlistEntries(params.currentEntries)
       : undefined;
   const raw = await params.prompter.text({
-    message: `${params.label} 白名单（逗号分隔）`,
+    message: tchi(
+      "onboard.access.allowlistMessage",
+      `${params.label} allowlist (comma-separated)`,
+      {
+        label: params.label,
+      },
+    ),
     placeholder: params.placeholder,
     initialValue,
   });
@@ -71,8 +86,12 @@ export async function promptChannelAccessConfig(params: {
   const shouldPrompt = params.defaultPrompt ?? !hasEntries;
   const wants = await params.prompter.confirm({
     message: params.updatePrompt
-      ? `更新 ${params.label} 访问权限？`
-      : `配置 ${params.label} 访问权限？`,
+      ? tchi("onboard.access.updatePrompt", `Update ${params.label} access?`, {
+          label: params.label,
+        })
+      : tchi("onboard.access.configurePrompt", `Configure ${params.label} access?`, {
+          label: params.label,
+        }),
     initialValue: shouldPrompt,
   });
   if (!wants) {

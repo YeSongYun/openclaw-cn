@@ -12,6 +12,7 @@ import {
   type DiscordChannelResolution,
 } from "../../../discord/resolve-channels.js";
 import { resolveDiscordUserAllowlist } from "../../../discord/resolve-users.js";
+import { tch } from "../../../i18n/index.js";
 import { DEFAULT_ACCOUNT_ID } from "../../../routing/session-key.js";
 import { formatDocsLink } from "../../../terminal/links.js";
 import type { WizardPrompter } from "../../../wizard/prompts.js";
@@ -37,13 +38,22 @@ const channel = "discord" as const;
 async function noteDiscordTokenHelp(prompter: WizardPrompter): Promise<void> {
   await prompter.note(
     [
-      "1) Discord Developer Portal → Applications → New Application",
-      "2) Bot → Add Bot → Reset Token → copy token",
-      "3) OAuth2 → URL Generator → scope 'bot' → invite to your server",
-      "Tip: enable Message Content Intent if you need message text. (Bot → Privileged Gateway Intents → Message Content Intent)",
+      tch(
+        "onboard.discord.tokenHelp1",
+        "1) Discord Developer Portal → Applications → New Application",
+      ),
+      tch("onboard.discord.tokenHelp2", "2) Bot → Add Bot → Reset Token → copy token"),
+      tch(
+        "onboard.discord.tokenHelp3",
+        "3) OAuth2 → URL Generator → scope 'bot' → invite to your server",
+      ),
+      tch(
+        "onboard.discord.tokenHelp4",
+        "Tip: enable Message Content Intent if you need message text. (Bot → Privileged Gateway Intents → Message Content Intent)",
+      ),
       `Docs: ${formatDocsLink("/discord", "discord")}`,
     ].join("\n"),
-    "Discord bot token",
+    tch("onboard.discord.tokenHelpTitle", "Discord bot token"),
   );
 }
 
@@ -106,20 +116,26 @@ async function promptDiscordAllowFrom(params: {
     prompter: params.prompter,
     existing,
     token,
-    noteTitle: "Discord allowlist",
+    noteTitle: tch("onboard.discord.allowlistTitle", "Discord allowlist"),
     noteLines: [
-      "Allowlist Discord DMs by username (we resolve to user ids).",
-      "Examples:",
-      "- 123456789012345678",
-      "- @alice",
-      "- alice#1234",
-      "Multiple entries: comma-separated.",
+      tch(
+        "onboard.discord.allowlistNote1",
+        "Allowlist Discord DMs by username (we resolve to user ids).",
+      ),
+      tch("onboard.discord.allowlistNote2", "Examples:"),
+      tch("onboard.discord.allowlistNote3", "- 123456789012345678"),
+      tch("onboard.discord.allowlistNote4", "- @alice"),
+      tch("onboard.discord.allowlistNote5", "- alice#1234"),
+      tch("onboard.discord.allowlistNote6", "Multiple entries: comma-separated."),
       `Docs: ${formatDocsLink("/discord", "discord")}`,
     ],
-    message: "Discord allowFrom (usernames or ids)",
+    message: tch("onboard.discord.allowFromMessage", "Discord allowFrom (usernames or ids)"),
     placeholder: "@alice, 123456789012345678",
     parseId,
-    invalidWithoutTokenNote: "Bot token missing; use numeric user ids (or mention form) only.",
+    invalidWithoutTokenNote: tch(
+      "onboard.discord.noTokenNote",
+      "Bot token missing; use numeric user ids (or mention form) only.",
+    ),
     resolveEntries: ({ token, entries }) =>
       resolveDiscordUserAllowlist({
         token,
@@ -151,11 +167,16 @@ export const discordOnboardingAdapter: ChannelOnboardingAdapter = {
       const account = resolveDiscordAccount({ cfg, accountId });
       return Boolean(account.token) || hasConfiguredSecretInput(account.config.token);
     });
+    const statusText = configured
+      ? tch("onboard.discord.statusConfigured", "configured")
+      : tch("onboard.discord.statusNeedsToken", "needs token");
     return {
       channel,
       configured,
-      statusLines: [`Discord: ${configured ? "configured" : "needs token"}`],
-      selectionHint: configured ? "configured" : "needs token",
+      statusLines: [
+        tchi("onboard.discord.statusLine", `Discord: ${statusText}`, { status: statusText }),
+      ],
+      selectionHint: statusText,
       quickstartScore: configured ? 2 : 1,
     };
   },
@@ -189,14 +210,14 @@ export const discordOnboardingAdapter: ChannelOnboardingAdapter = {
       cfg: next,
       prompter,
       providerHint: "discord",
-      credentialLabel: "Discord bot token",
+      credentialLabel: tch("onboard.discord.credentialLabel", "Discord bot token"),
       secretInputMode: options?.secretInputMode,
       accountConfigured,
       canUseEnv,
       hasConfigToken,
-      envPrompt: "DISCORD_BOT_TOKEN detected. Use env var?",
-      keepPrompt: "Discord token already configured. Keep it?",
-      inputPrompt: "Enter Discord bot token",
+      envPrompt: tch("onboard.discord.envPrompt", "DISCORD_BOT_TOKEN detected. Use env var?"),
+      keepPrompt: tch("onboard.discord.keepPrompt", "Discord token already configured. Keep it?"),
+      inputPrompt: tch("onboard.discord.inputPrompt", "Enter Discord bot token"),
       preferredEnvVar: allowEnv ? "DISCORD_BOT_TOKEN" : undefined,
     });
 
@@ -275,13 +296,13 @@ export const discordOnboardingAdapter: ChannelOnboardingAdapter = {
               label: "Discord channels",
               resolvedSections: [
                 {
-                  title: "Resolved channels",
+                  title: tch("onboard.discord.resolvedChannels", "Resolved channels"),
                   values: resolvedChannels
                     .map((entry) => entry.channelId)
                     .filter((value): value is string => Boolean(value)),
                 },
                 {
-                  title: "Resolved guilds",
+                  title: tch("onboard.discord.resolvedGuilds", "Resolved guilds"),
                   values: resolvedGuilds
                     .map((entry) => entry.guildId)
                     .filter((value): value is string => Boolean(value)),

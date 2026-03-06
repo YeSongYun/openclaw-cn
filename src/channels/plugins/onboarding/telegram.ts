@@ -1,6 +1,7 @@
 import { formatCliCommand } from "../../../cli/command-format.js";
 import type { OpenClawConfig } from "../../../config/config.js";
 import { hasConfiguredSecretInput } from "../../../config/types.secrets.js";
+import { tch, tchi } from "../../../i18n/index.js";
 import { DEFAULT_ACCOUNT_ID } from "../../../routing/session-key.js";
 import {
   listTelegramAccountIds,
@@ -28,27 +29,34 @@ const channel = "telegram" as const;
 async function noteTelegramTokenHelp(prompter: WizardPrompter): Promise<void> {
   await prompter.note(
     [
-      "1) Open Telegram and chat with @BotFather",
-      "2) Run /newbot (or /mybots)",
-      "3) Copy the token (looks like 123456:ABC...)",
-      "Tip: you can also set TELEGRAM_BOT_TOKEN in your env.",
+      tch("onboard.telegram.tokenHelp1", "1) Open Telegram and chat with @BotFather"),
+      tch("onboard.telegram.tokenHelp2", "2) Run /newbot (or /mybots)"),
+      tch("onboard.telegram.tokenHelp3", "3) Copy the token (looks like 123456:ABC...)"),
+      tch("onboard.telegram.tokenHelpTip", "Tip: you can also set TELEGRAM_BOT_TOKEN in your env."),
       `Docs: ${formatDocsLink("/telegram")}`,
       "Website: https://openclaw.ai",
     ].join("\n"),
-    "Telegram bot token",
+    tch("onboard.telegram.tokenHelpTitle", "Telegram bot token"),
   );
 }
 
 async function noteTelegramUserIdHelp(prompter: WizardPrompter): Promise<void> {
   await prompter.note(
     [
-      `1) DM your bot, then read from.id in \`${formatCliCommand("openclaw logs --follow")}\` (safest)`,
-      "2) Or call https://api.telegram.org/bot<bot_token>/getUpdates and read message.from.id",
-      "3) Third-party: DM @userinfobot or @getidsbot",
+      tchi(
+        "onboard.telegram.userIdHelp1",
+        `1) DM your bot, then read from.id in \`${formatCliCommand("openclaw logs --follow")}\` (safest)`,
+        { command: formatCliCommand("openclaw logs --follow") },
+      ),
+      tch(
+        "onboard.telegram.userIdHelp2",
+        "2) Or call https://api.telegram.org/bot<bot_token>/getUpdates and read message.from.id",
+      ),
+      tch("onboard.telegram.userIdHelp3", "3) Third-party: DM @userinfobot or @getidsbot"),
       `Docs: ${formatDocsLink("/telegram")}`,
       "Website: https://openclaw.ai",
     ].join("\n"),
-    "Telegram user id",
+    tch("onboard.telegram.userIdHelpTitle", "Telegram user id"),
   );
 }
 
@@ -77,19 +85,30 @@ async function promptTelegramAllowFrom(params: {
 
   const token = params.tokenOverride?.trim() || resolved.token;
   if (!token) {
-    await prompter.note("Telegram token missing; username lookup is unavailable.", "Telegram");
+    await prompter.note(
+      tch(
+        "onboard.telegram.noTokenNote",
+        "Telegram token missing; username lookup is unavailable.",
+      ),
+      "Telegram",
+    );
   }
   const unique = await promptResolvedAllowFrom({
     prompter,
     existing: existingAllowFrom,
     token,
-    message: "Telegram allowFrom (numeric sender id; @username resolves to id)",
+    message: tch(
+      "onboard.telegram.allowFromMessage",
+      "Telegram allowFrom (numeric sender id; @username resolves to id)",
+    ),
     placeholder: "@username",
     label: "Telegram allowlist",
     parseInputs: splitOnboardingEntries,
     parseId: parseTelegramAllowFromId,
-    invalidWithoutTokenNote:
+    invalidWithoutTokenNote: tch(
+      "onboard.telegram.noTokenAllowFromNote",
       "Telegram token missing; use numeric sender ids (usernames require a bot token).",
+    ),
     resolveEntries: async ({ token: tokenValue, entries }) => {
       const results = await Promise.all(
         entries.map(async (entry) => {
@@ -160,11 +179,18 @@ export const telegramOnboardingAdapter: ChannelOnboardingAdapter = {
         hasConfiguredSecretInput(account.config.botToken)
       );
     });
+    const statusText = configured
+      ? tch("onboard.telegram.statusConfigured", "configured")
+      : tch("onboard.telegram.statusNeedsToken", "needs token");
     return {
       channel,
       configured,
-      statusLines: [`Telegram: ${configured ? "configured" : "needs token"}`],
-      selectionHint: configured ? "recommended · configured" : "recommended · newcomer-friendly",
+      statusLines: [
+        tchi("onboard.telegram.statusLine", `Telegram: ${statusText}`, { status: statusText }),
+      ],
+      selectionHint: configured
+        ? tch("onboard.telegram.selectionConfigured", "recommended · configured")
+        : tch("onboard.telegram.selectionNewcomer", "recommended · newcomer-friendly"),
       quickstartScore: configured ? 1 : 10,
     };
   },
@@ -208,14 +234,14 @@ export const telegramOnboardingAdapter: ChannelOnboardingAdapter = {
       cfg: next,
       prompter,
       providerHint: "telegram",
-      credentialLabel: "Telegram bot token",
+      credentialLabel: tch("onboard.telegram.credentialLabel", "Telegram bot token"),
       secretInputMode: options?.secretInputMode,
       accountConfigured,
       canUseEnv,
       hasConfigToken,
-      envPrompt: "TELEGRAM_BOT_TOKEN detected. Use env var?",
-      keepPrompt: "Telegram token already configured. Keep it?",
-      inputPrompt: "Enter Telegram bot token",
+      envPrompt: tch("onboard.telegram.envPrompt", "TELEGRAM_BOT_TOKEN detected. Use env var?"),
+      keepPrompt: tch("onboard.telegram.keepPrompt", "Telegram token already configured. Keep it?"),
+      inputPrompt: tch("onboard.telegram.inputPrompt", "Enter Telegram bot token"),
       preferredEnvVar: allowEnv ? "TELEGRAM_BOT_TOKEN" : undefined,
     });
 

@@ -1,5 +1,6 @@
 import type { OpenClawConfig } from "../../../config/config.js";
 import { hasConfiguredSecretInput } from "../../../config/types.secrets.js";
+import { tch, tchi } from "../../../i18n/index.js";
 import { DEFAULT_ACCOUNT_ID } from "../../../routing/session-key.js";
 import {
   listSlackAccountIds,
@@ -101,18 +102,24 @@ async function noteSlackTokenHelp(prompter: WizardPrompter, botName: string): Pr
   const manifest = buildSlackManifest(botName);
   await prompter.note(
     [
-      "1) Slack API → Create App → From scratch or From manifest (with the JSON below)",
-      "2) Add Socket Mode + enable it to get the app-level token (xapp-...)",
-      "3) Install App to workspace to get the xoxb- bot token",
-      "4) Enable Event Subscriptions (socket) for message events",
-      "5) App Home → enable the Messages tab for DMs",
-      "Tip: set SLACK_BOT_TOKEN + SLACK_APP_TOKEN in your env.",
+      tch(
+        "onboard.slack.tokenHelp1",
+        "1) Slack API → Create App → From scratch or From manifest (with the JSON below)",
+      ),
+      tch(
+        "onboard.slack.tokenHelp2",
+        "2) Add Socket Mode + enable it to get the app-level token (xapp-...)",
+      ),
+      tch("onboard.slack.tokenHelp3", "3) Install App to workspace to get the xoxb- bot token"),
+      tch("onboard.slack.tokenHelp4", "4) Enable Event Subscriptions (socket) for message events"),
+      tch("onboard.slack.tokenHelp5", "5) App Home → enable the Messages tab for DMs"),
+      tch("onboard.slack.tokenHelpTip", "Tip: set SLACK_BOT_TOKEN + SLACK_APP_TOKEN in your env."),
       `Docs: ${formatDocsLink("/slack", "slack")}`,
       "",
-      "Manifest (JSON):",
+      tch("onboard.slack.manifestLabel", "Manifest (JSON):"),
       manifest,
     ].join("\n"),
-    "Slack socket mode tokens",
+    tch("onboard.slack.tokenHelpTitle", "Slack socket mode tokens"),
   );
 }
 
@@ -158,19 +165,25 @@ async function promptSlackAllowFrom(params: {
     prompter: params.prompter,
     existing,
     token,
-    noteTitle: "Slack allowlist",
+    noteTitle: tch("onboard.slack.allowlistTitle", "Slack allowlist"),
     noteLines: [
-      "Allowlist Slack DMs by username (we resolve to user ids).",
-      "Examples:",
-      "- U12345678",
-      "- @alice",
-      "Multiple entries: comma-separated.",
+      tch(
+        "onboard.slack.allowlistNote1",
+        "Allowlist Slack DMs by username (we resolve to user ids).",
+      ),
+      tch("onboard.slack.allowlistNote2", "Examples:"),
+      tch("onboard.slack.allowlistNote3", "- U12345678"),
+      tch("onboard.slack.allowlistNote4", "- @alice"),
+      tch("onboard.slack.allowlistNote5", "Multiple entries: comma-separated."),
       `Docs: ${formatDocsLink("/slack", "slack")}`,
     ],
-    message: "Slack allowFrom (usernames or ids)",
+    message: tch("onboard.slack.allowFromMessage", "Slack allowFrom (usernames or ids)"),
     placeholder: "@alice, U12345678",
     parseId,
-    invalidWithoutTokenNote: "Slack token missing; use user ids (or mention form) only.",
+    invalidWithoutTokenNote: tch(
+      "onboard.slack.noTokenNote",
+      "Slack token missing; use user ids (or mention form) only.",
+    ),
     resolveEntries: ({ token, entries }) =>
       resolveSlackUserAllowlist({
         token,
@@ -206,11 +219,16 @@ export const slackOnboardingAdapter: ChannelOnboardingAdapter = {
         Boolean(account.appToken) || hasConfiguredSecretInput(account.config.appToken);
       return hasBotToken && hasAppToken;
     });
+    const statusText = configured
+      ? tch("onboard.slack.statusConfigured", "configured")
+      : tch("onboard.slack.statusNeedsTokens", "needs tokens");
     return {
       channel,
       configured,
-      statusLines: [`Slack: ${configured ? "configured" : "needs tokens"}`],
-      selectionHint: configured ? "configured" : "needs tokens",
+      statusLines: [
+        tchi("onboard.slack.statusLine", `Slack: ${statusText}`, { status: statusText }),
+      ],
+      selectionHint: statusText,
       quickstartScore: configured ? 2 : 1,
     };
   },
@@ -244,7 +262,7 @@ export const slackOnboardingAdapter: ChannelOnboardingAdapter = {
     let resolvedBotTokenForAllowlist = resolvedAccount.botToken;
     const slackBotName = String(
       await prompter.text({
-        message: "Slack bot display name (used for manifest)",
+        message: tch("onboard.slack.botNameMessage", "Slack bot display name (used for manifest)"),
         initialValue: "OpenClaw",
       }),
     ).trim();
@@ -255,14 +273,17 @@ export const slackOnboardingAdapter: ChannelOnboardingAdapter = {
       cfg: next,
       prompter,
       providerHint: "slack-bot",
-      credentialLabel: "Slack bot token",
+      credentialLabel: tch("onboard.slack.botTokenLabel", "Slack bot token"),
       secretInputMode: options?.secretInputMode,
       accountConfigured: Boolean(resolvedAccount.botToken) || hasConfiguredBotToken,
       canUseEnv: canUseBotEnv,
       hasConfigToken: hasConfiguredBotToken,
-      envPrompt: "SLACK_BOT_TOKEN detected. Use env var?",
-      keepPrompt: "Slack bot token already configured. Keep it?",
-      inputPrompt: "Enter Slack bot token (xoxb-...)",
+      envPrompt: tch("onboard.slack.botTokenEnvPrompt", "SLACK_BOT_TOKEN detected. Use env var?"),
+      keepPrompt: tch(
+        "onboard.slack.botTokenKeepPrompt",
+        "Slack bot token already configured. Keep it?",
+      ),
+      inputPrompt: tch("onboard.slack.botTokenInputPrompt", "Enter Slack bot token (xoxb-...)"),
       preferredEnvVar: allowEnv ? "SLACK_BOT_TOKEN" : undefined,
     });
     if (botTokenResult.action === "use-env") {
@@ -281,14 +302,17 @@ export const slackOnboardingAdapter: ChannelOnboardingAdapter = {
       cfg: next,
       prompter,
       providerHint: "slack-app",
-      credentialLabel: "Slack app token",
+      credentialLabel: tch("onboard.slack.appTokenLabel", "Slack app token"),
       secretInputMode: options?.secretInputMode,
       accountConfigured: Boolean(resolvedAccount.appToken) || hasConfiguredAppToken,
       canUseEnv: canUseAppEnv,
       hasConfigToken: hasConfiguredAppToken,
-      envPrompt: "SLACK_APP_TOKEN detected. Use env var?",
-      keepPrompt: "Slack app token already configured. Keep it?",
-      inputPrompt: "Enter Slack app token (xapp-...)",
+      envPrompt: tch("onboard.slack.appTokenEnvPrompt", "SLACK_APP_TOKEN detected. Use env var?"),
+      keepPrompt: tch(
+        "onboard.slack.appTokenKeepPrompt",
+        "Slack app token already configured. Keep it?",
+      ),
+      inputPrompt: tch("onboard.slack.appTokenInputPrompt", "Enter Slack app token (xapp-...)"),
       preferredEnvVar: allowEnv ? "SLACK_APP_TOKEN" : undefined,
     });
     if (appTokenResult.action === "set") {
@@ -340,7 +364,9 @@ export const slackOnboardingAdapter: ChannelOnboardingAdapter = {
             await noteChannelLookupSummary({
               prompter,
               label: "Slack channels",
-              resolvedSections: [{ title: "Resolved", values: resolvedKeys }],
+              resolvedSections: [
+                { title: tch("onboard.slack.resolvedTitle", "Resolved"), values: resolvedKeys },
+              ],
               unresolved,
             });
           } catch (err) {

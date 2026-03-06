@@ -2,6 +2,7 @@ import { formatCliCommand } from "../../../cli/command-format.js";
 import { detectBinary } from "../../../commands/onboard-helpers.js";
 import { installSignalCli } from "../../../commands/signal-install.js";
 import type { OpenClawConfig } from "../../../config/config.js";
+import { tch, tchi } from "../../../i18n/index.js";
 import {
   listSignalAccountIds,
   resolveDefaultSignalAccountId,
@@ -17,8 +18,12 @@ const channel = "signal" as const;
 const MIN_E164_DIGITS = 5;
 const MAX_E164_DIGITS = 15;
 const DIGITS_ONLY = /^\d+$/;
-const INVALID_SIGNAL_ACCOUNT_ERROR =
-  "Invalid E.164 phone number (must start with + and country code, e.g. +15555550123)";
+// Lazy-evaluated to allow i18n initialization before first use
+const getInvalidSignalAccountError = () =>
+  tch(
+    "onboard.signal.invalidE164",
+    "Invalid E.164 phone number (must start with + and country code, e.g. +15555550123)",
+  );
 
 export function normalizeSignalAccountInput(value: string | null | undefined): string | null {
   const trimmed = value?.trim();
@@ -71,16 +76,16 @@ async function promptSignalAllowFrom(params: {
     accountId: params.accountId,
     defaultAccountId: resolveDefaultSignalAccountId(params.cfg),
     prompter: params.prompter,
-    noteTitle: "Signal allowlist",
+    noteTitle: tch("onboard.signal.allowlistTitle", "Signal allowlist"),
     noteLines: [
-      "Allowlist Signal DMs by sender id.",
-      "Examples:",
-      "- +15555550123",
-      "- uuid:123e4567-e89b-12d3-a456-426614174000",
-      "Multiple entries: comma-separated.",
+      tch("onboard.signal.allowlistNote1", "Allowlist Signal DMs by sender id."),
+      tch("onboard.signal.allowlistNote2", "Examples:"),
+      tch("onboard.signal.allowlistNote3", "- +15555550123"),
+      tch("onboard.signal.allowlistNote4", "- uuid:123e4567-e89b-12d3-a456-426614174000"),
+      tch("onboard.signal.allowlistNote5", "Multiple entries: comma-separated."),
       `Docs: ${formatDocsLink("/signal", "signal")}`,
     ],
-    message: "Signal allowFrom (E.164 or uuid)",
+    message: tch("onboard.signal.allowFromMessage", "Signal allowFrom (E.164 or uuid)"),
     placeholder: "+15555550123, uuid:123e4567-e89b-12d3-a456-426614174000",
     parseEntries: parseSignalAllowFromEntries,
     getExistingAllowFrom: ({ cfg, accountId }) => {
@@ -113,14 +118,25 @@ export const signalOnboardingAdapter: ChannelOnboardingAdapter = {
     );
     const signalCliPath = cfg.channels?.signal?.cliPath ?? "signal-cli";
     const signalCliDetected = await detectBinary(signalCliPath);
+    const statusText = configured
+      ? tch("onboard.signal.statusConfigured", "configured")
+      : tch("onboard.signal.statusNeedsSetup", "needs setup");
+    const cliStatusText = signalCliDetected
+      ? tch("onboard.signal.cliFound", "found")
+      : tch("onboard.signal.cliMissing", "missing");
     return {
       channel,
       configured,
       statusLines: [
-        `Signal: ${configured ? "configured" : "needs setup"}`,
-        `signal-cli: ${signalCliDetected ? "found" : "missing"} (${signalCliPath})`,
+        tchi("onboard.signal.statusLine", `Signal: ${statusText}`, { status: statusText }),
+        tchi("onboard.signal.cliStatusLine", `signal-cli: ${cliStatusText} (${signalCliPath})`, {
+          status: cliStatusText,
+          path: signalCliPath,
+        }),
       ],
-      selectionHint: signalCliDetected ? "signal-cli found" : "signal-cli missing",
+      selectionHint: signalCliDetected
+        ? tch("onboard.signal.cliFound", "signal-cli found")
+        : tch("onboard.signal.cliMissing", "signal-cli missing"),
       quickstartScore: signalCliDetected ? 1 : 0,
     };
   },
@@ -154,8 +170,8 @@ export const signalOnboardingAdapter: ChannelOnboardingAdapter = {
     if (options?.allowSignalInstall) {
       const wantsInstall = await prompter.confirm({
         message: cliDetected
-          ? "signal-cli detected. Reinstall/update now?"
-          : "signal-cli not found. Install now?",
+          ? tch("onboard.signal.cliDetectedReinstall", "signal-cli detected. Reinstall/update now?")
+          : tch("onboard.signal.cliNotFoundInstall", "signal-cli not found. Install now?"),
         initialValue: !cliDetected,
       });
       if (wantsInstall) {
@@ -164,19 +180,35 @@ export const signalOnboardingAdapter: ChannelOnboardingAdapter = {
           if (result.ok && result.cliPath) {
             cliDetected = true;
             resolvedCliPath = result.cliPath;
-            await prompter.note(`Installed signal-cli at ${result.cliPath}`, "Signal");
+            await prompter.note(
+              tchi("onboard.signal.cliInstalled", `Installed signal-cli at ${result.cliPath}`, {
+                path: result.cliPath,
+              }),
+              "Signal",
+            );
           } else if (!result.ok) {
-            await prompter.note(result.error ?? "signal-cli install failed.", "Signal");
+            await prompter.note(
+              result.error ?? tch("onboard.signal.cliInstallFailed", "signal-cli install failed."),
+              "Signal",
+            );
           }
         } catch (err) {
-          await prompter.note(`signal-cli install failed: ${String(err)}`, "Signal");
+          await prompter.note(
+            tchi("onboard.signal.cliInstallError", `signal-cli install failed: ${String(err)}`, {
+              error: String(err),
+            }),
+            "Signal",
+          );
         }
       }
     }
 
     if (!cliDetected) {
       await prompter.note(
-        "signal-cli not found. Install it, then rerun this step or set channels.signal.cliPath.",
+        tch(
+          "onboard.signal.cliMissingNote",
+          "signal-cli not found. Install it, then rerun this step or set channels.signal.cliPath.",
+        ),
         "Signal",
       );
     }
@@ -186,14 +218,21 @@ export const signalOnboardingAdapter: ChannelOnboardingAdapter = {
       const normalizedExisting = normalizeSignalAccountInput(account);
       if (!normalizedExisting) {
         await prompter.note(
-          "Existing Signal account isn't a valid E.164 number. Please enter it again.",
+          tch(
+            "onboard.signal.invalidAccountNote",
+            "Existing Signal account isn't a valid E.164 number. Please enter it again.",
+          ),
           "Signal",
         );
         account = "";
       } else {
         account = normalizedExisting;
         const keep = await prompter.confirm({
-          message: `Signal account set (${account}). Keep it?`,
+          message: tchi(
+            "onboard.signal.accountKeepMessage",
+            `Signal account set (${account}). Keep it?`,
+            { account },
+          ),
           initialValue: true,
         });
         if (!keep) {
@@ -205,11 +244,11 @@ export const signalOnboardingAdapter: ChannelOnboardingAdapter = {
     if (!account) {
       const rawAccount = String(
         await prompter.text({
-          message: "Signal bot number (E.164)",
+          message: tch("onboard.signal.botNumberMessage", "Signal bot number (E.164)"),
           validate: (value) =>
             normalizeSignalAccountInput(String(value ?? ""))
               ? undefined
-              : INVALID_SIGNAL_ACCOUNT_ERROR,
+              : getInvalidSignalAccountError(),
         }),
       );
       account = normalizeSignalAccountInput(rawAccount) ?? "";
@@ -229,12 +268,20 @@ export const signalOnboardingAdapter: ChannelOnboardingAdapter = {
 
     await prompter.note(
       [
-        'Link device with: signal-cli link -n "OpenClaw"',
-        "Scan QR in Signal → Linked Devices",
-        `Then run: ${formatCliCommand("openclaw gateway call channels.status --params '{\"probe\":true}'")}`,
+        tch("onboard.signal.nextStep1", 'Link device with: signal-cli link -n "OpenClaw"'),
+        tch("onboard.signal.nextStep2", "Scan QR in Signal → Linked Devices"),
+        tchi(
+          "onboard.signal.nextStep3",
+          `Then run: ${formatCliCommand("openclaw gateway call channels.status --params '{\"probe\":true}'")}`,
+          {
+            command: formatCliCommand(
+              "openclaw gateway call channels.status --params '{\"probe\":true}'",
+            ),
+          },
+        ),
         `Docs: ${formatDocsLink("/signal", "signal")}`,
       ].join("\n"),
-      "Signal next steps",
+      tch("onboard.signal.nextStepsTitle", "Signal next steps"),
     );
 
     return { cfg: next, accountId: signalAccountId };
