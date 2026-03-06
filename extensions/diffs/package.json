@@ -1,6 +1,6 @@
 {
   "name": "@openclaw/diffs",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "private": true,
   "description": "OpenClaw diff viewer plugin",
   "type": "module",
