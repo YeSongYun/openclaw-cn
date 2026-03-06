@@ -13,6 +13,7 @@ import {
   writeConfigFile,
 } from "../config/config.js";
 import { normalizeSecretInputString } from "../config/types.secrets.js";
+import { tw } from "../i18n/index.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { defaultRuntime } from "../runtime.js";
 import { resolveUserPath } from "../utils.js";
@@ -30,39 +31,65 @@ async function requireRiskAcknowledgement(params: {
 
   await params.prompter.note(
     [
-      "Security warning — please read.",
+      tw("security.warning", "Security warning — please read."),
       "",
-      "OpenClaw is a hobby project and still in beta. Expect sharp edges.",
-      "By default, OpenClaw is a personal agent: one trusted operator boundary.",
-      "This bot can read files and run actions if tools are enabled.",
-      "A bad prompt can trick it into doing unsafe things.",
+      tw("security.beta", "OpenClaw is a hobby project and still in beta. Expect sharp edges."),
+      tw(
+        "security.personalAgent",
+        "By default, OpenClaw is a personal agent: one trusted operator boundary.",
+      ),
+      tw("security.readFiles", "This bot can read files and run actions if tools are enabled."),
+      tw("security.badPrompt", "A bad prompt can trick it into doing unsafe things."),
       "",
-      "OpenClaw is not a hostile multi-tenant boundary by default.",
-      "If multiple users can message one tool-enabled agent, they share that delegated tool authority.",
+      tw(
+        "security.multiTenantBoundary",
+        "OpenClaw is not a hostile multi-tenant boundary by default.",
+      ),
+      tw(
+        "security.multiTenantWarning",
+        "If multiple users can message one tool-enabled agent, they share that delegated tool authority.",
+      ),
       "",
-      "If you’re not comfortable with security hardening and access control, don’t run OpenClaw.",
-      "Ask someone experienced to help before enabling tools or exposing it to the internet.",
+      tw(
+        "security.notComfortable",
+        "If you’re not comfortable with security hardening and access control, don’t run OpenClaw.",
+      ),
+      tw(
+        "security.askHelp",
+        "Ask someone experienced to help before enabling tools or exposing it to the internet.",
+      ),
       "",
-      "Recommended baseline:",
-      "- Pairing/allowlists + mention gating.",
-      "- Multi-user/shared inbox: split trust boundaries (separate gateway/credentials, ideally separate OS users/hosts).",
-      "- Sandbox + least-privilege tools.",
-      "- Shared inboxes: isolate DM sessions (`session.dmScope: per-channel-peer`) and keep tool access minimal.",
-      "- Keep secrets out of the agent’s reachable filesystem.",
-      "- Use the strongest available model for any bot with tools or untrusted inboxes.",
+      tw("security.baseline", "Recommended baseline:"),
+      tw("security.pairing", "- Pairing/allowlists + mention gating."),
+      tw(
+        "security.baselineMultiuser",
+        "- Multi-user/shared inbox: split trust boundaries (separate gateway/credentials, ideally separate OS users/hosts).",
+      ),
+      tw("security.sandbox", "- Sandbox + least-privilege tools."),
+      tw(
+        "security.baselineDmScope",
+        "- Shared inboxes: isolate DM sessions (`session.dmScope: per-channel-peer`) and keep tool access minimal.",
+      ),
+      tw("security.secrets", "- Keep secrets out of the agent’s reachable filesystem."),
+      tw(
+        "security.strongModel",
+        "- Use the strongest available model for any bot with tools or untrusted inboxes.",
+      ),
       "",
-      "Run regularly:",
+      tw("security.runRegularly", "Run regularly:"),
       "openclaw security audit --deep",
       "openclaw security audit --fix",
       "",
-      "Must read: https://docs.openclaw.ai/gateway/security",
+      tw("security.mustRead", "Must read:") + " https://docs.openclaw.ai/gateway/security",
     ].join("\n"),
-    "Security",
+    tw("security.title", "Security"),
   );
 
   const ok = await params.prompter.confirm({
-    message:
+    message: tw(
+      "security.confirm",
       "I understand this is personal-by-default and shared/multi-user use requires lock-down. Continue?",
+    ),
     initialValue: false,
   });
   if (!ok) {
@@ -77,14 +104,17 @@ export async function runOnboardingWizard(
 ) {
   const onboardHelpers = await import("../commands/onboard-helpers.js");
   onboardHelpers.printWizardHeader(runtime);
-  await prompter.intro("OpenClaw onboarding");
+  await prompter.intro(tw("intro", "OpenClaw onboarding"));
   await requireRiskAcknowledgement({ opts, prompter });
 
   const snapshot = await readConfigFileSnapshot();
   let baseConfig: OpenClawConfig = snapshot.valid ? snapshot.config : {};
 
   if (snapshot.exists && !snapshot.valid) {
-    await prompter.note(onboardHelpers.summarizeExistingConfig(baseConfig), "Invalid config");
+    await prompter.note(
+      onboardHelpers.summarizeExistingConfig(baseConfig),
+      tw("config.invalid", "Invalid config"),
+    );
     if (snapshot.issues.length > 0) {
       await prompter.note(
         [
@@ -92,18 +122,24 @@ export async function runOnboardingWizard(
           "",
           "Docs: https://docs.openclaw.ai/gateway/configuration",
         ].join("\n"),
-        "Config issues",
+        tw("config.issues", "Config issues"),
       );
     }
     await prompter.outro(
-      `Config invalid. Run \`${formatCliCommand("openclaw doctor")}\` to repair it, then re-run onboarding.`,
+      tw(
+        "config.invalidRun",
+        `Config invalid. Run \`${formatCliCommand("openclaw doctor")}\` to repair it, then re-run onboarding.`,
+      ),
     );
     runtime.exit(1);
     return;
   }
 
-  const quickstartHint = `Configure details later via ${formatCliCommand("openclaw configure")}.`;
-  const manualHint = "Configure port, network, Tailscale, and auth options.";
+  const quickstartHint = tw(
+    "mode.quickstartHint",
+    `Configure details later via ${formatCliCommand("openclaw configure")}.`,
+  );
+  const manualHint = tw("mode.manualHint", "Configure port, network, Tailscale, and auth options.");
   const explicitFlowRaw = opts.flow?.trim();
   const normalizedExplicitFlow = explicitFlowRaw === "manual" ? "advanced" : explicitFlowRaw;
   if (
@@ -122,18 +158,21 @@ export async function runOnboardingWizard(
   let flow: WizardFlow =
     explicitFlow ??
     (await prompter.select({
-      message: "Onboarding mode",
+      message: tw("mode.title", "Onboarding mode"),
       options: [
-        { value: "quickstart", label: "QuickStart", hint: quickstartHint },
-        { value: "advanced", label: "Manual", hint: manualHint },
+        { value: "quickstart", label: tw("mode.quickstart", "QuickStart"), hint: quickstartHint },
+        { value: "advanced", label: tw("mode.manual", "Manual"), hint: manualHint },
       ],
       initialValue: "quickstart",
     }));
 
   if (opts.mode === "remote" && flow === "quickstart") {
     await prompter.note(
-      "QuickStart only supports local gateways. Switching to Manual mode.",
-      "QuickStart",
+      tw(
+        "mode.quickstartLocalOnly",
+        "QuickStart only supports local gateways. Switching to Manual mode.",
+      ),
+      tw("mode.quickstart", "QuickStart"),
     );
     flow = "advanced";
   }
@@ -141,15 +180,15 @@ export async function runOnboardingWizard(
   if (snapshot.exists) {
     await prompter.note(
       onboardHelpers.summarizeExistingConfig(baseConfig),
-      "Existing config detected",
+      tw("config.existing", "Existing config detected"),
     );
 
     const action = await prompter.select({
-      message: "Config handling",
+      message: tw("config.handling", "Config handling"),
       options: [
-        { value: "keep", label: "Use existing values" },
-        { value: "modify", label: "Update values" },
-        { value: "reset", label: "Reset" },
+        { value: "keep", label: tw("config.keep", "Use existing values") },
+        { value: "modify", label: tw("config.modify", "Update values") },
+        { value: "reset", label: tw("config.reset", "Reset") },
       ],
     });
 
@@ -157,16 +196,16 @@ export async function runOnboardingWizard(
       const workspaceDefault =
         baseConfig.agents?.defaults?.workspace ?? onboardHelpers.DEFAULT_WORKSPACE;
       const resetScope = (await prompter.select({
-        message: "Reset scope",
+        message: tw("reset.scope", "Reset scope"),
         options: [
-          { value: "config", label: "Config only" },
+          { value: "config", label: tw("reset.configOnly", "Config only") },
           {
             value: "config+creds+sessions",
-            label: "Config + creds + sessions",
+            label: tw("reset.configCredsSessions", "Config + creds + sessions"),
           },
           {
             value: "full",
-            label: "Full reset (config + creds + sessions + workspace)",
+            label: tw("reset.full", "Full reset (config + creds + sessions + workspace)"),
           },
         ],
       })) as ResetScope;
@@ -229,54 +268,56 @@ export async function runOnboardingWizard(
   if (flow === "quickstart") {
     const formatBind = (value: "loopback" | "lan" | "auto" | "custom" | "tailnet") => {
       if (value === "loopback") {
-        return "Loopback (127.0.0.1)";
+        return tw("gateway.bindLoopback", "Loopback (127.0.0.1)");
       }
       if (value === "lan") {
-        return "LAN";
+        return tw("gateway.bindLan", "LAN");
       }
       if (value === "custom") {
-        return "Custom IP";
+        return tw("gateway.bindCustom", "Custom IP");
       }
       if (value === "tailnet") {
-        return "Tailnet (Tailscale IP)";
+        return tw("gateway.bindTailnet", "Tailnet (Tailscale IP)");
       }
-      return "Auto";
+      return tw("gateway.bindAuto", "Auto");
     };
     const formatAuth = (value: GatewayAuthChoice) => {
       if (value === "token") {
-        return "Token (default)";
+        return tw("gateway.authToken", "Token (default)");
       }
-      return "Password";
+      return tw("gateway.authPassword", "Password");
     };
     const formatTailscale = (value: "off" | "serve" | "funnel") => {
       if (value === "off") {
-        return "Off";
+        return tw("gateway.tailscaleOff", "Off");
       }
       if (value === "serve") {
-        return "Serve";
+        return tw("gateway.tailscaleServe", "Serve");
       }
-      return "Funnel";
+      return tw("gateway.tailscaleFunnel", "Funnel");
     };
     const quickstartLines = quickstartGateway.hasExisting
       ? [
-          "Keeping your current gateway settings:",
-          `Gateway port: ${quickstartGateway.port}`,
-          `Gateway bind: ${formatBind(quickstartGateway.bind)}`,
+          tw("gateway.keepSettings", "Keeping your current gateway settings:"),
+          `${tw("gateway.port", "Gateway port")}: ${quickstartGateway.port}`,
+          `${tw("gateway.bind", "Gateway bind")}: ${formatBind(quickstartGateway.bind)}`,
           ...(quickstartGateway.bind === "custom" && quickstartGateway.customBindHost
-            ? [`Gateway custom IP: ${quickstartGateway.customBindHost}`]
+            ? [
+                `${tw("gateway.customIp", "Gateway custom IP")}: ${quickstartGateway.customBindHost}`,
+              ]
             : []),
-          `Gateway auth: ${formatAuth(quickstartGateway.authMode)}`,
-          `Tailscale exposure: ${formatTailscale(quickstartGateway.tailscaleMode)}`,
-          "Direct to chat channels.",
+          `${tw("gateway.auth", "Gateway auth")}: ${formatAuth(quickstartGateway.authMode)}`,
+          `${tw("gateway.tailscale", "Tailscale exposure")}: ${formatTailscale(quickstartGateway.tailscaleMode)}`,
+          tw("gateway.directToChannels", "Direct to chat channels."),
         ]
       : [
-          `Gateway port: ${DEFAULT_GATEWAY_PORT}`,
-          "Gateway bind: Loopback (127.0.0.1)",
-          "Gateway auth: Token (default)",
-          "Tailscale exposure: Off",
-          "Direct to chat channels.",
+          `${tw("gateway.port", "Gateway port")}: ${DEFAULT_GATEWAY_PORT}`,
+          `${tw("gateway.bind", "Gateway bind")}: ${tw("gateway.bindLoopback", "Loopback (127.0.0.1)")}`,
+          `${tw("gateway.auth", "Gateway auth")}: ${tw("gateway.authToken", "Token (default)")}`,
+          `${tw("gateway.tailscale", "Tailscale exposure")}: ${tw("gateway.tailscaleOff", "Off")}`,
+          tw("gateway.directToChannels", "Direct to chat channels."),
         ];
-    await prompter.note(quickstartLines.join("\n"), "QuickStart");
+    await prompter.note(quickstartLines.join("\n"), tw("mode.quickstart", "QuickStart"));
   }
 
   const localPort = resolveGatewayPort(baseConfig);
@@ -300,7 +341,7 @@ export async function runOnboardingWizard(
         "Could not resolve gateway.auth.password SecretRef for onboarding probe.",
         error instanceof Error ? error.message : String(error),
       ].join("\n"),
-      "Gateway auth",
+      tw("gatewayConfig.auth", "Gateway auth"),
     );
   }
 
@@ -322,23 +363,23 @@ export async function runOnboardingWizard(
     (flow === "quickstart"
       ? "local"
       : ((await prompter.select({
-          message: "What do you want to set up?",
+          message: tw("setup.title", "What do you want to set up?"),
           options: [
             {
               value: "local",
-              label: "Local gateway (this machine)",
+              label: tw("setup.local", "Local gateway (this machine)"),
               hint: localProbe.ok
-                ? `Gateway reachable (${localUrl})`
-                : `No gateway detected (${localUrl})`,
+                ? `${tw("setup.localReachable", "Gateway reachable")} (${localUrl})`
+                : `${tw("setup.localNotDetected", "No gateway detected")} (${localUrl})`,
             },
             {
               value: "remote",
-              label: "Remote gateway (info-only)",
+              label: tw("setup.remote", "Remote gateway (info-only)"),
               hint: !remoteUrl
-                ? "No remote URL configured yet"
+                ? tw("setup.remoteNotConfigured", "No remote URL configured yet")
                 : remoteProbe?.ok
-                  ? `Gateway reachable (${remoteUrl})`
-                  : `Configured but unreachable (${remoteUrl})`,
+                  ? `${tw("setup.remoteReachable", "Gateway reachable")} (${remoteUrl})`
+                  : `${tw("setup.remoteUnreachable", "Configured but unreachable")} (${remoteUrl})`,
             },
           ],
         })) as OnboardMode));
@@ -352,7 +393,7 @@ export async function runOnboardingWizard(
     nextConfig = onboardHelpers.applyWizardMetadata(nextConfig, { command: "onboard", mode });
     await writeConfigFile(nextConfig);
     logConfigUpdated(runtime);
-    await prompter.outro("Remote gateway configured.");
+    await prompter.outro(tw("setup.remoteConfigured", "Remote gateway configured."));
     return;
   }
 
@@ -361,7 +402,7 @@ export async function runOnboardingWizard(
     (flow === "quickstart"
       ? (baseConfig.agents?.defaults?.workspace ?? onboardHelpers.DEFAULT_WORKSPACE)
       : await prompter.text({
-          message: "Workspace directory",
+          message: tw("workspace.title", "Workspace directory"),
           initialValue: baseConfig.agents?.defaults?.workspace ?? onboardHelpers.DEFAULT_WORKSPACE,
         }));
 
@@ -446,7 +487,10 @@ export async function runOnboardingWizard(
   const settings = gateway.settings;
 
   if (opts.skipChannels ?? opts.skipProviders) {
-    await prompter.note("Skipping channel setup.", "Channels");
+    await prompter.note(
+      tw("channels.skip", "Skipping channel setup."),
+      tw("channels.title", "Channels"),
+    );
   } else {
     const { listChannelPlugins } = await import("../channels/plugins/index.js");
     const { setupChannels } = await import("../commands/onboard-channels.js");
@@ -474,7 +518,7 @@ export async function runOnboardingWizard(
   });
 
   if (opts.skipSkills) {
-    await prompter.note("Skipping skills setup.", "Skills");
+    await prompter.note(tw("skills.skip", "Skipping skills setup."), tw("skills.title", "Skills"));
   } else {
     const { setupSkills } = await import("../commands/onboard-skills.js");
     nextConfig = await setupSkills(nextConfig, workspaceDir, runtime, prompter);

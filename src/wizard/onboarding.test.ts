@@ -485,7 +485,7 @@ describe("runOnboardingWizard", () => {
       legacyIssues: [],
     });
     const select = vi.fn(async (opts: WizardSelectParams<unknown>) => {
-      if (opts.message === "Config handling") {
+      if (opts.message === "Config handling" || opts.message === "配置处理") {
         return "keep";
       }
       return "quickstart";
