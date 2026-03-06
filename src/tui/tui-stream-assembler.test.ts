@@ -66,7 +66,7 @@ describe("TuiStreamAssembler", () => {
     expect(first).toBe("Hello");
 
     const second = assembler.ingestDelta("run-1", messageWithContent([thinking("Brain")]), true);
-    expect(second).toBe("[thinking]\nBrain\n\nHello");
+    expect(second).toBe("[思考中]\nBrain\n\nHello");
   });
 
   it("omits thinking when showThinking is false", () => {

@@ -75,7 +75,7 @@ describe("extractTextFromMessage", () => {
       { includeThinking: true },
     );
 
-    expect(text).toBe("[thinking]\nponder\n\nhello");
+    expect(text).toBe("[思考中]\nponder\n\nhello");
   });
 
   it("sanitizes ANSI and control chars from string content", () => {

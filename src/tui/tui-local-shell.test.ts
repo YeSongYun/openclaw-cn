@@ -62,8 +62,8 @@ describe("createLocalShellRunner", () => {
 
     await harness.runLocalShellLine("!pwd");
 
-    expect(harness.messages).toContain("local shell: not enabled");
-    expect(harness.messages).toContain("local shell: not enabled for this session");
+    expect(harness.messages).toContain("本地 shell：未启用");
+    expect(harness.messages).toContain("本地 shell：此会话未启用");
     expect(harness.createSelectorSpy).toHaveBeenCalledTimes(1);
     expect(harness.spawnCommand).not.toHaveBeenCalled();
   });
@@ -99,6 +99,6 @@ describe("createLocalShellRunner", () => {
     const spawnOptions = spawnCommand.mock.calls[0]?.[1] as { env?: Record<string, string> };
     expect(spawnOptions.env?.OPENCLAW_SHELL).toBe("tui-local");
     expect(spawnOptions.env?.PATH).toBe("/tmp/bin");
-    expect(harness.messages).toContain("local shell: enabled for this session");
+    expect(harness.messages).toContain("本地 shell：已为此会话启用");
   });
 });

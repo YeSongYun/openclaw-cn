@@ -1,5 +1,6 @@
 import { formatRawAssistantErrorForUi } from "../agents/pi-embedded-helpers.js";
 import { stripLeadingInboundMetadata } from "../auto-reply/reply/strip-inbound-meta.js";
+import { tt } from "../i18n/index.js";
 import { stripAnsi } from "../terminal/ansi.js";
 import { formatTokenCount } from "../utils/usage-format.js";
 
@@ -151,7 +152,7 @@ export function resolveFinalAssistantText(params: {
   if (streamedText.trim()) {
     return streamedText;
   }
-  return "(no output)";
+  return tt("fmt.noOutput", "(no output)");
 }
 
 export function composeThinkingAndContent(params: {
@@ -164,7 +165,7 @@ export function composeThinkingAndContent(params: {
   const parts: string[] = [];
 
   if (params.showThinking && thinkingText) {
-    parts.push(`[thinking]\n${thinkingText}`);
+    parts.push(`${tt("fmt.thinking", "[thinking]")}\n${thinkingText}`);
   }
   if (contentText) {
     parts.push(contentText);

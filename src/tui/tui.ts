@@ -10,6 +10,7 @@ import {
 } from "@mariozechner/pi-tui";
 import { resolveDefaultAgentId } from "../agents/agent-scope.js";
 import { loadConfig } from "../config/config.js";
+import { tt, tti } from "../i18n/index.js";
 import {
   buildAgentMainSessionKey,
   normalizeAgentId,
@@ -543,7 +544,11 @@ export async function runTui(opts: TuiOptions) {
     const agentLabel = formatAgentLabel(currentAgentId);
     header.setText(
       theme.header(
-        `openclaw tui - ${client.connection.url} - agent ${agentLabel} - session ${sessionLabel}`,
+        tti("tui.title", "openclaw tui - {url} - agent {agent} - session {session}", {
+          url: client.connection.url,
+          agent: agentLabel,
+          session: sessionLabel,
+        }),
       ),
     );
   };
@@ -852,7 +857,7 @@ export async function runTui(opts: TuiOptions) {
     lastCtrlCAt = decision.nextLastCtrlCAt;
     if (decision.action === "clear") {
       editor.setText("");
-      setActivityStatus("cleared input; press ctrl+c again to exit");
+      setActivityStatus(tt("tui.ctrlCClearInput", "cleared input; press ctrl+c again to exit"));
       tui.requestRender();
       return;
     }
@@ -860,7 +865,7 @@ export async function runTui(opts: TuiOptions) {
       requestExit();
       return;
     }
-    setActivityStatus("press ctrl+c again to exit");
+    setActivityStatus(tt("tui.ctrlCExit", "press ctrl+c again to exit"));
     tui.requestRender();
   };
   editor.onCtrlC = () => {
@@ -872,7 +877,11 @@ export async function runTui(opts: TuiOptions) {
   editor.onCtrlO = () => {
     toolsExpanded = !toolsExpanded;
     chatLog.setToolsExpanded(toolsExpanded);
-    setActivityStatus(toolsExpanded ? "tools expanded" : "tools collapsed");
+    setActivityStatus(
+      toolsExpanded
+        ? tt("tui.toolsExpanded", "tools expanded")
+        : tt("tui.toolsCollapsed", "tools collapsed"),
+    );
     tui.requestRender();
   };
   editor.onCtrlL = () => {
@@ -908,7 +917,12 @@ export async function runTui(opts: TuiOptions) {
       await refreshAgents();
       updateHeader();
       await loadHistory();
-      setConnectionStatus(reconnected ? "gateway reconnected" : "gateway connected", 4000);
+      setConnectionStatus(
+        reconnected
+          ? tt("tui.gatewayReconnected", "gateway reconnected")
+          : tt("tui.gatewayConnected", "gateway connected"),
+        4000,
+      );
       tui.requestRender();
       if (!autoMessageSent && autoMessage) {
         autoMessageSent = true;

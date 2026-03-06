@@ -2,6 +2,7 @@ import type { SlashCommand } from "@mariozechner/pi-tui";
 import { listChatCommands, listChatCommandsForConfig } from "../auto-reply/commands-registry.js";
 import { formatThinkingLevels, listThinkingLevelLabels } from "../auto-reply/thinking.js";
 import type { OpenClawConfig } from "../config/types.js";
+import { tt } from "../i18n/index.js";
 
 const VERBOSE_LEVELS = ["on", "off"];
 const REASONING_LEVELS = ["on", "off"];
@@ -57,20 +58,20 @@ export function getSlashCommands(options: SlashCommandOptions = {}): SlashComman
   const elevatedCompletions = createLevelCompletion(ELEVATED_LEVELS);
   const activationCompletions = createLevelCompletion(ACTIVATION_LEVELS);
   const commands: SlashCommand[] = [
-    { name: "help", description: "Show slash command help" },
-    { name: "status", description: "Show gateway status summary" },
-    { name: "agent", description: "Switch agent (or open picker)" },
-    { name: "agents", description: "Open agent picker" },
-    { name: "session", description: "Switch session (or open picker)" },
-    { name: "sessions", description: "Open session picker" },
+    { name: "help", description: tt("cmd.help", "Show slash command help") },
+    { name: "status", description: tt("cmd.status", "Show gateway status summary") },
+    { name: "agent", description: tt("cmd.agent", "Switch agent (or open picker)") },
+    { name: "agents", description: tt("cmd.agents", "Open agent picker") },
+    { name: "session", description: tt("cmd.session", "Switch session (or open picker)") },
+    { name: "sessions", description: tt("cmd.sessions", "Open session picker") },
     {
       name: "model",
-      description: "Set model (or open picker)",
+      description: tt("cmd.model", "Set model (or open picker)"),
     },
-    { name: "models", description: "Open model picker" },
+    { name: "models", description: tt("cmd.models", "Open model picker") },
     {
       name: "think",
-      description: "Set thinking level",
+      description: tt("cmd.think", "Set thinking level"),
       getArgumentCompletions: (prefix) =>
         thinkLevels
           .filter((v) => v.startsWith(prefix.toLowerCase()))
@@ -78,40 +79,40 @@ export function getSlashCommands(options: SlashCommandOptions = {}): SlashComman
     },
     {
       name: "verbose",
-      description: "Set verbose on/off",
+      description: tt("cmd.verbose", "Set verbose on/off"),
       getArgumentCompletions: verboseCompletions,
     },
     {
       name: "reasoning",
-      description: "Set reasoning on/off",
+      description: tt("cmd.reasoning", "Set reasoning on/off"),
       getArgumentCompletions: reasoningCompletions,
     },
     {
       name: "usage",
-      description: "Toggle per-response usage line",
+      description: tt("cmd.usage", "Toggle per-response usage line"),
       getArgumentCompletions: usageCompletions,
     },
     {
       name: "elevated",
-      description: "Set elevated on/off/ask/full",
+      description: tt("cmd.elevated", "Set elevated on/off/ask/full"),
       getArgumentCompletions: elevatedCompletions,
     },
     {
       name: "elev",
-      description: "Alias for /elevated",
+      description: tt("cmd.elev", "Alias for /elevated"),
       getArgumentCompletions: elevatedCompletions,
     },
     {
       name: "activation",
-      description: "Set group activation",
+      description: tt("cmd.activation", "Set group activation"),
       getArgumentCompletions: activationCompletions,
     },
-    { name: "abort", description: "Abort active run" },
-    { name: "new", description: "Reset the session" },
-    { name: "reset", description: "Reset the session" },
-    { name: "settings", description: "Open settings" },
-    { name: "exit", description: "Exit the TUI" },
-    { name: "quit", description: "Exit the TUI" },
+    { name: "abort", description: tt("cmd.abort", "Abort active run") },
+    { name: "new", description: tt("cmd.new", "Reset the session") },
+    { name: "reset", description: tt("cmd.reset", "Reset the session") },
+    { name: "settings", description: tt("cmd.settings", "Open settings") },
+    { name: "exit", description: tt("cmd.exit", "Exit the TUI") },
+    { name: "quit", description: tt("cmd.quit", "Exit the TUI") },
   ];
 
   const seen = new Set(commands.map((command) => command.name));
@@ -134,7 +135,7 @@ export function getSlashCommands(options: SlashCommandOptions = {}): SlashComman
 export function helpText(options: SlashCommandOptions = {}): string {
   const thinkLevels = formatThinkingLevels(options.provider, options.model, "|");
   return [
-    "Slash commands:",
+    tt("help.title", "Slash commands:"),
     "/help",
     "/commands",
     "/status",

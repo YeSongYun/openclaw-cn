@@ -1,3 +1,4 @@
+import { tt, tti } from "../i18n/index.js";
 import { formatTimeAgo } from "../infra/format-time/format-relative.ts";
 import { formatTokenCount } from "../utils/usage-format.js";
 import { formatContextUsageLine } from "./tui-formatters.js";
@@ -5,24 +6,27 @@ import type { GatewayStatusSummary } from "./tui-types.js";
 
 export function formatStatusSummary(summary: GatewayStatusSummary) {
   const lines: string[] = [];
-  lines.push("Gateway status");
+  lines.push(tt("status.title", "Gateway status"));
 
   if (!summary.linkChannel) {
-    lines.push("Link channel: unknown");
+    lines.push(tt("status.linkUnknown", "Link channel: unknown"));
   } else {
-    const linkLabel = summary.linkChannel.label ?? "Link channel";
+    const linkLabel = summary.linkChannel.label ?? tt("status.linkDefault", "Link channel");
     const linked = summary.linkChannel.linked === true;
     const authAge =
       linked && typeof summary.linkChannel.authAgeMs === "number"
-        ? ` (last refreshed ${formatTimeAgo(summary.linkChannel.authAgeMs)})`
+        ? ` ${tti("status.lastRefreshed", "(last refreshed {time})", { time: formatTimeAgo(summary.linkChannel.authAgeMs) })}`
         : "";
-    lines.push(`${linkLabel}: ${linked ? "linked" : "not linked"}${authAge}`);
+    const linkedText = linked
+      ? tt("status.linked", "linked")
+      : tt("status.notLinked", "not linked");
+    lines.push(`${linkLabel}: ${linkedText}${authAge}`);
   }
 
   const providerSummary = Array.isArray(summary.providerSummary) ? summary.providerSummary : [];
   if (providerSummary.length > 0) {
     lines.push("");
-    lines.push("System:");
+    lines.push(tt("status.system", "System:"));
     for (const line of providerSummary) {
       lines.push(`  ${line}`);
     }
@@ -38,14 +42,18 @@ export function formatStatusSummary(summary: GatewayStatusSummary) {
       return `${agent.every ?? "unknown"} (${agentId})`;
     });
     lines.push("");
-    lines.push(`Heartbeat: ${heartbeatParts.join(", ")}`);
+    lines.push(tti("status.heartbeat", "Heartbeat: {parts}", { parts: heartbeatParts.join(", ") }));
   }
 
   const sessionPaths = summary.sessions?.paths ?? [];
   if (sessionPaths.length === 1) {
-    lines.push(`Session store: ${sessionPaths[0]}`);
+    lines.push(
+      tti("status.sessionStore", "Session store: {path}", { path: sessionPaths[0] ?? "" }),
+    );
   } else if (sessionPaths.length > 1) {
-    lines.push(`Session stores: ${sessionPaths.length}`);
+    lines.push(
+      tti("status.sessionStores", "Session stores: {count}", { count: sessionPaths.length }),
+    );
   }
 
   const defaults = summary.sessions?.defaults;
@@ -54,14 +62,19 @@ export function formatStatusSummary(summary: GatewayStatusSummary) {
     typeof defaults?.contextTokens === "number"
       ? ` (${formatTokenCount(defaults.contextTokens)} ctx)`
       : "";
-  lines.push(`Default model: ${defaultModel}${defaultCtx}`);
+  lines.push(
+    tti("status.defaultModel", "Default model: {model}{ctx}", {
+      model: defaultModel,
+      ctx: defaultCtx,
+    }),
+  );
 
   const sessionCount = summary.sessions?.count ?? 0;
-  lines.push(`Active sessions: ${sessionCount}`);
+  lines.push(tti("status.activeSessions", "Active sessions: {count}", { count: sessionCount }));
 
   const recent = Array.isArray(summary.sessions?.recent) ? summary.sessions?.recent : [];
   if (recent.length > 0) {
-    lines.push("Recent sessions:");
+    lines.push(tt("status.recentSessions", "Recent sessions:"));
     for (const entry of recent) {
       const ageLabel = typeof entry.age === "number" ? formatTimeAgo(entry.age) : "no activity";
       const model = entry.model ?? "unknown";
@@ -81,7 +94,12 @@ export function formatStatusSummary(summary: GatewayStatusSummary) {
   const queued = Array.isArray(summary.queuedSystemEvents) ? summary.queuedSystemEvents : [];
   if (queued.length > 0) {
     const preview = queued.slice(0, 3).join(" | ");
-    lines.push(`Queued system events (${queued.length}): ${preview}`);
+    lines.push(
+      tti("status.queuedEvents", "Queued system events ({count}): {preview}", {
+        count: queued.length,
+        preview,
+      }),
+    );
   }
 
   return lines;

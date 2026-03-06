@@ -125,7 +125,7 @@ describe("tui command handlers", () => {
 
     await handleCommand("/context");
 
-    expect(addSystem).toHaveBeenCalledWith("send failed: Error: gateway down");
+    expect(addSystem).toHaveBeenCalledWith("发送失败：Error: gateway down");
     expect(setActivityStatus).toHaveBeenLastCalledWith("error");
   });
 
@@ -138,7 +138,7 @@ describe("tui command handlers", () => {
 
     expect(sendChat).not.toHaveBeenCalled();
     expect(addUser).not.toHaveBeenCalled();
-    expect(addSystem).toHaveBeenCalledWith("not connected to gateway — message not sent");
+    expect(addSystem).toHaveBeenCalledWith("未连接到网关 — 消息未发送");
     expect(setActivityStatus).toHaveBeenLastCalledWith("disconnected");
   });
 });

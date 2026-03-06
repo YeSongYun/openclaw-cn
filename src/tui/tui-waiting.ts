@@ -1,3 +1,5 @@
+import { tt } from "../i18n/index.js";
+
 type MinimalTheme = {
   dim: (s: string) => string;
   bold: (s: string) => string;
@@ -5,16 +7,16 @@ type MinimalTheme = {
 };
 
 export const defaultWaitingPhrases = [
-  "flibbertigibbeting",
-  "kerfuffling",
-  "dillydallying",
-  "twiddling thumbs",
-  "noodling",
-  "bamboozling",
-  "moseying",
-  "hobnobbing",
-  "pondering",
-  "conjuring",
+  tt("wait.0", "flibbertigibbeting"),
+  tt("wait.1", "kerfuffling"),
+  tt("wait.2", "dillydallying"),
+  tt("wait.3", "twiddling thumbs"),
+  tt("wait.4", "noodling"),
+  tt("wait.5", "bamboozling"),
+  tt("wait.6", "moseying"),
+  tt("wait.7", "hobnobbing"),
+  tt("wait.8", "pondering"),
+  tt("wait.9", "conjuring"),
 ];
 
 export function pickWaitingPhrase(tick: number, phrases = defaultWaitingPhrases) {

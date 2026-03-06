@@ -1,4 +1,5 @@
 import type { Command } from "commander";
+import { tt } from "../i18n/index.js";
 import { defaultRuntime } from "../runtime.js";
 import { formatDocsLink } from "../terminal/links.js";
 import { theme } from "../terminal/theme.js";
@@ -8,16 +9,25 @@ import { parseTimeoutMs } from "./parse-timeout.js";
 export function registerTuiCli(program: Command) {
   program
     .command("tui")
-    .description("Open a terminal UI connected to the Gateway")
-    .option("--url <url>", "Gateway WebSocket URL (defaults to gateway.remote.url when configured)")
-    .option("--token <token>", "Gateway token (if required)")
-    .option("--password <password>", "Gateway password (if required)")
-    .option("--session <key>", 'Session key (default: "main", or "global" when scope is global)')
-    .option("--deliver", "Deliver assistant replies", false)
-    .option("--thinking <level>", "Thinking level override")
-    .option("--message <text>", "Send an initial message after connecting")
-    .option("--timeout-ms <ms>", "Agent timeout in ms (defaults to agents.defaults.timeoutSeconds)")
-    .option("--history-limit <n>", "History entries to load", "200")
+    .description(tt("cli.tui.desc", "Open a terminal UI connected to the Gateway"))
+    .option(
+      "--url <url>",
+      tt("cli.tui.url", "Gateway WebSocket URL (defaults to gateway.remote.url when configured)"),
+    )
+    .option("--token <token>", tt("cli.tui.token", "Gateway token (if required)"))
+    .option("--password <password>", tt("cli.tui.password", "Gateway password (if required)"))
+    .option(
+      "--session <key>",
+      tt("cli.tui.session", 'Session key (default: "main", or "global" when scope is global)'),
+    )
+    .option("--deliver", tt("cli.tui.deliver", "Deliver assistant replies"), false)
+    .option("--thinking <level>", tt("cli.tui.thinking", "Thinking level override"))
+    .option("--message <text>", tt("cli.tui.message", "Send an initial message after connecting"))
+    .option(
+      "--timeout-ms <ms>",
+      tt("cli.tui.timeoutMs", "Agent timeout in ms (defaults to agents.defaults.timeoutSeconds)"),
+    )
+    .option("--history-limit <n>", tt("cli.tui.historyLimit", "History entries to load"), "200")
     .addHelpText(
       "after",
       () => `\n${theme.muted("Docs:")} ${formatDocsLink("/cli/tui", "docs.openclaw.ai/cli/tui")}\n`,

@@ -1,3 +1,4 @@
+import { tt, tti } from "../i18n/index.js";
 import { asString, extractTextFromMessage, isCommandMessage } from "./tui-formatters.js";
 import { TuiStreamAssembler } from "./tui-stream-assembler.js";
 import type { AgentEvent, ChatEvent, TuiStateAccess } from "./tui-types.js";
@@ -203,8 +204,9 @@ export function createEventHandlers(context: EventHandlerContext) {
           : "";
 
       const finalText = streamAssembler.finalize(evt.runId, evt.message, state.showThinking);
+      // 与 tui-formatters.ts 的 resolveFinalAssistantText 返回值保持同步（均用 tt）
       const suppressEmptyExternalPlaceholder =
-        finalText === "(no output)" && !isLocalRunId?.(evt.runId);
+        finalText === tt("fmt.noOutput", "(no output)") && !isLocalRunId?.(evt.runId);
       if (suppressEmptyExternalPlaceholder) {
         chatLog.dropAssistant(evt.runId);
       } else {
@@ -218,13 +220,15 @@ export function createEventHandlers(context: EventHandlerContext) {
     }
     if (evt.state === "aborted") {
       const wasActiveRun = state.activeChatRunId === evt.runId;
-      chatLog.addSystem("run aborted");
+      chatLog.addSystem(tt("msg.runAborted", "run aborted"));
       terminateRun({ runId: evt.runId, wasActiveRun, status: "aborted" });
       maybeRefreshHistoryForRun(evt.runId);
     }
     if (evt.state === "error") {
       const wasActiveRun = state.activeChatRunId === evt.runId;
-      chatLog.addSystem(`run error: ${evt.errorMessage ?? "unknown"}`);
+      chatLog.addSystem(
+        tti("msg.runError", "run error: {message}", { message: evt.errorMessage ?? "unknown" }),
+      );
       terminateRun({ runId: evt.runId, wasActiveRun, status: "error" });
       maybeRefreshHistoryForRun(evt.runId);
     }
