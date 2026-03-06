@@ -2,6 +2,13 @@
 
 Docs: https://docs.openclaw.ai
 
+## 1.2.4
+
+### Changes
+
+- feat(i18n): TUI 全组件汉化（标题栏/命令/状态/等待短语/CLI选项）
+- feat(i18n): 全面汉化剩余用户可见字符串（第二批，覆盖 17 个命令文件）
+
 ## 1.2.3
 
 ### Changes
