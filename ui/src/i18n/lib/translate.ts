@@ -81,7 +81,7 @@ class I18nManager {
     this.subscribers.forEach((sub) => sub(this.locale));
   }
 
-  public t(key: string, params?: Record<string, string>): string {
+  public t(key: string, fallbackOrParams?: string | Record<string, string>): string {
     const keys = key.split(".");
     let value: unknown = this.translations[this.locale] || this.translations[DEFAULT_LOCALE];
 
@@ -108,9 +108,11 @@ class I18nManager {
     }
 
     if (typeof value !== "string") {
-      return key;
+      // If a string fallback was provided, use it; otherwise return the key.
+      return typeof fallbackOrParams === "string" ? fallbackOrParams : key;
     }
 
+    const params = typeof fallbackOrParams === "object" ? fallbackOrParams : undefined;
     if (params) {
       return value.replace(/\{(\w+)\}/g, (_, k) => params[k] || `{${k}}`);
     }
@@ -120,4 +122,5 @@ class I18nManager {
 }
 
 export const i18n = new I18nManager();
-export const t = (key: string, params?: Record<string, string>) => i18n.t(key, params);
+export const t = (key: string, fallbackOrParams?: string | Record<string, string>) =>
+  i18n.t(key, fallbackOrParams);
