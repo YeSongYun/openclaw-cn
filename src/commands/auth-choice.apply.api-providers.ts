@@ -1,5 +1,6 @@
 import { ensureAuthProfileStore, resolveAuthProfileOrder } from "../agents/auth-profiles.js";
 import type { SecretInput } from "../config/types.secrets.js";
+import { ta, tai } from "../i18n/index.js";
 import { normalizeApiKeyInput, validateApiKeyInput } from "./auth-choice.api-key.js";
 import {
   normalizeSecretInputModeInput,
@@ -147,7 +148,7 @@ const SIMPLE_API_KEY_PROVIDER_FLOWS: Partial<Record<AuthChoice, SimpleApiKeyProv
     profileId: "vercel-ai-gateway:default",
     expectedProviders: ["vercel-ai-gateway"],
     envLabel: "AI_GATEWAY_API_KEY",
-    promptMessage: "Enter Vercel AI Gateway API key",
+    promptMessage: ta("apply.promptMessage.vercelAiGateway", "Enter Vercel AI Gateway API key"),
     setCredential: setVercelAiGatewayApiKey,
     defaultModel: VERCEL_AI_GATEWAY_DEFAULT_MODEL_REF,
     applyDefaultConfig: applyVercelAiGatewayConfig,
@@ -159,7 +160,7 @@ const SIMPLE_API_KEY_PROVIDER_FLOWS: Partial<Record<AuthChoice, SimpleApiKeyProv
     profileId: "moonshot:default",
     expectedProviders: ["moonshot"],
     envLabel: "MOONSHOT_API_KEY",
-    promptMessage: "Enter Moonshot API key",
+    promptMessage: ta("apply.promptMessage.moonshot", "Enter Moonshot API key"),
     setCredential: setMoonshotApiKey,
     defaultModel: MOONSHOT_DEFAULT_MODEL_REF,
     applyDefaultConfig: applyMoonshotConfig,
@@ -170,7 +171,7 @@ const SIMPLE_API_KEY_PROVIDER_FLOWS: Partial<Record<AuthChoice, SimpleApiKeyProv
     profileId: "moonshot:default",
     expectedProviders: ["moonshot"],
     envLabel: "MOONSHOT_API_KEY",
-    promptMessage: "Enter Moonshot API key (.cn)",
+    promptMessage: ta("apply.promptMessage.moonshotCn", "Enter Moonshot API key (.cn)"),
     setCredential: setMoonshotApiKey,
     defaultModel: MOONSHOT_DEFAULT_MODEL_REF,
     applyDefaultConfig: applyMoonshotConfigCn,
@@ -181,24 +182,24 @@ const SIMPLE_API_KEY_PROVIDER_FLOWS: Partial<Record<AuthChoice, SimpleApiKeyProv
     profileId: "kimi-coding:default",
     expectedProviders: ["kimi-code", "kimi-coding"],
     envLabel: "KIMI_API_KEY",
-    promptMessage: "Enter Kimi Coding API key",
+    promptMessage: ta("apply.promptMessage.kimiCoding", "Enter Kimi Coding API key"),
     setCredential: setKimiCodingApiKey,
     defaultModel: KIMI_CODING_MODEL_REF,
     applyDefaultConfig: applyKimiCodeConfig,
     applyProviderConfig: applyKimiCodeProviderConfig,
     noteDefault: KIMI_CODING_MODEL_REF,
-    noteMessage: [
-      "Kimi Coding uses a dedicated endpoint and API key.",
-      "Get your API key at: https://www.kimi.com/code/en",
-    ].join("\n"),
-    noteTitle: "Kimi Coding",
+    noteMessage: ta(
+      "apply.noteMessage.kimiCoding",
+      "Kimi Coding uses a dedicated endpoint and API key.\nGet your API key at: https://www.kimi.com/code/en",
+    ),
+    noteTitle: ta("apply.noteTitle.kimiCoding", "Kimi Coding"),
   },
   "xiaomi-api-key": {
     provider: "xiaomi",
     profileId: "xiaomi:default",
     expectedProviders: ["xiaomi"],
     envLabel: "XIAOMI_API_KEY",
-    promptMessage: "Enter Xiaomi API key",
+    promptMessage: ta("apply.promptMessage.xiaomi", "Enter Xiaomi API key"),
     setCredential: setXiaomiApiKey,
     defaultModel: XIAOMI_DEFAULT_MODEL_REF,
     applyDefaultConfig: applyXiaomiConfig,
@@ -210,7 +211,7 @@ const SIMPLE_API_KEY_PROVIDER_FLOWS: Partial<Record<AuthChoice, SimpleApiKeyProv
     profileId: "mistral:default",
     expectedProviders: ["mistral"],
     envLabel: "MISTRAL_API_KEY",
-    promptMessage: "Enter Mistral API key",
+    promptMessage: ta("apply.promptMessage.mistral", "Enter Mistral API key"),
     setCredential: setMistralApiKey,
     defaultModel: MISTRAL_DEFAULT_MODEL_REF,
     applyDefaultConfig: applyMistralConfig,
@@ -222,17 +223,16 @@ const SIMPLE_API_KEY_PROVIDER_FLOWS: Partial<Record<AuthChoice, SimpleApiKeyProv
     profileId: "venice:default",
     expectedProviders: ["venice"],
     envLabel: "VENICE_API_KEY",
-    promptMessage: "Enter Venice AI API key",
+    promptMessage: ta("apply.promptMessage.venice", "Enter Venice AI API key"),
     setCredential: setVeniceApiKey,
     defaultModel: VENICE_DEFAULT_MODEL_REF,
     applyDefaultConfig: applyVeniceConfig,
     applyProviderConfig: applyVeniceProviderConfig,
     noteDefault: VENICE_DEFAULT_MODEL_REF,
-    noteMessage: [
-      "Venice AI provides privacy-focused inference with uncensored models.",
-      "Get your API key at: https://venice.ai/settings/api",
-      "Supports 'private' (fully private) and 'anonymized' (proxy) modes.",
-    ].join("\n"),
+    noteMessage: ta(
+      "apply.noteMessage.venice",
+      "Venice AI provides privacy-focused inference with uncensored models.\nGet your API key at: https://venice.ai/settings/api\nSupports 'private' (fully private) and 'anonymized' (proxy) modes.",
+    ),
     noteTitle: "Venice AI",
   },
   "opencode-zen": {
@@ -240,17 +240,16 @@ const SIMPLE_API_KEY_PROVIDER_FLOWS: Partial<Record<AuthChoice, SimpleApiKeyProv
     profileId: "opencode:default",
     expectedProviders: ["opencode"],
     envLabel: "OPENCODE_API_KEY",
-    promptMessage: "Enter OpenCode Zen API key",
+    promptMessage: ta("apply.promptMessage.opencode", "Enter OpenCode Zen API key"),
     setCredential: setOpencodeZenApiKey,
     defaultModel: OPENCODE_ZEN_DEFAULT_MODEL,
     applyDefaultConfig: applyOpencodeZenConfig,
     applyProviderConfig: applyOpencodeZenProviderConfig,
     noteDefault: OPENCODE_ZEN_DEFAULT_MODEL,
-    noteMessage: [
-      "OpenCode Zen provides access to Claude, GPT, Gemini, and more models.",
-      "Get your API key at: https://opencode.ai/auth",
-      "OpenCode Zen bills per request. Check your OpenCode dashboard for details.",
-    ].join("\n"),
+    noteMessage: ta(
+      "apply.noteMessage.opencode",
+      "OpenCode Zen provides access to Claude, GPT, Gemini, and more models.\nGet your API key at: https://opencode.ai/auth\nOpenCode Zen bills per request. Check your OpenCode dashboard for details.",
+    ),
     noteTitle: "OpenCode Zen",
   },
   "together-api-key": {
@@ -258,16 +257,16 @@ const SIMPLE_API_KEY_PROVIDER_FLOWS: Partial<Record<AuthChoice, SimpleApiKeyProv
     profileId: "together:default",
     expectedProviders: ["together"],
     envLabel: "TOGETHER_API_KEY",
-    promptMessage: "Enter Together AI API key",
+    promptMessage: ta("apply.promptMessage.together", "Enter Together AI API key"),
     setCredential: setTogetherApiKey,
     defaultModel: TOGETHER_DEFAULT_MODEL_REF,
     applyDefaultConfig: applyTogetherConfig,
     applyProviderConfig: applyTogetherProviderConfig,
     noteDefault: TOGETHER_DEFAULT_MODEL_REF,
-    noteMessage: [
-      "Together AI provides access to leading open-source models including Llama, DeepSeek, Qwen, and more.",
-      "Get your API key at: https://api.together.xyz/settings/api-keys",
-    ].join("\n"),
+    noteMessage: ta(
+      "apply.noteMessage.together",
+      "Together AI provides access to leading open-source models including Llama, DeepSeek, Qwen, and more.\nGet your API key at: https://api.together.xyz/settings/api-keys",
+    ),
     noteTitle: "Together AI",
   },
   "qianfan-api-key": {
@@ -275,16 +274,16 @@ const SIMPLE_API_KEY_PROVIDER_FLOWS: Partial<Record<AuthChoice, SimpleApiKeyProv
     profileId: "qianfan:default",
     expectedProviders: ["qianfan"],
     envLabel: "QIANFAN_API_KEY",
-    promptMessage: "Enter QIANFAN API key",
+    promptMessage: ta("apply.promptMessage.qianfan", "Enter QIANFAN API key"),
     setCredential: setQianfanApiKey,
     defaultModel: QIANFAN_DEFAULT_MODEL_REF,
     applyDefaultConfig: applyQianfanConfig,
     applyProviderConfig: applyQianfanProviderConfig,
     noteDefault: QIANFAN_DEFAULT_MODEL_REF,
-    noteMessage: [
-      "Get your API key at: https://console.bce.baidu.com/qianfan/ais/console/apiKey",
-      "API key format: bce-v3/ALTAK-...",
-    ].join("\n"),
+    noteMessage: ta(
+      "apply.noteMessage.qianfan",
+      "Get your API key at: https://console.bce.baidu.com/qianfan/ais/console/apiKey\nAPI key format: bce-v3/ALTAK-...",
+    ),
     noteTitle: "QIANFAN",
   },
   "kilocode-api-key": {
@@ -292,7 +291,7 @@ const SIMPLE_API_KEY_PROVIDER_FLOWS: Partial<Record<AuthChoice, SimpleApiKeyProv
     profileId: "kilocode:default",
     expectedProviders: ["kilocode"],
     envLabel: "KILOCODE_API_KEY",
-    promptMessage: "Enter Kilo Gateway API key",
+    promptMessage: ta("apply.promptMessage.kilocode", "Enter Kilo Gateway API key"),
     setCredential: setKilocodeApiKey,
     defaultModel: KILOCODE_DEFAULT_MODEL_REF,
     applyDefaultConfig: applyKilocodeConfig,
@@ -304,7 +303,7 @@ const SIMPLE_API_KEY_PROVIDER_FLOWS: Partial<Record<AuthChoice, SimpleApiKeyProv
     profileId: "synthetic:default",
     expectedProviders: ["synthetic"],
     envLabel: "SYNTHETIC_API_KEY",
-    promptMessage: "Enter Synthetic API key",
+    promptMessage: ta("apply.promptMessage.synthetic", "Enter Synthetic API key"),
     setCredential: setSyntheticApiKey,
     defaultModel: SYNTHETIC_DEFAULT_MODEL_REF,
     applyDefaultConfig: applySyntheticConfig,
@@ -317,17 +316,16 @@ const SIMPLE_API_KEY_PROVIDER_FLOWS: Partial<Record<AuthChoice, SimpleApiKeyProv
     profileId: "dmxapi:default",
     expectedProviders: ["dmxapi"],
     envLabel: "DMXAPI_API_KEY",
-    promptMessage: "输入 DMXAPI API key",
+    promptMessage: ta("apply.promptMessage.dmxapi", "输入 DMXAPI API key"),
     setCredential: setDmxapiApiKey,
     defaultModel: DMXAPI_DEFAULT_MODEL_REF,
     applyDefaultConfig: applyDmxapiConfig,
     applyProviderConfig: applyDmxapiProviderConfig,
     noteDefault: DMXAPI_DEFAULT_MODEL_REF,
-    noteMessage: [
-      "DMXAPI 支持 Claude、GPT-5、Gemini 等多种模型。",
-      "获取 API key：https://www.dmxapi.cn",
-      "默认模型：claude-opus-4-6（可通过 openclaw config set 切换）",
-    ].join("\n"),
+    noteMessage: ta(
+      "apply.noteMessage.dmxapi",
+      "DMXAPI 支持 Claude、GPT-5、Gemini 等多种模型。\n获取 API key：https://www.dmxapi.cn\n默认模型：claude-opus-4-6（可通过 openclaw config set 切换）",
+    ),
     noteTitle: "DMXAPI",
   },
 };
@@ -450,14 +448,16 @@ export async function applyAuthChoiceApiProviders(
         expectedProviders: ["litellm"],
         provider: "litellm",
         envLabel: "LITELLM_API_KEY",
-        promptMessage: "Enter LiteLLM API key",
+        promptMessage: ta("apply.promptMessage.litellm", "Enter LiteLLM API key"),
         normalize: normalizeApiKeyInput,
         validate: validateApiKeyInput,
         prompter: params.prompter,
         setCredential: async (apiKey, mode) =>
           setLitellmApiKey(apiKey, params.agentDir, { secretInputMode: mode }),
-        noteMessage:
+        noteMessage: ta(
+          "apply.noteMessage.litellm",
           "LiteLLM provides a unified API to 100+ LLM providers.\nGet your API key from your LiteLLM proxy or https://litellm.ai\nDefault proxy runs on http://localhost:4000",
+        ),
         noteTitle: "LiteLLM",
       });
       hasCredential = true;
@@ -510,15 +510,21 @@ export async function applyAuthChoiceApiProviders(
     const ensureAccountGateway = async () => {
       if (!accountId) {
         const value = await params.prompter.text({
-          message: "Enter Cloudflare Account ID",
-          validate: (val) => (String(val ?? "").trim() ? undefined : "Account ID is required"),
+          message: ta("apply.promptMessage.cloudflareAccountId", "Enter Cloudflare Account ID"),
+          validate: (val) =>
+            String(val ?? "").trim()
+              ? undefined
+              : ta("apply.validate.cloudflareAccountId", "Account ID is required"),
         });
         accountId = String(value ?? "").trim();
       }
       if (!gatewayId) {
         const value = await params.prompter.text({
-          message: "Enter Cloudflare AI Gateway ID",
-          validate: (val) => (String(val ?? "").trim() ? undefined : "Gateway ID is required"),
+          message: ta("apply.promptMessage.cloudflareGatewayId", "Enter Cloudflare AI Gateway ID"),
+          validate: (val) =>
+            String(val ?? "").trim()
+              ? undefined
+              : ta("apply.validate.cloudflareGatewayId", "Gateway ID is required"),
         });
         gatewayId = String(value ?? "").trim();
       }
@@ -534,7 +540,10 @@ export async function applyAuthChoiceApiProviders(
       expectedProviders: ["cloudflare-ai-gateway"],
       provider: "cloudflare-ai-gateway",
       envLabel: "CLOUDFLARE_AI_GATEWAY_API_KEY",
-      promptMessage: "Enter Cloudflare AI Gateway API key",
+      promptMessage: ta(
+        "apply.promptMessage.cloudflareApiKey",
+        "Enter Cloudflare AI Gateway API key",
+      ),
       normalize: normalizeApiKeyInput,
       validate: validateApiKeyInput,
       prompter: params.prompter,
@@ -575,7 +584,7 @@ export async function applyAuthChoiceApiProviders(
       config: nextConfig,
       expectedProviders: ["google"],
       envLabel: "GEMINI_API_KEY",
-      promptMessage: "Enter Gemini API key",
+      promptMessage: ta("apply.promptMessage.gemini", "Enter Gemini API key"),
       normalize: normalizeApiKeyInput,
       validate: validateApiKeyInput,
       prompter: params.prompter,
@@ -592,8 +601,10 @@ export async function applyAuthChoiceApiProviders(
       nextConfig = applied.next;
       if (applied.changed) {
         await params.prompter.note(
-          `Default model set to ${GOOGLE_GEMINI_DEFAULT_MODEL}`,
-          "Model configured",
+          tai("apply.modelConfigured", `Default model set to ${GOOGLE_GEMINI_DEFAULT_MODEL}`, {
+            model: GOOGLE_GEMINI_DEFAULT_MODEL,
+          }),
+          ta("apply.modelConfigured.title", "Model configured"),
         );
       }
     } else {
@@ -620,7 +631,7 @@ export async function applyAuthChoiceApiProviders(
       config: nextConfig,
       expectedProviders: ["zai"],
       envLabel: "ZAI_API_KEY",
-      promptMessage: "Enter Z.AI API key",
+      promptMessage: ta("apply.promptMessage.zai", "Enter Z.AI API key"),
       normalize: normalizeApiKeyInput,
       validate: validateApiKeyInput,
       prompter: params.prompter,
@@ -638,27 +649,27 @@ export async function applyAuthChoiceApiProviders(
         await params.prompter.note(detected.note, "Z.AI endpoint");
       } else {
         endpoint = await params.prompter.select({
-          message: "Select Z.AI endpoint",
+          message: ta("apply.zai.selectEndpoint", "Select Z.AI endpoint"),
           options: [
             {
               value: "coding-global",
               label: "Coding-Plan-Global",
-              hint: "GLM Coding Plan Global (api.z.ai)",
+              hint: ta("apply.zai.codingGlobal.hint", "GLM Coding Plan Global (api.z.ai)"),
             },
             {
               value: "coding-cn",
               label: "Coding-Plan-CN",
-              hint: "GLM Coding Plan CN (open.bigmodel.cn)",
+              hint: ta("apply.zai.codingCn.hint", "GLM Coding Plan CN (open.bigmodel.cn)"),
             },
             {
               value: "global",
-              label: "Global",
-              hint: "Z.AI Global (api.z.ai)",
+              label: ta("option.zai-global.label", "Global"),
+              hint: ta("apply.zai.global.hint", "Z.AI Global (api.z.ai)"),
             },
             {
               value: "cn",
-              label: "CN",
-              hint: "Z.AI CN (open.bigmodel.cn)",
+              label: ta("option.zai-cn.label", "CN"),
+              hint: ta("apply.zai.cn.hint", "Z.AI CN (open.bigmodel.cn)"),
             },
           ],
           initialValue: "global",

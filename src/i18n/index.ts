@@ -111,6 +111,7 @@ export function preloadCommonNamespaces(): void {
     "channels",
     "agents",
     "configure",
+    "auth",
   ]) {
     try {
       loadNamespace(ns);
@@ -162,3 +163,8 @@ export const tagi = (
 ): string => ti("agents", key, fallback, vars);
 /** configure 命名空间快捷函数 */
 export const tcfg = (key: string, fallback: string): string => t("configure", key, fallback);
+/** auth 命名空间快捷函数 */
+export const ta = (key: string, fallback: string): string => t("auth", key, fallback);
+/** auth 命名空间带插值快捷函数 */
+export const tai = (key: string, fallback: string, vars: Record<string, string | number>): string =>
+  ti("auth", key, fallback, vars);

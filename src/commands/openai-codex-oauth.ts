@@ -1,5 +1,6 @@
 import type { OAuthCredentials } from "@mariozechner/pi-ai";
 import { loginOpenAICodex } from "@mariozechner/pi-ai";
+import { ta } from "../i18n/index.js";
 import type { RuntimeEnv } from "../runtime.js";
 import type { WizardPrompter } from "../wizard/prompts.js";
 import { createVpsAwareOAuthHandlers } from "./oauth-flow.js";
@@ -20,26 +21,24 @@ export async function loginOpenAICodexOAuth(params: {
   if (!preflight.ok && preflight.kind === "tls-cert") {
     const hint = formatOpenAIOAuthTlsPreflightFix(preflight);
     runtime.error(hint);
-    await prompter.note(hint, "OAuth prerequisites");
+    await prompter.note(hint, ta("apply.oauth.openai.prerequisites", "OAuth prerequisites"));
     throw new Error(preflight.message);
   }
 
   await prompter.note(
     isRemote
-      ? [
-          "You are running in a remote/VPS environment.",
-          "A URL will be shown for you to open in your LOCAL browser.",
-          "After signing in, paste the redirect URL back here.",
-        ].join("\n")
-      : [
-          "Browser will open for OpenAI authentication.",
-          "If the callback doesn't auto-complete, paste the redirect URL.",
-          "OpenAI OAuth uses localhost:1455 for the callback.",
-        ].join("\n"),
-    "OpenAI Codex OAuth",
+      ? ta(
+          "apply.oauth.openai.remoteNote",
+          "You are running in a remote/VPS environment.\nA URL will be shown for you to open in your LOCAL browser.\nAfter signing in, paste the redirect URL back here.",
+        )
+      : ta(
+          "apply.oauth.openai.localNote",
+          "Browser will open for OpenAI authentication.\nIf the callback doesn't auto-complete, paste the redirect URL.\nOpenAI OAuth uses localhost:1455 for the callback.",
+        ),
+    ta("apply.oauth.openai.title", "OpenAI Codex OAuth"),
   );
 
-  const spin = prompter.progress("Starting OAuth flow…");
+  const spin = prompter.progress(ta("apply.oauth.openai.startFlow", "Starting OAuth flow…"));
   try {
     const { onAuth, onPrompt } = createVpsAwareOAuthHandlers({
       isRemote,
@@ -47,7 +46,9 @@ export async function loginOpenAICodexOAuth(params: {
       runtime,
       spin,
       openUrl,
-      localBrowserMessage: localBrowserMessage ?? "Complete sign-in in browser…",
+      localBrowserMessage:
+        localBrowserMessage ??
+        ta("apply.oauth.openai.localBrowser", "Complete sign-in in browser…"),
     });
 
     const creds = await loginOpenAICodex({
@@ -55,12 +56,18 @@ export async function loginOpenAICodexOAuth(params: {
       onPrompt,
       onProgress: (msg) => spin.update(msg),
     });
-    spin.stop("OpenAI OAuth complete");
+    spin.stop(ta("apply.oauth.openai.complete", "OpenAI OAuth complete"));
     return creds ?? null;
   } catch (err) {
-    spin.stop("OpenAI OAuth failed");
+    spin.stop(ta("apply.oauth.openai.failed", "OpenAI OAuth failed"));
     runtime.error(String(err));
-    await prompter.note("Trouble with OAuth? See https://docs.openclaw.ai/start/faq", "OAuth help");
+    await prompter.note(
+      ta(
+        "apply.oauth.openai.helpNote",
+        "Trouble with OAuth? See https://docs.openclaw.ai/start/faq",
+      ),
+      ta("apply.oauth.openai.helpTitle", "OAuth help"),
+    );
     throw err;
   }
 }

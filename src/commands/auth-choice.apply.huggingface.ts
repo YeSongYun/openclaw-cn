@@ -2,6 +2,7 @@ import {
   discoverHuggingfaceModels,
   isHuggingfacePolicyLocked,
 } from "../agents/huggingface-models.js";
+import { ta } from "../i18n/index.js";
 import { normalizeApiKeyInput, validateApiKeyInput } from "./auth-choice.api-key.js";
 import {
   createAuthChoiceAgentModelNoter,
@@ -38,16 +39,16 @@ export async function applyAuthChoiceHuggingface(
     expectedProviders: ["huggingface"],
     provider: "huggingface",
     envLabel: "Hugging Face token",
-    promptMessage: "Enter Hugging Face API key (HF token)",
+    promptMessage: ta("apply.huggingface.promptMessage", "Enter Hugging Face API key (HF token)"),
     normalize: normalizeApiKeyInput,
     validate: validateApiKeyInput,
     prompter: params.prompter,
     setCredential: async (apiKey, mode) =>
       setHuggingfaceApiKey(apiKey, params.agentDir, { secretInputMode: mode }),
-    noteMessage: [
-      "Hugging Face Inference Providers offer OpenAI-compatible chat completions.",
-      "Create a token at: https://huggingface.co/settings/tokens (fine-grained, 'Make calls to Inference Providers').",
-    ].join("\n"),
+    noteMessage: ta(
+      "apply.huggingface.noteMessage",
+      "Hugging Face Inference Providers offer OpenAI-compatible chat completions.\nCreate a token at: https://huggingface.co/settings/tokens (fine-grained, 'Make calls to Inference Providers').",
+    ),
     noteTitle: "Hugging Face",
   });
   nextConfig = applyAuthProfileConfig(nextConfig, {
@@ -82,7 +83,7 @@ export async function applyAuthChoiceHuggingface(
       : options.length === 1
         ? options[0].value
         : await params.prompter.select({
-            message: "Default Hugging Face model",
+            message: ta("apply.huggingface.selectModel", "Default Hugging Face model"),
             options,
             initialValue: options.some((o) => o.value === defaultRef)
               ? defaultRef
@@ -91,7 +92,10 @@ export async function applyAuthChoiceHuggingface(
 
   if (isHuggingfacePolicyLocked(selectedModelRef)) {
     await params.prompter.note(
-      "Provider locked — router will choose backend by cost or speed.",
+      ta(
+        "apply.huggingface.policyLocked",
+        "Provider locked — router will choose backend by cost or speed.",
+      ),
       "Hugging Face",
     );
   }

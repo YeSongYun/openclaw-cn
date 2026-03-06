@@ -1,6 +1,7 @@
 import { resolveEnvApiKey } from "../agents/model-auth.js";
 import type { OpenClawConfig } from "../config/types.js";
 import { type SecretInput, type SecretRef } from "../config/types.secrets.js";
+import { ta, tai } from "../i18n/index.js";
 import { encodeJsonPointerToken } from "../secrets/json-pointer.js";
 import { PROVIDER_ENV_VARS } from "../secrets/provider-env-vars.js";
 import {
@@ -67,13 +68,21 @@ function resolveRefFallbackInput(params: {
   const fallbackEnvVar = params.preferredEnvVar ?? resolveDefaultProviderEnvVar(params.provider);
   if (!fallbackEnvVar) {
     throw new Error(
-      `No default environment variable mapping found for provider "${params.provider}". Set a provider-specific env var, or re-run onboarding in an interactive terminal to configure a ref.`,
+      tai(
+        "helpers.envNoMapping",
+        `No default environment variable mapping found for provider "${params.provider}". Set a provider-specific env var, or re-run onboarding in an interactive terminal to configure a ref.`,
+        { provider: params.provider },
+      ),
     );
   }
   const value = process.env[fallbackEnvVar]?.trim();
   if (!value) {
     throw new Error(
-      `Environment variable "${fallbackEnvVar}" is required for --secret-input-mode ref in non-interactive onboarding.`,
+      tai(
+        "helpers.envRequired",
+        `Environment variable "${fallbackEnvVar}" is required for --secret-input-mode ref in non-interactive onboarding.`,
+        { envVar: fallbackEnvVar },
+      ),
     );
   }
   return {
@@ -102,18 +111,26 @@ export async function promptSecretRefForOnboarding(params: {
 
   while (true) {
     const sourceRaw: SecretRefChoice = await params.prompter.select<SecretRefChoice>({
-      message: params.copy?.sourceMessage ?? "Where is this API key stored?",
+      message:
+        params.copy?.sourceMessage ??
+        ta("helpers.secretSource.message", "Where is this API key stored?"),
       initialValue: sourceChoice,
       options: [
         {
           value: "env",
-          label: "Environment variable",
-          hint: "Reference a variable from your runtime environment",
+          label: ta("helpers.secretSource.env.label", "Environment variable"),
+          hint: ta(
+            "helpers.secretSource.env.hint",
+            "Reference a variable from your runtime environment",
+          ),
         },
         {
           value: "provider",
-          label: "Configured secret provider",
-          hint: "Use a configured file or exec secret provider",
+          label: ta("helpers.secretSource.provider.label", "Configured secret provider"),
+          hint: ta(
+            "helpers.secretSource.provider.hint",
+            "Use a configured file or exec secret provider",
+          ),
         },
       ],
     });
@@ -122,7 +139,8 @@ export async function promptSecretRefForOnboarding(params: {
 
     if (source === "env") {
       const envVarRaw = await params.prompter.text({
-        message: params.copy?.envVarMessage ?? "Environment variable name",
+        message:
+          params.copy?.envVarMessage ?? ta("helpers.envVar.message", "Environment variable name"),
         initialValue: defaultEnvVar || undefined,
         placeholder: params.copy?.envVarPlaceholder ?? "OPENAI_API_KEY",
         validate: (value) => {
@@ -130,13 +148,20 @@ export async function promptSecretRefForOnboarding(params: {
           if (!ENV_SECRET_REF_ID_RE.test(candidate)) {
             return (
               params.copy?.envVarFormatError ??
-              'Use an env var name like "OPENAI_API_KEY" (uppercase letters, numbers, underscores).'
+              ta(
+                "helpers.envVar.formatError",
+                'Use an env var name like "OPENAI_API_KEY" (uppercase letters, numbers, underscores).',
+              )
             );
           }
           if (!process.env[candidate]?.trim()) {
             return (
               params.copy?.envVarMissingError?.(candidate) ??
-              `Environment variable "${candidate}" is missing or empty in this session.`
+              tai(
+                "helpers.envVar.missingError",
+                `Environment variable "${candidate}" is missing or empty in this session.`,
+                { envVar: candidate },
+              )
             );
           }
           return undefined;
@@ -147,7 +172,11 @@ export async function promptSecretRefForOnboarding(params: {
         envCandidate && ENV_SECRET_REF_ID_RE.test(envCandidate) ? envCandidate : defaultEnvVar;
       if (!envVar) {
         throw new Error(
-          `No valid environment variable name provided for provider "${params.provider}".`,
+          tai(
+            "helpers.noValidEnvVar",
+            `No valid environment variable name provided for provider "${params.provider}".`,
+            { provider: params.provider },
+          ),
         );
       }
       const ref: SecretRef = {
@@ -163,8 +192,12 @@ export async function promptSecretRefForOnboarding(params: {
       });
       await params.prompter.note(
         params.copy?.envValidatedMessage?.(envVar) ??
-          `Validated environment variable ${envVar}. OpenClaw will store a reference, not the key value.`,
-        "Reference validated",
+          tai(
+            "helpers.envVar.validated",
+            `Validated environment variable ${envVar}. OpenClaw will store a reference, not the key value.`,
+            { envVar },
+          ),
+        ta("helpers.envVar.validatedTitle", "Reference validated"),
       );
       return { ref, resolvedValue };
     }
@@ -175,8 +208,11 @@ export async function promptSecretRefForOnboarding(params: {
     if (externalProviders.length === 0) {
       await params.prompter.note(
         params.copy?.noProvidersMessage ??
-          "No file/exec secret providers are configured yet. Add one under secrets.providers, or select Environment variable.",
-        "No providers configured",
+          ta(
+            "helpers.noProviders.message",
+            "No file/exec secret providers are configured yet. Add one under secrets.providers, or select Environment variable.",
+          ),
+        ta("helpers.noProviders.title", "No providers configured"),
       );
       continue;
     }
@@ -184,28 +220,38 @@ export async function promptSecretRefForOnboarding(params: {
       preferFirstProviderForSource: true,
     });
     const selectedProvider = await params.prompter.select<string>({
-      message: "Select secret provider",
+      message: ta("helpers.selectProvider.message", "Select secret provider"),
       initialValue:
         externalProviders.find(([providerName]) => providerName === defaultProvider)?.[0] ??
         externalProviders[0]?.[0],
       options: externalProviders.map(([providerName, provider]) => ({
         value: providerName,
         label: providerName,
-        hint: provider?.source === "exec" ? "Exec provider" : "File provider",
+        hint:
+          provider?.source === "exec"
+            ? ta("helpers.providerSource.exec", "Exec provider")
+            : ta("helpers.providerSource.file", "File provider"),
       })),
     });
     const providerEntry = params.config.secrets?.providers?.[selectedProvider];
     if (!providerEntry || (providerEntry.source !== "file" && providerEntry.source !== "exec")) {
       await params.prompter.note(
-        `Provider "${selectedProvider}" is not a file/exec provider.`,
-        "Invalid provider",
+        tai(
+          "helpers.invalidProvider.message",
+          `Provider "${selectedProvider}" is not a file/exec provider.`,
+          { provider: selectedProvider },
+        ),
+        ta("helpers.invalidProvider.title", "Invalid provider"),
       );
       continue;
     }
     const idPrompt =
       providerEntry.source === "file"
-        ? "Secret id (JSON pointer for json mode, or 'value' for singleValue mode)"
-        : "Secret id for the exec provider";
+        ? ta(
+            "helpers.secretId.filePrompt",
+            "Secret id (JSON pointer for json mode, or 'value' for singleValue mode)",
+          )
+        : ta("helpers.secretId.execPrompt", "Secret id for the exec provider");
     const idDefault =
       providerEntry.source === "file"
         ? providerEntry.mode === "singleValue"
@@ -219,21 +265,24 @@ export async function promptSecretRefForOnboarding(params: {
       validate: (value) => {
         const candidate = value.trim();
         if (!candidate) {
-          return "Secret id cannot be empty.";
+          return ta("helpers.secretId.emptyError", "Secret id cannot be empty.");
         }
         if (
           providerEntry.source === "file" &&
           providerEntry.mode !== "singleValue" &&
           !isValidFileSecretRefId(candidate)
         ) {
-          return 'Use an absolute JSON pointer like "/providers/openai/apiKey".';
+          return ta(
+            "helpers.secretId.fileFormatError",
+            'Use an absolute JSON pointer like "/providers/openai/apiKey".',
+          );
         }
         if (
           providerEntry.source === "file" &&
           providerEntry.mode === "singleValue" &&
           candidate !== "value"
         ) {
-          return 'singleValue mode expects id "value".';
+          return ta("helpers.secretId.singleValueError", 'singleValue mode expects id "value".');
         }
         return undefined;
       },
@@ -251,18 +300,29 @@ export async function promptSecretRefForOnboarding(params: {
       });
       await params.prompter.note(
         params.copy?.providerValidatedMessage?.(selectedProvider, id, providerEntry.source) ??
-          `Validated ${providerEntry.source} reference ${selectedProvider}:${id}. OpenClaw will store a reference, not the key value.`,
-        "Reference validated",
+          tai(
+            "helpers.providerValidated",
+            `Validated ${providerEntry.source} reference ${selectedProvider}:${id}. OpenClaw will store a reference, not the key value.`,
+            { source: providerEntry.source, provider: selectedProvider, id },
+          ),
+        ta("helpers.envVar.validatedTitle", "Reference validated"),
       );
       return { ref, resolvedValue };
     } catch (error) {
       await params.prompter.note(
         [
-          `Could not validate provider reference ${selectedProvider}:${id}.`,
+          tai(
+            "helpers.providerFailed.message",
+            `Could not validate provider reference ${selectedProvider}:${id}.`,
+            { provider: selectedProvider, id },
+          ),
           formatErrorMessage(error),
-          "Check your provider configuration and try again.",
+          ta(
+            "helpers.providerFailed.checkConfig",
+            "Check your provider configuration and try again.",
+          ),
         ].join("\n"),
-        "Reference check failed",
+        ta("helpers.providerFailed.title", "Reference check failed"),
       );
     }
   }
@@ -276,8 +336,12 @@ export function createAuthChoiceAgentModelNoter(
       return;
     }
     await params.prompter.note(
-      `Default model set to ${model} for agent "${params.agentId}".`,
-      "Model configured",
+      tai(
+        "helpers.agentModelNote",
+        `Default model set to ${model} for agent "${params.agentId}".`,
+        { model, agentId: params.agentId },
+      ),
+      ta("helpers.agentModelNote.title", "Model configured"),
     );
   };
 }
@@ -386,20 +450,31 @@ export async function resolveSecretInputModeForEnvSelection(params: {
     return "plaintext";
   }
   const selected = await params.prompter.select<SecretInputMode>({
-    message: params.copy?.modeMessage ?? "How do you want to provide this API key?",
+    message:
+      params.copy?.modeMessage ??
+      ta("helpers.secretMode.message", "How do you want to provide this API key?"),
     initialValue: "plaintext",
     options: [
       {
         value: "plaintext",
-        label: params.copy?.plaintextLabel ?? "Paste API key now",
-        hint: params.copy?.plaintextHint ?? "Stores the key directly in OpenClaw config",
+        label:
+          params.copy?.plaintextLabel ??
+          ta("helpers.secretMode.plaintext.label", "Paste API key now"),
+        hint:
+          params.copy?.plaintextHint ??
+          ta("helpers.secretMode.plaintext.hint", "Stores the key directly in OpenClaw config"),
       },
       {
         value: "ref",
-        label: params.copy?.refLabel ?? "Use external secret provider",
+        label:
+          params.copy?.refLabel ??
+          ta("helpers.secretMode.ref.label", "Use external secret provider"),
         hint:
           params.copy?.refHint ??
-          "Stores a reference to env or configured external secret providers",
+          ta(
+            "helpers.secretMode.ref.hint",
+            "Stores a reference to env or configured external secret providers",
+          ),
       },
     ],
   });
@@ -510,7 +585,15 @@ export async function ensureApiKeyFromEnvOrPrompt(params: {
 
   if (envKey && selectedMode === "plaintext") {
     const useExisting = await params.prompter.confirm({
-      message: `Use existing ${params.envLabel} (${envKey.source}, ${formatApiKeyPreview(envKey.apiKey)})?`,
+      message: tai(
+        "helpers.useExistingKey",
+        `Use existing ${params.envLabel} (${envKey.source}, ${formatApiKeyPreview(envKey.apiKey)})?`,
+        {
+          envLabel: params.envLabel,
+          source: envKey.source,
+          preview: formatApiKeyPreview(envKey.apiKey),
+        },
+      ),
       initialValue: true,
     });
     if (useExisting) {

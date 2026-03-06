@@ -1,3 +1,4 @@
+import { ta, tai } from "../i18n/index.js";
 import type { ApplyAuthChoiceParams, ApplyAuthChoiceResult } from "./auth-choice.apply.js";
 import { loginChutes } from "./chutes-oauth.js";
 import { isRemoteEnvironment } from "./oauth-env.js";
@@ -18,7 +19,7 @@ export async function applyAuthChoiceOAuth(
       process.env.CHUTES_CLIENT_ID?.trim() ||
       String(
         await params.prompter.text({
-          message: "Enter Chutes OAuth client id",
+          message: ta("apply.oauth.chutes.clientId", "Enter Chutes OAuth client id"),
           placeholder: "cid_xxx",
           validate: (value) => (value?.trim() ? undefined : "Required"),
         }),
@@ -27,23 +28,20 @@ export async function applyAuthChoiceOAuth(
 
     await params.prompter.note(
       isRemote
-        ? [
-            "You are running in a remote/VPS environment.",
-            "A URL will be shown for you to open in your LOCAL browser.",
-            "After signing in, paste the redirect URL back here.",
-            "",
-            `Redirect URI: ${redirectUri}`,
-          ].join("\n")
-        : [
-            "Browser will open for Chutes authentication.",
-            "If the callback doesn't auto-complete, paste the redirect URL.",
-            "",
-            `Redirect URI: ${redirectUri}`,
-          ].join("\n"),
+        ? ta(
+            "apply.oauth.chutes.remoteNote",
+            "You are running in a remote/VPS environment.\nA URL will be shown for you to open in your LOCAL browser.\nAfter signing in, paste the redirect URL back here.",
+          ) + `\n\nRedirect URI: ${redirectUri}`
+        : ta(
+            "apply.oauth.chutes.localNote",
+            "Browser will open for Chutes authentication.\nIf the callback doesn't auto-complete, paste the redirect URL.",
+          ) + `\n\nRedirect URI: ${redirectUri}`,
       "Chutes OAuth",
     );
 
-    const spin = params.prompter.progress("Starting OAuth flow…");
+    const spin = params.prompter.progress(
+      ta("apply.oauth.chutes.startFlow", "Starting OAuth flow…"),
+    );
     try {
       const { onAuth, onPrompt } = createVpsAwareOAuthHandlers({
         isRemote,
@@ -51,7 +49,7 @@ export async function applyAuthChoiceOAuth(
         runtime: params.runtime,
         spin,
         openUrl,
-        localBrowserMessage: "Complete sign-in in browser…",
+        localBrowserMessage: ta("apply.oauth.chutes.localBrowser", "Complete sign-in in browser…"),
       });
 
       const creds = await loginChutes({
@@ -67,7 +65,7 @@ export async function applyAuthChoiceOAuth(
         onProgress: (msg) => spin.update(msg),
       });
 
-      spin.stop("Chutes OAuth complete");
+      spin.stop(ta("apply.oauth.chutes.complete", "Chutes OAuth complete"));
       const profileId = await writeOAuthCredentials("chutes", creds, params.agentDir);
       nextConfig = applyAuthProfileConfig(nextConfig, {
         profileId,
@@ -75,16 +73,15 @@ export async function applyAuthChoiceOAuth(
         mode: "oauth",
       });
     } catch (err) {
-      spin.stop("Chutes OAuth failed");
+      spin.stop(ta("apply.oauth.chutes.failed", "Chutes OAuth failed"));
       params.runtime.error(String(err));
       await params.prompter.note(
-        [
-          "Trouble with OAuth?",
-          "Verify CHUTES_CLIENT_ID (and CHUTES_CLIENT_SECRET if required).",
-          `Verify the OAuth app redirect URI includes: ${redirectUri}`,
-          "Chutes docs: https://chutes.ai/docs/sign-in-with-chutes/overview",
-        ].join("\n"),
-        "OAuth help",
+        tai(
+          "apply.oauth.chutes.helpNote",
+          `Trouble with OAuth?\nVerify CHUTES_CLIENT_ID (and CHUTES_CLIENT_SECRET if required).\nVerify the OAuth app redirect URI includes: ${redirectUri}\nChutes docs: https://chutes.ai/docs/sign-in-with-chutes/overview`,
+          { redirectUri },
+        ),
+        ta("apply.oauth.chutes.helpTitle", "OAuth help"),
       );
     }
     return { config: nextConfig };

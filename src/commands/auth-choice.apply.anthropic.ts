@@ -1,4 +1,5 @@
 import { upsertAuthProfile } from "../agents/auth-profiles.js";
+import { ta } from "../i18n/index.js";
 import { normalizeApiKeyInput, validateApiKeyInput } from "./auth-choice.api-key.js";
 import {
   normalizeSecretInputModeInput,
@@ -24,19 +25,26 @@ export async function applyAuthChoiceAnthropic(
   ) {
     let nextConfig = params.config;
     await params.prompter.note(
-      ["Run `claude setup-token` in your terminal.", "Then paste the generated token below."].join(
-        "\n",
+      ta(
+        "apply.anthropic.setupTokenNote",
+        "Run `claude setup-token` in your terminal.\nThen paste the generated token below.",
       ),
-      "Anthropic setup-token",
+      ta("apply.anthropic.setupTokenNote.title", "Anthropic setup-token"),
     );
 
     const selectedMode = await resolveSecretInputModeForEnvSelection({
       prompter: params.prompter,
       explicitMode: requestedSecretInputMode,
       copy: {
-        modeMessage: "How do you want to provide this setup token?",
-        plaintextLabel: "Paste setup token now",
-        plaintextHint: "Stores the token directly in the auth profile",
+        modeMessage: ta(
+          "apply.anthropic.secretMode.message",
+          "How do you want to provide this setup token?",
+        ),
+        plaintextLabel: ta("apply.anthropic.secretMode.plaintextLabel", "Paste setup token now"),
+        plaintextHint: ta(
+          "apply.anthropic.secretMode.plaintextHint",
+          "Stores the token directly in the auth profile",
+        ),
       },
     });
     let token = "";
@@ -48,7 +56,10 @@ export async function applyAuthChoiceAnthropic(
         prompter: params.prompter,
         preferredEnvVar: "ANTHROPIC_SETUP_TOKEN",
         copy: {
-          sourceMessage: "Where is this Anthropic setup token stored?",
+          sourceMessage: ta(
+            "apply.anthropic.secretRefSource",
+            "Where is this Anthropic setup token stored?",
+          ),
           envVarPlaceholder: "ANTHROPIC_SETUP_TOKEN",
         },
       });
@@ -56,7 +67,7 @@ export async function applyAuthChoiceAnthropic(
       tokenRef = resolved.ref;
     } else {
       const tokenRaw = await params.prompter.text({
-        message: "Paste Anthropic setup-token",
+        message: ta("apply.anthropic.pasteToken", "Paste Anthropic setup-token"),
         validate: (value) => validateAnthropicSetupToken(String(value ?? "")),
       });
       token = String(tokenRaw ?? "").trim();
@@ -67,7 +78,7 @@ export async function applyAuthChoiceAnthropic(
     }
 
     const profileNameRaw = await params.prompter.text({
-      message: "Token name (blank = default)",
+      message: ta("apply.anthropic.tokenName", "Token name (blank = default)"),
       placeholder: "default",
     });
     const provider = "anthropic";
@@ -112,7 +123,7 @@ export async function applyAuthChoiceAnthropic(
       expectedProviders: ["anthropic"],
       provider: "anthropic",
       envLabel: "ANTHROPIC_API_KEY",
-      promptMessage: "Enter Anthropic API key",
+      promptMessage: ta("apply.anthropic.promptMessage", "Enter Anthropic API key"),
       normalize: normalizeApiKeyInput,
       validate: validateApiKeyInput,
       prompter: params.prompter,

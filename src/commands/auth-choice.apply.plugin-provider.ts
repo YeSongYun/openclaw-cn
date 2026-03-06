@@ -6,6 +6,7 @@ import {
 } from "../agents/agent-scope.js";
 import { upsertAuthProfile } from "../agents/auth-profiles.js";
 import { resolveDefaultAgentWorkspaceDir } from "../agents/workspace.js";
+import { ta, tai } from "../i18n/index.js";
 import { enablePluginInConfig } from "../plugins/enable.js";
 import { resolvePluginProviders } from "../plugins/providers.js";
 import type { ApplyAuthChoiceParams, ApplyAuthChoiceResult } from "./auth-choice.apply.js";
@@ -40,7 +41,11 @@ export async function applyAuthChoicePluginProvider(
   let nextConfig = enableResult.config;
   if (!enableResult.enabled) {
     await params.prompter.note(
-      `${options.label} plugin is disabled (${enableResult.reason ?? "blocked"}).`,
+      tai(
+        "apply.pluginProvider.disabled",
+        `${options.label} plugin is disabled (${enableResult.reason ?? "blocked"}).`,
+        { label: options.label, reason: enableResult.reason ?? "blocked" },
+      ),
       options.label,
     );
     return { config: nextConfig };
@@ -58,7 +63,11 @@ export async function applyAuthChoicePluginProvider(
   const provider = resolveProviderMatch(providers, options.providerId);
   if (!provider) {
     await params.prompter.note(
-      `${options.label} auth plugin is not available. Enable it and re-run the wizard.`,
+      tai(
+        "apply.pluginProvider.notAvailable",
+        `${options.label} auth plugin is not available. Enable it and re-run the wizard.`,
+        { label: options.label },
+      ),
       options.label,
     );
     return { config: nextConfig };
@@ -66,7 +75,12 @@ export async function applyAuthChoicePluginProvider(
 
   const method = pickAuthMethod(provider, options.methodId) ?? provider.auth[0];
   if (!method) {
-    await params.prompter.note(`${options.label} auth method missing.`, options.label);
+    await params.prompter.note(
+      tai("apply.pluginProvider.methodMissing", `${options.label} auth method missing.`, {
+        label: options.label,
+      }),
+      options.label,
+    );
     return { config: nextConfig };
   }
 
@@ -111,18 +125,30 @@ export async function applyAuthChoicePluginProvider(
   if (result.defaultModel) {
     if (params.setDefaultModel) {
       nextConfig = applyDefaultModel(nextConfig, result.defaultModel);
-      await params.prompter.note(`Default model set to ${result.defaultModel}`, "Model configured");
+      await params.prompter.note(
+        tai("apply.pluginProvider.modelSet", `Default model set to ${result.defaultModel}`, {
+          model: result.defaultModel,
+        }),
+        ta("apply.modelConfigured.title", "Model configured"),
+      );
     } else if (params.agentId) {
       agentModelOverride = result.defaultModel;
       await params.prompter.note(
-        `Default model set to ${result.defaultModel} for agent "${params.agentId}".`,
-        "Model configured",
+        tai(
+          "apply.pluginProvider.modelSetAgent",
+          `Default model set to ${result.defaultModel} for agent "${params.agentId}".`,
+          { model: result.defaultModel, agentId: params.agentId },
+        ),
+        ta("apply.modelConfigured.title", "Model configured"),
       );
     }
   }
 
   if (result.notes && result.notes.length > 0) {
-    await params.prompter.note(result.notes.join("\n"), "Provider notes");
+    await params.prompter.note(
+      result.notes.join("\n"),
+      ta("apply.pluginProvider.providerNotes", "Provider notes"),
+    );
   }
 
   return { config: nextConfig, agentModelOverride };

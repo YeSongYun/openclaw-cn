@@ -9,6 +9,7 @@ import {
   parseOAuthCallbackInput,
 } from "../agents/chutes-oauth.js";
 import { isLoopbackHost } from "../gateway/net.js";
+import { ta } from "../i18n/index.js";
 
 type OAuthPrompt = {
   message: string;
@@ -115,8 +116,8 @@ async function waitForLocalCallback(params: {
           [
             "<!doctype html>",
             "<html><head><meta charset='utf-8' /></head>",
-            "<body><h2>Chutes OAuth complete</h2>",
-            "<p>You can close this window and return to OpenClaw.</p></body></html>",
+            `<body><h2>${ta("chutesOauth.completeHtml", "Chutes OAuth complete")}</h2>`,
+            `<p>${ta("chutesOauth.completeHtmlBody", "You can close this window and return to OpenClaw.")}</p></body></html>`,
           ].join(""),
         );
         if (timeout) {
@@ -182,9 +183,9 @@ export async function loginChutes(params: {
   let codeAndState: { code: string; state: string };
   if (params.manual) {
     await params.onAuth({ url });
-    params.onProgress?.("Waiting for redirect URL…");
+    params.onProgress?.(ta("chutesOauth.waitingRedirect", "Waiting for redirect URL…"));
     const input = await params.onPrompt({
-      message: "Paste the redirect URL (or authorization code)",
+      message: ta("chutesOauth.pasteRedirect", "Paste the redirect URL (or authorization code)"),
       placeholder: `${params.app.redirectUri}?code=...&state=...`,
     });
     codeAndState = parseManualOAuthInput(input, state);
@@ -195,9 +196,11 @@ export async function loginChutes(params: {
       timeoutMs,
       onProgress: params.onProgress,
     }).catch(async () => {
-      params.onProgress?.("OAuth callback not detected; paste redirect URL…");
+      params.onProgress?.(
+        ta("chutesOauth.callbackNotDetected", "OAuth callback not detected; paste redirect URL…"),
+      );
       const input = await params.onPrompt({
-        message: "Paste the redirect URL (or authorization code)",
+        message: ta("chutesOauth.pasteRedirect", "Paste the redirect URL (or authorization code)"),
         placeholder: `${params.app.redirectUri}?code=...&state=...`,
       });
       return parseManualOAuthInput(input, state);
@@ -207,7 +210,7 @@ export async function loginChutes(params: {
     codeAndState = await callback;
   }
 
-  params.onProgress?.("Exchanging code for tokens…");
+  params.onProgress?.(ta("chutesOauth.exchangingCode", "Exchanging code for tokens…"));
   return await exchangeChutesCodeForTokens({
     app: params.app,
     code: codeAndState.code,
