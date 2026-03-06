@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { td, tdi } from "../i18n/index.js";
 import {
   resolveControlUiDistIndexHealth,
   resolveControlUiDistIndexPathForRoot,
@@ -38,24 +39,33 @@ export async function maybeRepairUiProtocolFreshness(
     ]);
 
     if (schemaStats && !uiStats) {
-      note(["- Control UI assets are missing.", "- Run: pnpm ui:build"].join("\n"), "UI");
+      note(
+        td("ui.missingAssets", "- Control UI assets are missing.\n- Run: pnpm ui:build"),
+        td("ui.title", "UI"),
+      );
 
       // In slim/docker environments we may not have the UI source tree. Trying
       // to build would fail (and spam logs), so skip the interactive repair.
       const uiSourcesPath = path.join(root, "ui/package.json");
       const uiSourcesExist = await fs.stat(uiSourcesPath).catch(() => null);
       if (!uiSourcesExist) {
-        note("Skipping UI build: ui/ sources not present.", "UI");
+        note(
+          td("ui.skipBuild", "Skipping UI build: ui/ sources not present."),
+          td("ui.title", "UI"),
+        );
         return;
       }
 
       const shouldRepair = await prompter.confirmRepair({
-        message: "Build Control UI assets now?",
+        message: td("ui.buildNow", "Build Control UI assets now?"),
         initialValue: true,
       });
 
       if (shouldRepair) {
-        note("Building Control UI assets... (this may take a moment)", "UI");
+        note(
+          td("ui.building", "Building Control UI assets... (this may take a moment)"),
+          td("ui.title", "UI"),
+        );
         const uiScriptPath = path.join(root, "scripts/ui.js");
         const buildResult = await runCommandWithTimeout([process.execPath, uiScriptPath, "build"], {
           cwd: root,
@@ -63,15 +73,17 @@ export async function maybeRepairUiProtocolFreshness(
           env: { ...process.env, FORCE_COLOR: "1" },
         });
         if (buildResult.code === 0) {
-          note("UI build complete.", "UI");
+          note(td("ui.buildComplete", "UI build complete."), td("ui.title", "UI"));
         } else {
           const details = [
-            `UI build failed (exit ${buildResult.code ?? "unknown"}).`,
+            tdi("ui.buildFailed", "UI build failed (exit {code}).", {
+              code: String(buildResult.code ?? "unknown"),
+            }),
             buildResult.stderr.trim() ? buildResult.stderr.trim() : null,
           ]
             .filter(Boolean)
             .join("\n");
-          note(details, "UI");
+          note(details, td("ui.title", "UI"));
         }
       }
       return;
@@ -104,11 +116,14 @@ export async function maybeRepairUiProtocolFreshness(
             .split("\n")
             .map((l) => `- ${l}`)
             .join("\n")}`,
-          "UI Freshness",
+          td("ui.freshnessTitle", "UI Freshness"),
         );
 
         const shouldRepair = await prompter.confirmAggressive({
-          message: "Rebuild UI now? (Detected protocol mismatch requiring update)",
+          message: td(
+            "ui.rebuildNow",
+            "Rebuild UI now? (Detected protocol mismatch requiring update)",
+          ),
           initialValue: true,
         });
 
@@ -116,13 +131,17 @@ export async function maybeRepairUiProtocolFreshness(
           const uiSourcesPath = path.join(root, "ui/package.json");
           const uiSourcesExist = await fs.stat(uiSourcesPath).catch(() => null);
           if (!uiSourcesExist) {
-            note("Skipping UI rebuild: ui/ sources not present.", "UI");
+            note(
+              td("ui.rebuildSkip", "Skipping UI rebuild: ui/ sources not present."),
+              td("ui.title", "UI"),
+            );
             return;
           }
 
-          note("Rebuilding stale UI assets... (this may take a moment)", "UI");
-          // Use scripts/ui.js to build, assuming node is available as we are running in it.
-          // We use the same node executable to run the script.
+          note(
+            td("ui.rebuilding", "Rebuilding stale UI assets... (this may take a moment)"),
+            td("ui.title", "UI"),
+          );
           const uiScriptPath = path.join(root, "scripts/ui.js");
           const buildResult = await runCommandWithTimeout(
             [process.execPath, uiScriptPath, "build"],
@@ -133,15 +152,17 @@ export async function maybeRepairUiProtocolFreshness(
             },
           );
           if (buildResult.code === 0) {
-            note("UI rebuild complete.", "UI");
+            note(td("ui.rebuildComplete", "UI rebuild complete."), td("ui.title", "UI"));
           } else {
             const details = [
-              `UI rebuild failed (exit ${buildResult.code ?? "unknown"}).`,
+              tdi("ui.rebuildFailed", "UI rebuild failed (exit {code}).", {
+                code: String(buildResult.code ?? "unknown"),
+              }),
               buildResult.stderr.trim() ? buildResult.stderr.trim() : null,
             ]
               .filter(Boolean)
               .join("\n");
-            note(details, "UI");
+            note(details, td("ui.title", "UI"));
           }
         }
       }

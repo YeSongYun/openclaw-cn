@@ -99,7 +99,7 @@ export function clearTranslationCache(): void {
  * 预加载常用命名空间，避免首次翻译时的 I/O 延迟
  */
 export function preloadCommonNamespaces(): void {
-  for (const ns of ["cli", "wizard", "status", "commands", "doctor", "errors", "tui"]) {
+  for (const ns of ["cli", "wizard", "status", "commands", "doctor", "errors", "tui", "onboard"]) {
     try {
       loadNamespace(ns);
     } catch {
@@ -124,3 +124,11 @@ export const tt = (key: string, fallback: string): string => t("tui", key, fallb
 /** tui 命名空间带插值快捷函数 */
 export const tti = (key: string, fallback: string, vars: Record<string, string | number>): string =>
   ti("tui", key, fallback, vars);
+/** cli 命名空间带插值快捷函数 */
+export const tci = (key: string, fallback: string, vars: Record<string, string | number>): string =>
+  ti("cli", key, fallback, vars);
+/** onboard 命名空间快捷函数 */
+export const to = (key: string, fallback: string): string => t("onboard", key, fallback);
+/** onboard 命名空间带插值快捷函数 */
+export const toi = (key: string, fallback: string, vars: Record<string, string | number>): string =>
+  ti("onboard", key, fallback, vars);

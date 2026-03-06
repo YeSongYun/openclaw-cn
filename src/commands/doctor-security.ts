@@ -4,6 +4,7 @@ import { formatCliCommand } from "../cli/command-format.js";
 import type { OpenClawConfig, GatewayBindMode } from "../config/config.js";
 import { resolveGatewayAuth } from "../gateway/auth.js";
 import { isLoopbackHost, resolveGatewayBindHost } from "../gateway/net.js";
+import { td } from "../i18n/index.js";
 import { resolveDmAllowState } from "../security/dm-policy-shared.js";
 import { note } from "../terminal/note.js";
 import { resolveDefaultChannelAccountContext } from "./channel-account-context.js";
@@ -181,7 +182,10 @@ export async function noteSecurityWarnings(cfg: OpenClawConfig) {
     }
   }
 
-  const lines = warnings.length > 0 ? warnings : ["- No channel security warnings detected."];
+  const lines =
+    warnings.length > 0
+      ? warnings
+      : [td("security.noWarnings", "- No channel security warnings detected.")];
   lines.push(auditHint);
-  note(lines.join("\n"), "Security");
+  note(lines.join("\n"), td("security.title", "Security"));
 }

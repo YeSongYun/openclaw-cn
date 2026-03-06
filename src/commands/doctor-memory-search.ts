@@ -4,6 +4,7 @@ import { resolveMemorySearchConfig } from "../agents/memory-search.js";
 import { resolveApiKeyForProvider } from "../agents/model-auth.js";
 import { formatCliCommand } from "../cli/command-format.js";
 import type { OpenClawConfig } from "../config/config.js";
+import { td } from "../i18n/index.js";
 import { resolveMemoryBackendConfig } from "../memory/backend-config.js";
 import { DEFAULT_LOCAL_MODEL } from "../memory/embeddings.js";
 import { note } from "../terminal/note.js";
@@ -29,7 +30,10 @@ export async function noteMemorySearchHealth(
   const hasRemoteApiKey = Boolean(resolved?.remote?.apiKey?.trim());
 
   if (!resolved) {
-    note("Memory search is explicitly disabled (enabled: false).", "Memory search");
+    note(
+      td("memory.disabled", "Memory search is explicitly disabled (enabled: false)."),
+      td("memory.title", "Memory search"),
+    );
     return;
   }
 
@@ -59,7 +63,7 @@ export async function noteMemorySearchHealth(
             ]
               .filter(Boolean)
               .join("\n"),
-            "Memory search",
+            td("memory.title", "Memory search"),
           );
         }
         return;
@@ -74,7 +78,7 @@ export async function noteMemorySearchHealth(
           "",
           `Verify: ${formatCliCommand("openclaw memory status --deep")}`,
         ].join("\n"),
-        "Memory search",
+        td("memory.title", "Memory search"),
       );
       return;
     }
@@ -89,7 +93,7 @@ export async function noteMemorySearchHealth(
           "The running gateway reports memory embeddings are ready for the default agent.",
           `Verify: ${formatCliCommand("openclaw memory status --deep")}`,
         ].join("\n"),
-        "Memory search",
+        td("memory.title", "Memory search"),
       );
       return;
     }
@@ -108,7 +112,7 @@ export async function noteMemorySearchHealth(
         "",
         `Verify: ${formatCliCommand("openclaw memory status --deep")}`,
       ].join("\n"),
-      "Memory search",
+      td("memory.title", "Memory search"),
     );
     return;
   }
@@ -130,7 +134,7 @@ export async function noteMemorySearchHealth(
         "The running gateway reports memory embeddings are ready for the default agent.",
         `Verify: ${formatCliCommand("openclaw memory status --deep")}`,
       ].join("\n"),
-      "Memory search",
+      td("memory.title", "Memory search"),
     );
     return;
   }
@@ -150,7 +154,7 @@ export async function noteMemorySearchHealth(
       "",
       `Verify: ${formatCliCommand("openclaw memory status --deep")}`,
     ].join("\n"),
-    "Memory search",
+    td("memory.title", "Memory search"),
   );
 }
 

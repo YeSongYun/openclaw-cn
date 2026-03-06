@@ -2,6 +2,7 @@ import { getChannelPlugin, listChannelPlugins } from "../channels/plugins/index.
 import { formatCliCommand } from "../cli/command-format.js";
 import type { OpenClawConfig } from "../config/config.js";
 import { CONFIG_PATH } from "../config/config.js";
+import { tc, tci } from "../i18n/index.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { note } from "../terminal/note.js";
 import { shortenHomePath } from "../utils.js";
@@ -24,24 +25,29 @@ export async function removeChannelConfigWizard(
     if (configured.length === 0) {
       note(
         [
-          "No channel config found in openclaw.json.",
-          `Tip: \`${formatCliCommand("openclaw channels status")}\` shows what is configured and enabled.`,
+          tc("channel.noConfig", "No channel config found in openclaw.json."),
+          tci("channel.tipStatus", "Tip: `{cmd}` shows what is configured and enabled.", {
+            cmd: formatCliCommand("openclaw channels status"),
+          }),
         ].join("\n"),
-        "Remove channel",
+        tc("channel.removeTitle", "Remove channel"),
       );
       return next;
     }
 
     const channel = guardCancel(
       await select({
-        message: "Remove which channel config?",
+        message: tc("channel.removeWhich", "Remove which channel config?"),
         options: [
           ...configured.map((meta) => ({
             value: meta.id,
             label: meta.label,
-            hint: "Deletes tokens + settings from config (credentials stay on disk)",
+            hint: tc(
+              "channel.credentialHint",
+              "Deletes tokens + settings from config (credentials stay on disk)",
+            ),
           })),
-          { value: "done", label: "Done" },
+          { value: "done", label: tc("channel.done", "Done") },
         ],
       }),
       runtime,
@@ -54,7 +60,10 @@ export async function removeChannelConfigWizard(
     const label = getChannelPlugin(channel)?.meta.label ?? channel;
     const confirmed = guardCancel(
       await confirm({
-        message: `Delete ${label} configuration from ${shortenHomePath(CONFIG_PATH)}?`,
+        message: tci("channel.confirmDelete", "Delete {label} configuration from {configPath}?", {
+          label,
+          configPath: shortenHomePath(CONFIG_PATH),
+        }),
         initialValue: false,
       }),
       runtime,
@@ -73,10 +82,11 @@ export async function removeChannelConfigWizard(
     };
 
     note(
-      [`${label} removed from config.`, "Note: credentials/sessions on disk are unchanged."].join(
-        "\n",
-      ),
-      "Channel removed",
+      [
+        tci("channel.removedBody", "{label} removed from config.", { label }),
+        tc("channel.credentialsNote", "Note: credentials/sessions on disk are unchanged."),
+      ].join("\n"),
+      tc("channel.removedTitle", "Channel removed"),
     );
   }
 }

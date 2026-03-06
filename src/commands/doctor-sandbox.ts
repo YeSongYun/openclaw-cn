@@ -7,6 +7,7 @@ import {
   resolveSandboxScope,
 } from "../agents/sandbox.js";
 import type { OpenClawConfig } from "../config/config.js";
+import { td, tdi } from "../i18n/index.js";
 import { runCommandWithTimeout, runExec } from "../process/exec.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { note } from "../terminal/note.js";
@@ -40,25 +41,31 @@ function resolveSandboxScript(scriptRel: string): SandboxScriptInfo | null {
 async function runSandboxScript(scriptRel: string, runtime: RuntimeEnv): Promise<boolean> {
   const script = resolveSandboxScript(scriptRel);
   if (!script) {
-    note(`Unable to locate ${scriptRel}. Run it from the repo root.`, "Sandbox");
+    note(
+      tdi("sandbox.notFound", "Unable to locate {script}. Run it from the repo root.", {
+        script: scriptRel,
+      }),
+      td("sandbox.title", "Sandbox"),
+    );
     return false;
   }
 
-  runtime.log(`Running ${scriptRel}...`);
+  runtime.log(tdi("sandbox.running", "Running {script}...", { script: scriptRel }));
   const result = await runCommandWithTimeout(["bash", script.scriptPath], {
     timeoutMs: 20 * 60 * 1000,
     cwd: script.cwd,
   });
   if (result.code !== 0) {
     runtime.error(
-      `Failed running ${scriptRel}: ${
-        result.stderr.trim() || result.stdout.trim() || "unknown error"
-      }`,
+      tdi("sandbox.failed", "Failed running {script}: {error}", {
+        script: scriptRel,
+        error: result.stderr.trim() || result.stdout.trim() || "unknown error",
+      }),
     );
     return false;
   }
 
-  runtime.log(`Completed ${scriptRel}.`);
+  runtime.log(tdi("sandbox.completed", "Completed {script}.", { script: scriptRel }));
   return true;
 }
 
@@ -155,14 +162,21 @@ async function handleMissingSandboxImage(
   }
 
   const buildHint = params.buildScript
-    ? `Build it with ${params.buildScript}.`
-    : "Build or pull it first.";
-  note(`Sandbox ${params.kind} image missing: ${params.image}. ${buildHint}`, "Sandbox");
+    ? tdi("sandbox.buildHint", "Build it with {script}.", { script: params.buildScript })
+    : td("sandbox.buildHintFallback", "Build or pull it first.");
+  note(
+    tdi("sandbox.imageMissing", "Sandbox {kind} image missing: {image}. {hint}", {
+      kind: params.kind,
+      image: params.image,
+      hint: buildHint,
+    }),
+    td("sandbox.title", "Sandbox"),
+  );
 
   let built = false;
   if (params.buildScript) {
     const build = await prompter.confirmSkipInNonInteractive({
-      message: `Build ${params.kind} sandbox image now?`,
+      message: tdi("sandbox.buildNow", "Build {kind} sandbox image now?", { kind: params.kind }),
       initialValue: true,
     });
     if (build) {
@@ -188,16 +202,14 @@ export async function maybeRepairSandboxImages(
 
   const dockerAvailable = await isDockerAvailable();
   if (!dockerAvailable) {
-    const lines = [
-      `Sandbox mode is enabled (mode: "${mode}") but Docker is not available.`,
-      "Docker is required for sandbox mode to function.",
-      "Isolated sessions (cron jobs, sub-agents) will fail without Docker.",
-      "",
-      "Options:",
-      "- Install Docker and restart the gateway",
-      "- Disable sandbox mode: openclaw config set agents.defaults.sandbox.mode off",
-    ];
-    note(lines.join("\n"), "Sandbox");
+    note(
+      tdi(
+        "sandbox.dockerUnavailable",
+        'Sandbox mode is enabled (mode: "{mode}") but Docker is not available.\nDocker is required for sandbox mode to function.\nIsolated sessions (cron jobs, sub-agents) will fail without Docker.\n\nOptions:\n- Install Docker and restart the gateway\n- Disable sandbox mode: openclaw config set agents.defaults.sandbox.mode off',
+        { mode },
+      ),
+      td("sandbox.title", "Sandbox"),
+    );
     return cfg;
   }
 
@@ -285,13 +297,20 @@ export function noteSandboxScopeWarnings(cfg: OpenClawConfig) {
 
     warnings.push(
       [
-        `- agents.list (id "${agentId}") sandbox ${overrides.join("/")} overrides ignored.`,
-        `  scope resolves to "shared".`,
+        tdi(
+          "sandbox.scopeWarning.override",
+          '- agents.list (id "{agentId}") sandbox {overrides} overrides ignored.',
+          {
+            agentId,
+            overrides: overrides.join("/"),
+          },
+        ),
+        td("sandbox.scopeWarning.shared", '  scope resolves to "shared".'),
       ].join("\n"),
     );
   }
 
   if (warnings.length > 0) {
-    note(warnings.join("\n"), "Sandbox");
+    note(warnings.join("\n"), td("sandbox.title", "Sandbox"));
   }
 }

@@ -15,6 +15,7 @@ import {
   resolveSessionTranscriptsDirForAgent,
   resolveStorePath,
 } from "../config/sessions.js";
+import { td } from "../i18n/index.js";
 import { resolveRequiredHomeDir } from "../infra/home-dir.js";
 import { parseAgentSessionKey } from "../sessions/session-key-utils.js";
 import { note } from "../terminal/note.js";
@@ -799,10 +800,10 @@ export async function noteStateIntegrity(
   }
 
   if (warnings.length > 0) {
-    note(warnings.join("\n"), "State integrity");
+    note(warnings.join("\n"), td("state.title", "State integrity"));
   }
   if (changes.length > 0) {
-    note(changes.join("\n"), "Doctor changes");
+    note(changes.join("\n"), td("doctor.changes.title", "Doctor changes"));
   }
 }
 
@@ -820,6 +821,6 @@ export function noteWorkspaceBackupTip(workspaceDir: string) {
       "- Keep ~/.openclaw out of git; it contains credentials and session history.",
       "- Details: /concepts/agent-workspace#git-backup-recommended",
     ].join("\n"),
-    "Workspace",
+    td("workspace.title", "Workspace"),
   );
 }

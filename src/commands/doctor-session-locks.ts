@@ -1,6 +1,7 @@
 import { resolveAgentSessionDirs } from "../agents/session-dirs.js";
 import { cleanStaleLockFiles, type SessionLockInspection } from "../agents/session-write-lock.js";
 import { resolveStateDir } from "../config/paths.js";
+import { td, tdi } from "../i18n/index.js";
 import { note } from "../terminal/note.js";
 import { shortenHomePath } from "../utils.js";
 
@@ -42,7 +43,12 @@ export async function noteSessionLockHealth(params?: { shouldRepair?: boolean; s
   try {
     sessionDirs = await resolveAgentSessionDirs(resolveStateDir(process.env));
   } catch (err) {
-    note(`- Failed to inspect session lock files: ${String(err)}`, "Session locks");
+    note(
+      tdi("locks.inspectFailed", "- Failed to inspect session lock files: {error}", {
+        error: String(err),
+      }),
+      td("locks.title", "Session locks"),
+    );
     return;
   }
 
@@ -67,19 +73,32 @@ export async function noteSessionLockHealth(params?: { shouldRepair?: boolean; s
   const staleCount = allLocks.filter((lock) => lock.stale).length;
   const removedCount = allLocks.filter((lock) => lock.removed).length;
   const lines: string[] = [
-    `- Found ${allLocks.length} session lock file${allLocks.length === 1 ? "" : "s"}.`,
+    tdi("locks.found", "- Found {count} session lock file{s}.", {
+      count: allLocks.length,
+      s: allLocks.length === 1 ? "" : "s",
+    }),
     ...allLocks.toSorted((a, b) => a.lockPath.localeCompare(b.lockPath)).map(formatLockLine),
   ];
 
   if (staleCount > 0 && !shouldRepair) {
-    lines.push(`- ${staleCount} lock file${staleCount === 1 ? " is" : "s are"} stale.`);
-    lines.push('- Run "openclaw doctor --fix" to remove stale lock files automatically.');
+    lines.push(
+      tdi("locks.staleCount", "- {count} lock file{s} stale.", {
+        count: staleCount,
+        s: staleCount === 1 ? " is" : "s are",
+      }),
+    );
+    lines.push(
+      td("locks.runFix", '- Run "openclaw doctor --fix" to remove stale lock files automatically.'),
+    );
   }
   if (shouldRepair && removedCount > 0) {
     lines.push(
-      `- Removed ${removedCount} stale session lock file${removedCount === 1 ? "" : "s"}.`,
+      tdi("locks.removedCount", "- Removed {count} stale session lock file{s}.", {
+        count: removedCount,
+        s: removedCount === 1 ? "" : "s",
+      }),
     );
   }
 
-  note(lines.join("\n"), "Session locks");
+  note(lines.join("\n"), td("locks.title", "Session locks"));
 }

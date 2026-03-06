@@ -9,6 +9,7 @@ import {
   resolveShellFromEnv,
   usesSlowDynamicCompletion,
 } from "../cli/completion-cli.js";
+import { td, tdi } from "../i18n/index.js";
 import { resolveOpenClawPackageRoot } from "../infra/openclaw-root.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { note } from "../terminal/note.js";
@@ -87,7 +88,7 @@ export async function doctorShellCompletion(
   if (status.usesSlowPattern) {
     note(
       `Your ${status.shell} profile uses slow dynamic completion (source <(...)).\nUpgrading to cached completion for faster shell startup...`,
-      "Shell completion",
+      td("completion.title", "Shell completion"),
     );
 
     // Ensure cache exists first
@@ -96,7 +97,7 @@ export async function doctorShellCompletion(
       if (!generated) {
         note(
           `Failed to generate completion cache. Run \`${cliName} completion --write-state\` manually.`,
-          "Shell completion",
+          td("completion.title", "Shell completion"),
         );
         return;
       }
@@ -106,7 +107,7 @@ export async function doctorShellCompletion(
     await installCompletion(status.shell, true, cliName);
     note(
       `Shell completion upgraded. Restart your shell or run: source ~/.${status.shell === "zsh" ? "zshrc" : status.shell === "bash" ? "bashrc" : "config/fish/config.fish"}`,
-      "Shell completion",
+      td("completion.title", "Shell completion"),
     );
     return;
   }
@@ -115,15 +116,18 @@ export async function doctorShellCompletion(
   if (status.profileInstalled && !status.cacheExists) {
     note(
       `Shell completion is configured in your ${status.shell} profile but the cache is missing.\nRegenerating cache...`,
-      "Shell completion",
+      td("completion.title", "Shell completion"),
     );
     const generated = await generateCompletionCache();
     if (generated) {
-      note(`Completion cache regenerated at ${status.cachePath}`, "Shell completion");
+      note(
+        `Completion cache regenerated at ${status.cachePath}`,
+        td("completion.title", "Shell completion"),
+      );
     } else {
       note(
         `Failed to regenerate completion cache. Run \`${cliName} completion --write-state\` manually.`,
-        "Shell completion",
+        td("completion.title", "Shell completion"),
       );
     }
     return;
@@ -137,7 +141,10 @@ export async function doctorShellCompletion(
     }
 
     const shouldInstall = await prompter.confirm({
-      message: `Enable ${status.shell} shell completion for ${cliName}?`,
+      message: tdi("completion.enablePrompt", "Enable {shell} shell completion for {cli}?", {
+        shell: status.shell,
+        cli: cliName,
+      }),
       initialValue: true,
     });
 
@@ -147,7 +154,7 @@ export async function doctorShellCompletion(
       if (!generated) {
         note(
           `Failed to generate completion cache. Run \`${cliName} completion --write-state\` manually.`,
-          "Shell completion",
+          td("completion.title", "Shell completion"),
         );
         return;
       }
@@ -156,7 +163,7 @@ export async function doctorShellCompletion(
       await installCompletion(status.shell, true, cliName);
       note(
         `Shell completion installed. Restart your shell or run: source ~/.${status.shell === "zsh" ? "zshrc" : status.shell === "bash" ? "bashrc" : "config/fish/config.fish"}`,
-        "Shell completion",
+        td("completion.title", "Shell completion"),
       );
     }
   }

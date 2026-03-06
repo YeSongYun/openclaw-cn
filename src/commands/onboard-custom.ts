@@ -4,6 +4,7 @@ import { buildModelAliasIndex, modelKey } from "../agents/model-selection.js";
 import type { OpenClawConfig } from "../config/config.js";
 import type { ModelProviderConfig } from "../config/types.models.js";
 import { isSecretRef, type SecretInput } from "../config/types.secrets.js";
+import { to, toi } from "../i18n/index.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { fetchWithTimeout } from "../utils/fetch-timeout.js";
 import {
@@ -132,18 +133,18 @@ const COMPATIBILITY_OPTIONS: Array<{
 }> = [
   {
     value: "openai",
-    label: "OpenAI-compatible",
-    hint: "Uses /chat/completions",
+    label: to("custom.compatibility.openai.label", "OpenAI-compatible"),
+    hint: to("custom.compatibility.openai.hint", "Uses /chat/completions"),
   },
   {
     value: "anthropic",
-    label: "Anthropic-compatible",
-    hint: "Uses /messages",
+    label: to("custom.compatibility.anthropic.label", "Anthropic-compatible"),
+    hint: to("custom.compatibility.anthropic.hint", "Uses /messages"),
   },
   {
     value: "unknown",
-    label: "Unknown (detect automatically)",
-    hint: "Probes OpenAI then Anthropic endpoints",
+    label: to("custom.compatibility.unknown.label", "Unknown (detect automatically)"),
+    hint: to("custom.compatibility.unknown.hint", "Probes OpenAI then Anthropic endpoints"),
   },
 ];
 
@@ -427,11 +428,11 @@ type CustomApiRetryChoice = "baseUrl" | "model" | "both";
 
 async function promptCustomApiRetryChoice(prompter: WizardPrompter): Promise<CustomApiRetryChoice> {
   return await prompter.select({
-    message: "What would you like to change?",
+    message: to("custom.changeWhat", "What would you like to change?"),
     options: [
-      { value: "baseUrl", label: "Change base URL" },
-      { value: "model", label: "Change model" },
-      { value: "both", label: "Change base URL and model" },
+      { value: "baseUrl", label: to("custom.change.baseUrl", "Change base URL") },
+      { value: "model", label: to("custom.change.model", "Change model") },
+      { value: "both", label: to("custom.change.both", "Change base URL and model") },
     ],
   });
 }
@@ -439,9 +440,10 @@ async function promptCustomApiRetryChoice(prompter: WizardPrompter): Promise<Cus
 async function promptCustomApiModelId(prompter: WizardPrompter): Promise<string> {
   return (
     await prompter.text({
-      message: "Model ID",
+      message: to("custom.modelId", "Model ID"),
       placeholder: "e.g. llama3, claude-3-7-sonnet",
-      validate: (val) => (val.trim() ? undefined : "Model ID is required"),
+      validate: (val) =>
+        val.trim() ? undefined : to("custom.modelIdRequired", "Model ID is required"),
     })
   ).trim();
 }
@@ -687,7 +689,7 @@ export async function promptCustomApiConfig(params: {
   let resolvedApiKey = baseInput.resolvedApiKey;
 
   const compatibilityChoice = await prompter.select({
-    message: "Endpoint compatibility",
+    message: to("custom.endpointCompatibility", "Endpoint compatibility"),
     options: COMPATIBILITY_OPTIONS.map((option) => ({
       value: option.value,
       label: option.label,
@@ -703,14 +705,14 @@ export async function promptCustomApiConfig(params: {
   while (true) {
     let verifiedFromProbe = false;
     if (!compatibility) {
-      const probeSpinner = prompter.progress("Detecting endpoint type...");
+      const probeSpinner = prompter.progress(to("custom.detecting", "Detecting endpoint type..."));
       const openaiProbe = await requestOpenAiVerification({
         baseUrl,
         apiKey: resolvedApiKey,
         modelId,
       });
       if (openaiProbe.ok) {
-        probeSpinner.stop("Detected OpenAI-compatible endpoint.");
+        probeSpinner.stop(to("custom.detectedOpenai", "Detected OpenAI-compatible endpoint."));
         compatibility = "openai";
         verifiedFromProbe = true;
       } else {
@@ -720,14 +722,19 @@ export async function promptCustomApiConfig(params: {
           modelId,
         });
         if (anthropicProbe.ok) {
-          probeSpinner.stop("Detected Anthropic-compatible endpoint.");
+          probeSpinner.stop(
+            to("custom.detectedAnthropic", "Detected Anthropic-compatible endpoint."),
+          );
           compatibility = "anthropic";
           verifiedFromProbe = true;
         } else {
-          probeSpinner.stop("Could not detect endpoint type.");
+          probeSpinner.stop(to("custom.detectFailed", "Could not detect endpoint type."));
           await prompter.note(
-            "This endpoint did not respond to OpenAI or Anthropic style requests.",
-            "Endpoint detection",
+            to(
+              "custom.notResponding",
+              "This endpoint did not respond to OpenAI or Anthropic style requests.",
+            ),
+            to("custom.endpointDetection", "Endpoint detection"),
           );
           const retryChoice = await promptCustomApiRetryChoice(prompter);
           ({ baseUrl, apiKey, resolvedApiKey, modelId } = await applyCustomApiRetryChoice({
@@ -746,13 +753,13 @@ export async function promptCustomApiConfig(params: {
       break;
     }
 
-    const verifySpinner = prompter.progress("Verifying...");
+    const verifySpinner = prompter.progress(to("custom.verifying", "Verifying..."));
     const result =
       compatibility === "anthropic"
         ? await requestAnthropicVerification({ baseUrl, apiKey: resolvedApiKey, modelId })
         : await requestOpenAiVerification({ baseUrl, apiKey: resolvedApiKey, modelId });
     if (result.ok) {
-      verifySpinner.stop("Verification successful.");
+      verifySpinner.stop(to("custom.verifyOk", "Verification successful."));
       break;
     }
     if (result.status !== undefined) {
@@ -776,19 +783,19 @@ export async function promptCustomApiConfig(params: {
   const providers = config.models?.providers ?? {};
   const suggestedId = buildEndpointIdFromUrl(baseUrl);
   const providerIdInput = await prompter.text({
-    message: "Endpoint ID",
+    message: to("custom.endpointId", "Endpoint ID"),
     initialValue: suggestedId,
     placeholder: "custom",
     validate: (value) => {
       const normalized = normalizeEndpointId(value);
       if (!normalized) {
-        return "Endpoint ID is required.";
+        return to("custom.endpointIdRequired", "Endpoint ID is required.");
       }
       return undefined;
     },
   });
   const aliasInput = await prompter.text({
-    message: "Model alias (optional)",
+    message: to("custom.modelAlias", "Model alias (optional)"),
     placeholder: "e.g. local, ollama",
     initialValue: "",
     validate: (value) => {
@@ -815,11 +822,23 @@ export async function promptCustomApiConfig(params: {
 
   if (result.providerIdRenamedFrom && result.providerId) {
     await prompter.note(
-      `Endpoint ID "${result.providerIdRenamedFrom}" already exists for a different base URL. Using "${result.providerId}".`,
-      "Endpoint ID",
+      toi(
+        "custom.endpointIdRenamed",
+        'Endpoint ID "{from}" already exists for a different base URL. Using "{to}".',
+        {
+          from: result.providerIdRenamedFrom,
+          to: result.providerId,
+        },
+      ),
+      to("custom.endpointId", "Endpoint ID"),
     );
   }
 
-  runtime.log(`Configured custom provider: ${result.providerId}/${result.modelId}`);
+  runtime.log(
+    toi("custom.configured", "Configured custom provider: {id}/{model}", {
+      id: result.providerId ?? "",
+      model: result.modelId ?? "",
+    }),
+  );
   return result;
 }

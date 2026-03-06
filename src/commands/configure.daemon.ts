@@ -1,6 +1,7 @@
 import { withProgress } from "../cli/progress.js";
 import { loadConfig } from "../config/config.js";
 import { resolveGatewayService } from "../daemon/service.js";
+import { tc, tci } from "../i18n/index.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { note } from "../terminal/note.js";
 import { confirm, select } from "./configure.shared.js";
@@ -27,25 +28,25 @@ export async function maybeInstallDaemon(params: {
   if (loaded) {
     const action = guardCancel(
       await select({
-        message: "Gateway service already installed",
+        message: tc("daemon.installed", "Gateway service already installed"),
         options: [
-          { value: "restart", label: "Restart" },
-          { value: "reinstall", label: "Reinstall" },
-          { value: "skip", label: "Skip" },
+          { value: "restart", label: tc("daemon.restart", "Restart") },
+          { value: "reinstall", label: tc("daemon.reinstall", "Reinstall") },
+          { value: "skip", label: tc("daemon.skip", "Skip") },
         ],
       }),
       params.runtime,
     );
     if (action === "restart") {
       await withProgress(
-        { label: "Gateway service", indeterminate: true, delayMs: 0 },
+        { label: tc("daemon.installed", "Gateway service"), indeterminate: true, delayMs: 0 },
         async (progress) => {
-          progress.setLabel("Restarting Gateway service…");
+          progress.setLabel(tc("daemon.restarting", "Restarting Gateway service…"));
           await service.restart({
             env: process.env,
             stdout: process.stdout,
           });
-          progress.setLabel("Gateway service restarted.");
+          progress.setLabel(tc("daemon.restarted", "Gateway service restarted."));
         },
       );
       shouldCheckLinger = true;
@@ -56,11 +57,11 @@ export async function maybeInstallDaemon(params: {
     }
     if (action === "reinstall") {
       await withProgress(
-        { label: "Gateway service", indeterminate: true, delayMs: 0 },
+        { label: tc("daemon.installed", "Gateway service"), indeterminate: true, delayMs: 0 },
         async (progress) => {
-          progress.setLabel("Uninstalling Gateway service…");
+          progress.setLabel(tc("daemon.uninstalling", "Uninstalling Gateway service…"));
           await service.uninstall({ env: process.env, stdout: process.stdout });
-          progress.setLabel("Gateway service uninstalled.");
+          progress.setLabel(tc("daemon.uninstalled", "Gateway service uninstalled."));
         },
       );
     }
@@ -83,9 +84,9 @@ export async function maybeInstallDaemon(params: {
       }
     }
     await withProgress(
-      { label: "Gateway service", indeterminate: true, delayMs: 0 },
+      { label: tc("daemon.installed", "Gateway service"), indeterminate: true, delayMs: 0 },
       async (progress) => {
-        progress.setLabel("Preparing Gateway service…");
+        progress.setLabel(tc("daemon.preparing", "Preparing Gateway service…"));
 
         const cfg = loadConfig();
         const { programArguments, workingDirectory, environment } = await buildGatewayInstallPlan({
@@ -97,7 +98,7 @@ export async function maybeInstallDaemon(params: {
           config: cfg,
         });
 
-        progress.setLabel("Installing Gateway service…");
+        progress.setLabel(tc("daemon.installing", "Installing Gateway service…"));
         try {
           await service.install({
             env: process.env,
@@ -106,15 +107,20 @@ export async function maybeInstallDaemon(params: {
             workingDirectory,
             environment,
           });
-          progress.setLabel("Gateway service installed.");
+          progress.setLabel(tc("daemon.installed.done", "Gateway service installed."));
         } catch (err) {
           installError = err instanceof Error ? err.message : String(err);
-          progress.setLabel("Gateway service install failed.");
+          progress.setLabel(tc("daemon.installFailed.label", "Gateway service install failed."));
         }
       },
     );
     if (installError) {
-      note("Gateway service install failed: " + installError, "Gateway");
+      note(
+        tci("daemon.installFailedError", "Gateway service install failed: {error}", {
+          error: installError,
+        }),
+        "Gateway",
+      );
       note(gatewayInstallErrorHint(), "Gateway");
       return;
     }
@@ -128,8 +134,10 @@ export async function maybeInstallDaemon(params: {
         confirm: async (p) => guardCancel(await confirm(p), params.runtime),
         note,
       },
-      reason:
+      reason: tc(
+        "daemon.lingerReason",
         "Linux installs use a systemd user service. Without lingering, systemd stops the user session on logout/idle and kills the Gateway.",
+      ),
       requireConfirm: true,
     });
   }

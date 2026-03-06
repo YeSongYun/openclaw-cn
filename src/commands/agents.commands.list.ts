@@ -1,5 +1,6 @@
 import { formatCliCommand } from "../cli/command-format.js";
 import type { AgentBinding } from "../config/types.js";
+import { tc, tci } from "../i18n/index.js";
 import { normalizeAgentId } from "../routing/session-key.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { defaultRuntime } from "../runtime.js";
@@ -20,7 +21,7 @@ type AgentsListOptions = {
 };
 
 function formatSummary(summary: AgentSummary) {
-  const defaultTag = summary.isDefault ? " (default)" : "";
+  const defaultTag = summary.isDefault ? tc("agents.defaultTag", " (default)") : "";
   const header =
     summary.name && summary.name !== summary.id
       ? `${summary.id}${defaultTag} (${summary.name})`
@@ -36,34 +37,44 @@ function formatSummary(summary: AgentSummary) {
   const identityLine = identityParts.length > 0 ? identityParts.join(" ") : null;
   const identitySource =
     summary.identitySource === "identity"
-      ? "IDENTITY.md"
+      ? tc("agents.identitySource.identityMd", "IDENTITY.md")
       : summary.identitySource === "config"
-        ? "config"
+        ? tc("agents.identitySource.config", "config")
         : null;
 
   const lines = [`- ${header}`];
   if (identityLine) {
-    lines.push(`  Identity: ${identityLine}${identitySource ? ` (${identitySource})` : ""}`);
+    lines.push(
+      tci("agents.identity", "  Identity: {line}", {
+        line: `${identityLine}${identitySource ? ` (${identitySource})` : ""}`,
+      }),
+    );
   }
-  lines.push(`  Workspace: ${shortenHomePath(summary.workspace)}`);
-  lines.push(`  Agent dir: ${shortenHomePath(summary.agentDir)}`);
+  lines.push(
+    tci("agents.workspace", "  Workspace: {path}", { path: shortenHomePath(summary.workspace) }),
+  );
+  lines.push(
+    tci("agents.agentDir", "  Agent dir: {path}", { path: shortenHomePath(summary.agentDir) }),
+  );
   if (summary.model) {
-    lines.push(`  Model: ${summary.model}`);
+    lines.push(tci("agents.model", "  Model: {model}", { model: summary.model }));
   }
-  lines.push(`  Routing rules: ${summary.bindings}`);
+  lines.push(
+    tci("agents.routingRulesCount", "  Routing rules: {count}", { count: summary.bindings }),
+  );
 
   if (summary.routes?.length) {
-    lines.push(`  Routing: ${summary.routes.join(", ")}`);
+    lines.push(tci("agents.routing", "  Routing: {routes}", { routes: summary.routes.join(", ") }));
   }
   if (summary.providers?.length) {
-    lines.push("  Providers:");
+    lines.push(tc("agents.providers", "  Providers:"));
     for (const provider of summary.providers) {
       lines.push(`    - ${provider}`);
     }
   }
 
   if (summary.bindingDetails?.length) {
-    lines.push("  Routing rules:");
+    lines.push(tc("agents.routingRulesDetail", "  Routing rules:"));
     for (const binding of summary.bindingDetails) {
       lines.push(`    - ${binding}`);
     }
@@ -106,7 +117,7 @@ export async function agentsListCommand(
     if (routes.length > 0) {
       summary.routes = routes;
     } else if (summary.isDefault) {
-      summary.routes = ["default (no explicit rules)"];
+      summary.routes = [tc("agents.default", "default (no explicit rules)")];
     }
 
     const providerLines = listProvidersForAgent({
@@ -125,10 +136,21 @@ export async function agentsListCommand(
     return;
   }
 
-  const lines = ["Agents:", ...summaries.map(formatSummary)];
-  lines.push("Routing rules map channel/account/peer to an agent. Use --bindings for full rules.");
+  const lines = [tc("agents.title", "Agents:"), ...summaries.map(formatSummary)];
   lines.push(
-    `Channel status reflects local config/creds. For live health: ${formatCliCommand("openclaw channels status --probe")}.`,
+    tc(
+      "agents.routingHint",
+      "Routing rules map channel/account/peer to an agent. Use --bindings for full rules.",
+    ),
+  );
+  lines.push(
+    tci(
+      "agents.channelStatusHint",
+      "Channel status reflects local config/creds. For live health: {cmd}.",
+      {
+        cmd: formatCliCommand("openclaw channels status --probe"),
+      },
+    ),
   );
   runtime.log(lines.join("\n"));
 }

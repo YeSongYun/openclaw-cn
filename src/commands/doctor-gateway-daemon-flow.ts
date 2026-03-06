@@ -15,6 +15,7 @@ import {
 import { resolveGatewayService } from "../daemon/service.js";
 import { renderSystemdUnavailableHints } from "../daemon/systemd-hints.js";
 import { isSystemdUserServiceAvailable } from "../daemon/systemd.js";
+import { td, tdi } from "../i18n/index.js";
 import { formatPortDiagnostics, inspectPortUsage } from "../infra/ports.js";
 import { isWSL } from "../infra/wsl.js";
 import type { RuntimeEnv } from "../runtime.js";
@@ -56,17 +57,26 @@ async function maybeRepairLaunchAgentBootstrap(params: {
     return false;
   }
 
-  note("LaunchAgent is listed but not loaded in launchd.", `${params.title} LaunchAgent`);
+  note(
+    td("gateway.daemon.launchAgentNotLoaded", "LaunchAgent is listed but not loaded in launchd."),
+    `${params.title} LaunchAgent`,
+  );
 
   const shouldFix = await params.prompter.confirmSkipInNonInteractive({
-    message: `Repair ${params.title} LaunchAgent bootstrap now?`,
+    message: tdi("gateway.daemon.repairNow", "Repair {title} LaunchAgent bootstrap now?", {
+      title: params.title,
+    }),
     initialValue: true,
   });
   if (!shouldFix) {
     return false;
   }
 
-  params.runtime.log(`Bootstrapping ${params.title} LaunchAgent...`);
+  params.runtime.log(
+    tdi("gateway.daemon.bootstrapping", "Bootstrapping {title} LaunchAgent...", {
+      title: params.title,
+    }),
+  );
   const repair = await repairLaunchAgentBootstrap({ env: params.env });
   if (!repair.ok) {
     params.runtime.error(
@@ -81,7 +91,10 @@ async function maybeRepairLaunchAgentBootstrap(params: {
     return false;
   }
 
-  note(`${params.title} LaunchAgent repaired.`, `${params.title} LaunchAgent`);
+  note(
+    tdi("gateway.daemon.repaired", "{title} LaunchAgent repaired.", { title: params.title }),
+    `${params.title} LaunchAgent`,
+  );
   return true;
 }
 
@@ -156,10 +169,13 @@ export async function maybeRepairGatewayDaemon(params: {
         return;
       }
     }
-    note("Gateway service not installed.", "Gateway");
+    note(
+      td("gateway.daemon.notInstalled", "Gateway service not installed."),
+      td("gateway.title", "Gateway"),
+    );
     if (params.cfg.gateway?.mode !== "remote") {
       const install = await params.prompter.confirmSkipInNonInteractive({
-        message: "Install gateway service now?",
+        message: td("gateway.daemon.installNow", "Install gateway service now?"),
         initialValue: true,
       });
       if (install) {
@@ -189,8 +205,13 @@ export async function maybeRepairGatewayDaemon(params: {
             environment,
           });
         } catch (err) {
-          note(`Gateway service install failed: ${String(err)}`, "Gateway");
-          note(gatewayInstallErrorHint(), "Gateway");
+          note(
+            tdi("gateway.daemon.installFailed", "Gateway service install failed: {error}", {
+              error: String(err),
+            }),
+            td("gateway.title", "Gateway"),
+          );
+          note(gatewayInstallErrorHint(), td("gateway.title", "Gateway"));
         }
       }
     }
@@ -208,12 +229,12 @@ export async function maybeRepairGatewayDaemon(params: {
       lines.push(`Runtime: ${summary}`);
     }
     lines.push(...hints);
-    note(lines.join("\n"), "Gateway");
+    note(lines.join("\n"), td("gateway.title", "Gateway"));
   }
 
   if (serviceRuntime?.status !== "running") {
     const start = await params.prompter.confirmSkipInNonInteractive({
-      message: "Start gateway service now?",
+      message: td("gateway.daemon.startNow", "Start gateway service now?"),
       initialValue: true,
     });
     if (start) {
@@ -228,14 +249,21 @@ export async function maybeRepairGatewayDaemon(params: {
   if (process.platform === "darwin") {
     const label = resolveGatewayLaunchAgentLabel(process.env.OPENCLAW_PROFILE);
     note(
-      `LaunchAgent loaded; stopping requires "${formatCliCommand("openclaw gateway stop")}" or launchctl bootout gui/$UID/${label}.`,
-      "Gateway",
+      tdi(
+        "gateway.daemon.launchctlHint",
+        'LaunchAgent loaded; stopping requires "{cmd}" or launchctl bootout gui/$UID/{label}.',
+        {
+          cmd: formatCliCommand("openclaw gateway stop"),
+          label,
+        },
+      ),
+      td("gateway.title", "Gateway"),
     );
   }
 
   if (serviceRuntime?.status === "running") {
     const restart = await params.prompter.confirmSkipInNonInteractive({
-      message: "Restart gateway service now?",
+      message: td("gateway.daemon.restartNow", "Restart gateway service now?"),
       initialValue: true,
     });
     if (restart) {
@@ -249,8 +277,8 @@ export async function maybeRepairGatewayDaemon(params: {
       } catch (err) {
         const message = String(err);
         if (message.includes("gateway closed")) {
-          note("Gateway not running.", "Gateway");
-          note(params.gatewayDetailsMessage, "Gateway connection");
+          note(td("gateway.notRunning", "Gateway not running."), td("gateway.title", "Gateway"));
+          note(params.gatewayDetailsMessage, td("gateway.connection.title", "Gateway connection"));
         } else {
           params.runtime.error(formatHealthCheckFailure(err));
         }

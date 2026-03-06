@@ -5,6 +5,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import type { OpenClawConfig } from "../config/config.js";
 import { hasConfiguredSecretInput } from "../config/types.secrets.js";
+import { td, tdi } from "../i18n/index.js";
 import { note } from "../terminal/note.js";
 import { shortenHomePath } from "../utils.js";
 
@@ -27,11 +28,13 @@ export async function noteMacLaunchAgentOverrides() {
 
   const displayMarkerPath = shortenHomePath(markerPath);
   const lines = [
-    `- LaunchAgent writes are disabled via ${displayMarkerPath}.`,
-    "- To restore default behavior:",
-    `  rm ${displayMarkerPath}`,
+    tdi(
+      "platform.launchAgentDisabled",
+      "- LaunchAgent writes are disabled via {path}.\n- To restore default behavior:\n  rm {path}",
+      { path: displayMarkerPath },
+    ),
   ].filter((line): line is string => Boolean(line));
-  note(lines.join("\n"), "Gateway (macOS)");
+  note(lines.join("\n"), td("platform.gatewayMacTitle", "Gateway (macOS)"));
 }
 
 async function launchctlGetenv(name: string): Promise<string | undefined> {
@@ -81,13 +84,16 @@ export async function noteMacLaunchctlGatewayEnvOverrides(
   ].filter((entry): entry is [string, string] => Boolean(entry[1]?.trim()));
   if (deprecatedLaunchctlEntries.length > 0) {
     const lines = [
-      "- Deprecated launchctl environment variables detected (ignored).",
+      td(
+        "platform.deprecatedLaunchctl",
+        "- Deprecated launchctl environment variables detected (ignored).",
+      ),
       ...deprecatedLaunchctlEntries.map(
         ([key]) =>
           `- \`${key}\` is set; use \`OPENCLAW_${key.slice(key.indexOf("_") + 1)}\` instead.`,
       ),
     ];
-    (deps?.noteFn ?? note)(lines.join("\n"), "Gateway (macOS)");
+    (deps?.noteFn ?? note)(lines.join("\n"), td("platform.gatewayMacTitle", "Gateway (macOS)"));
   }
 
   const tokenEntries = [
@@ -107,19 +113,22 @@ export async function noteMacLaunchctlGatewayEnvOverrides(
   }
 
   const lines = [
-    "- launchctl environment overrides detected (can cause confusing unauthorized errors).",
+    td(
+      "platform.launchctlOverrides",
+      "- launchctl environment overrides detected (can cause confusing unauthorized errors).",
+    ),
     envToken && envTokenKey
       ? `- \`${envTokenKey}\` is set; it overrides config tokens.`
       : undefined,
     envPassword
       ? `- \`${envPasswordKey ?? "OPENCLAW_GATEWAY_PASSWORD"}\` is set; it overrides config passwords.`
       : undefined,
-    "- Clear overrides and restart the app/gateway:",
+    td("platform.clearAndRestart", "- Clear overrides and restart the app/gateway:"),
     envTokenKey ? `  launchctl unsetenv ${envTokenKey}` : undefined,
     envPasswordKey ? `  launchctl unsetenv ${envPasswordKey}` : undefined,
   ].filter((line): line is string => Boolean(line));
 
-  (deps?.noteFn ?? note)(lines.join("\n"), "Gateway (macOS)");
+  (deps?.noteFn ?? note)(lines.join("\n"), td("platform.gatewayMacTitle", "Gateway (macOS)"));
 }
 
 export function noteDeprecatedLegacyEnvVars(
@@ -134,14 +143,16 @@ export function noteDeprecatedLegacyEnvVars(
   }
 
   const lines = [
-    "- Deprecated legacy environment variables detected (ignored).",
-    "- Use OPENCLAW_* equivalents instead:",
+    td(
+      "environment.deprecated",
+      "- Deprecated legacy environment variables detected (ignored).\n- Use OPENCLAW_* equivalents instead:",
+    ),
     ...entries.map((key) => {
       const suffix = key.slice(key.indexOf("_") + 1);
       return `  ${key} -> OPENCLAW_${suffix}`;
     }),
   ];
-  (deps?.noteFn ?? note)(lines.join("\n"), "Environment");
+  (deps?.noteFn ?? note)(lines.join("\n"), td("platform.envTitle", "Environment"));
 }
 
 function isTruthyEnvValue(value: string | undefined): boolean {
@@ -219,5 +230,8 @@ export function noteStartupOptimizationHints(
     isTruthyEnvValue(disableCompileCache) ? "  unset NODE_DISABLE_COMPILE_CACHE" : undefined,
   ].filter((line): line is string => Boolean(line));
 
-  noteFn([...lines, ...suggestions].join("\n"), "Startup optimization");
+  noteFn(
+    [...lines, ...suggestions].join("\n"),
+    td("platform.startupTitle", "Startup optimization"),
+  );
 }

@@ -1,6 +1,7 @@
 import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "../agents/agent-scope.js";
 import { buildWorkspaceSkillStatus } from "../agents/skills-status.js";
 import type { OpenClawConfig } from "../config/config.js";
+import { td, tdi } from "../i18n/index.js";
 import { loadOpenClawPlugins } from "../plugins/loader.js";
 import { note } from "../terminal/note.js";
 import { detectLegacyWorkspaceDirs, formatLegacyWorkspaceWarning } from "./doctor-workspace.js";
@@ -15,14 +16,19 @@ export function noteWorkspaceStatus(cfg: OpenClawConfig) {
   const skillsReport = buildWorkspaceSkillStatus(workspaceDir, { config: cfg });
   note(
     [
-      `Eligible: ${skillsReport.skills.filter((s) => s.eligible).length}`,
-      `Missing requirements: ${
-        skillsReport.skills.filter((s) => !s.eligible && !s.disabled && !s.blockedByAllowlist)
-          .length
-      }`,
-      `Blocked by allowlist: ${skillsReport.skills.filter((s) => s.blockedByAllowlist).length}`,
+      tdi("workspace.status.eligible", "Eligible: {count}", {
+        count: skillsReport.skills.filter((s) => s.eligible).length,
+      }),
+      tdi("workspace.status.missing", "Missing requirements: {count}", {
+        count: skillsReport.skills.filter(
+          (s) => !s.eligible && !s.disabled && !s.blockedByAllowlist,
+        ).length,
+      }),
+      tdi("workspace.status.blocked", "Blocked by allowlist: {count}", {
+        count: skillsReport.skills.filter((s) => s.blockedByAllowlist).length,
+      }),
     ].join("\n"),
-    "Skills status",
+    td("workspace.status.title", "Skills status"),
   );
 
   const pluginRegistry = loadOpenClawPlugins({
@@ -41,9 +47,9 @@ export function noteWorkspaceStatus(cfg: OpenClawConfig) {
     const errored = pluginRegistry.plugins.filter((p) => p.status === "error");
 
     const lines = [
-      `Loaded: ${loaded.length}`,
-      `Disabled: ${disabled.length}`,
-      `Errors: ${errored.length}`,
+      tdi("workspace.plugins.loaded", "Loaded: {count}", { count: loaded.length }),
+      tdi("workspace.plugins.disabled", "Disabled: {count}", { count: disabled.length }),
+      tdi("workspace.plugins.errors", "Errors: {count}", { count: errored.length }),
       errored.length > 0
         ? `- ${errored
             .slice(0, 10)
@@ -52,7 +58,7 @@ export function noteWorkspaceStatus(cfg: OpenClawConfig) {
         : null,
     ].filter((line): line is string => Boolean(line));
 
-    note(lines.join("\n"), "Plugins");
+    note(lines.join("\n"), td("workspace.plugins.title", "Plugins"));
   }
   if (pluginRegistry.diagnostics.length > 0) {
     const lines = pluginRegistry.diagnostics.map((diag) => {
@@ -61,7 +67,7 @@ export function noteWorkspaceStatus(cfg: OpenClawConfig) {
       const source = diag.source ? ` (${diag.source})` : "";
       return `- ${prefix}${plugin}: ${diag.message}${source}`;
     });
-    note(lines.join("\n"), "Plugin diagnostics");
+    note(lines.join("\n"), td("workspace.plugins.diagnostics", "Plugin diagnostics"));
   }
 
   return { workspaceDir };

@@ -18,6 +18,7 @@ import {
 } from "../daemon/service-audit.js";
 import { resolveGatewayService } from "../daemon/service.js";
 import { uninstallLegacySystemdUnits } from "../daemon/systemd.js";
+import { td, tdi } from "../i18n/index.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { note } from "../terminal/note.js";
 import { buildGatewayInstallPlan } from "./daemon-install-helpers.js";
@@ -199,12 +200,18 @@ export async function maybeRepairGatewayServiceConfig(
   prompter: DoctorPrompter,
 ) {
   if (resolveIsNixMode(process.env)) {
-    note("Nix mode detected; skip service updates.", "Gateway");
+    note(
+      td("gateway.service.nixSkip", "Nix mode detected; skip service updates."),
+      td("gateway.title", "Gateway"),
+    );
     return;
   }
 
   if (mode === "remote") {
-    note("Gateway mode is remote; skipped local service audit.", "Gateway");
+    note(
+      td("gateway.service.remoteSkip", "Gateway mode is remote; skipped local service audit."),
+      td("gateway.title", "Gateway"),
+    );
     return;
   }
 
@@ -233,11 +240,14 @@ export async function maybeRepairGatewayServiceConfig(
   if (needsNodeRuntime && !systemNodePath) {
     const warning = renderSystemNodeWarning(systemNodeInfo);
     if (warning) {
-      note(warning, "Gateway runtime");
+      note(warning, td("gateway.daemon.runtime", "Gateway runtime"));
     }
     note(
-      "System Node 22+ not found. Install via Homebrew/apt/choco and rerun doctor to migrate off Bun/version managers.",
-      "Gateway runtime",
+      td(
+        "gateway.service.nodeNotFound",
+        "System Node 22+ not found. Install via Homebrew/apt/choco and rerun doctor to migrate off Bun/version managers.",
+      ),
+      td("gateway.daemon.runtime", "Gateway runtime"),
     );
   }
 
@@ -277,7 +287,7 @@ export async function maybeRepairGatewayServiceConfig(
         issue.detail ? `- ${issue.message} (${issue.detail})` : `- ${issue.message}`,
       )
       .join("\n"),
-    "Gateway service config",
+    td("gateway.service.configTitle", "Gateway service config"),
   );
 
   const aggressiveIssues = audit.issues.filter((issue) => issue.level === "aggressive");
@@ -285,18 +295,27 @@ export async function maybeRepairGatewayServiceConfig(
 
   if (needsAggressive && !prompter.shouldForce) {
     note(
-      "Custom or unexpected service edits detected. Rerun with --force to overwrite.",
-      "Gateway service config",
+      td(
+        "gateway.service.customDetected",
+        "Custom or unexpected service edits detected. Rerun with --force to overwrite.",
+      ),
+      td("gateway.service.configTitle", "Gateway service config"),
     );
   }
 
   const repair = needsAggressive
     ? await prompter.confirmAggressive({
-        message: "Overwrite gateway service config with current defaults now?",
+        message: td(
+          "gateway.service.overwriteNow",
+          "Overwrite gateway service config with current defaults now?",
+        ),
         initialValue: Boolean(prompter.shouldForce),
       })
     : await prompter.confirmRepair({
-        message: "Update gateway service config to the recommended defaults now?",
+        message: td(
+          "gateway.service.updateNow",
+          "Update gateway service config to the recommended defaults now?",
+        ),
         initialValue: true,
       });
   if (!repair) {
@@ -311,7 +330,11 @@ export async function maybeRepairGatewayServiceConfig(
       environment,
     });
   } catch (err) {
-    runtime.error(`Gateway service update failed: ${String(err)}`);
+    runtime.error(
+      tdi("gateway.service.updateFailed", "Gateway service update failed: {error}", {
+        error: String(err),
+      }),
+    );
   }
 }
 
@@ -329,13 +352,13 @@ export async function maybeScanExtraGatewayServices(
 
   note(
     extraServices.map((svc) => `- ${svc.label} (${svc.scope}, ${svc.detail})`).join("\n"),
-    "Other gateway-like services detected",
+    td("gateway.extraTitle", "Other gateway-like services detected"),
   );
 
   const legacyServices = extraServices.filter((svc) => svc.legacy === true);
   if (legacyServices.length > 0) {
     const shouldRemove = await prompter.confirmSkipInNonInteractive({
-      message: "Remove legacy gateway services (clawdbot/moltbot) now?",
+      message: td("gateway.legacyRemove", "Remove legacy gateway services (clawdbot/moltbot) now?"),
       initialValue: true,
     });
     if (shouldRemove) {
@@ -356,28 +379,41 @@ export async function maybeScanExtraGatewayServices(
       }
 
       if (removed.length > 0) {
-        note(removed.map((line) => `- ${line}`).join("\n"), "Legacy gateway removed");
+        note(
+          removed.map((line) => `- ${line}`).join("\n"),
+          td("gateway.legacyRemoved", "Legacy gateway removed"),
+        );
       }
       if (failed.length > 0) {
-        note(failed.map((line) => `- ${line}`).join("\n"), "Legacy gateway cleanup skipped");
+        note(
+          failed.map((line) => `- ${line}`).join("\n"),
+          td("gateway.legacySkipped", "Legacy gateway cleanup skipped"),
+        );
       }
       if (removed.length > 0) {
-        runtime.log("Legacy gateway services removed. Installing OpenClaw gateway next.");
+        runtime.log(
+          td(
+            "gateway.legacyInstall",
+            "Legacy gateway services removed. Installing OpenClaw gateway next.",
+          ),
+        );
       }
     }
   }
 
   const cleanupHints = renderGatewayServiceCleanupHints();
   if (cleanupHints.length > 0) {
-    note(cleanupHints.map((hint) => `- ${hint}`).join("\n"), "Cleanup hints");
+    note(
+      cleanupHints.map((hint) => `- ${hint}`).join("\n"),
+      td("gateway.cleanupHints", "Cleanup hints"),
+    );
   }
 
   note(
-    [
-      "Recommendation: run a single gateway per machine for most setups.",
-      "One gateway supports multiple agents.",
-      "If you need multiple gateways (e.g., a rescue bot on the same host), isolate ports + config/state (see docs: /gateway#multiple-gateways-same-host).",
-    ].join("\n"),
-    "Gateway recommendation",
+    td(
+      "gateway.recommendationText",
+      "Recommendation: run a single gateway per machine for most setups.\nOne gateway supports multiple agents.\nIf you need multiple gateways (e.g., a rescue bot on the same host), isolate ports + config/state (see docs: /gateway#multiple-gateways-same-host).",
+    ),
+    td("gateway.recommendation", "Gateway recommendation"),
   );
 }
