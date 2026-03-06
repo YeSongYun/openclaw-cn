@@ -87,5 +87,28 @@
   "gateway.tailscaleFunnelLabel": "Funnel",
   "gateway.tailscaleFunnelHint": "通过 Tailscale Funnel 公开的公共 HTTPS（互联网）",
   "gateway.tailscaleMissingBin": "在 PATH 或 /Applications 中未找到 Tailscale 二进制文件。\n请确保已安装 Tailscale：\n  https://tailscale.com/download/mac\n\n您可以继续设置，但运行时 serve/funnel 将失败。",
-  "gateway.tailscaleDocs": "文档：\nhttps://docs.openclaw.ai/gateway/tailscale\nhttps://docs.openclaw.ai/web"
+  "gateway.tailscaleDocs": "文档：\nhttps://docs.openclaw.ai/gateway/tailscale\nhttps://docs.openclaw.ai/web",
+
+  "shared.workspace.label": "工作区",
+  "shared.workspace.hint": "设置工作区 + 会话",
+  "shared.model.label": "模型",
+  "shared.model.hint": "选择提供商 + 凭据",
+  "shared.web.label": "Web 工具",
+  "shared.web.hint": "配置 Brave 搜索 + 抓取",
+  "shared.gateway.label": "网关",
+  "shared.gateway.hint": "端口、绑定、认证、Tailscale",
+  "shared.daemon.label": "服务",
+  "shared.daemon.hint": "安装/管理后台服务",
+  "shared.channels.label": "频道",
+  "shared.channels.hint": "关联 WhatsApp/Telegram 等及默认设置",
+  "shared.skills.label": "技能",
+  "shared.skills.hint": "安装/启用工作区技能",
+  "shared.health.label": "健康检查",
+  "shared.health.hint": "运行网关 + 频道检查",
+
+  "vllm.baseUrl": "vLLM 基础 URL",
+  "vllm.apiKey": "vLLM API 密钥",
+  "vllm.apiKeyPlaceholder": "sk-...（或任意非空字符串）",
+  "vllm.model": "vLLM 模型",
+  "vllm.modelPlaceholder": "meta-llama/Meta-Llama-3-8B-Instruct"
 }

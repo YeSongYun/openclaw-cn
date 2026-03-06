@@ -75,7 +75,7 @@ export async function maybeInstallDaemon(params: {
       } else {
         daemonRuntime = guardCancel(
           await select({
-            message: "Gateway service runtime",
+            message: tc("daemon.serviceRuntime", "Gateway service runtime"),
             options: GATEWAY_DAEMON_RUNTIME_OPTIONS,
             initialValue: DEFAULT_GATEWAY_DAEMON_RUNTIME,
           }),

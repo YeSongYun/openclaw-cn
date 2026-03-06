@@ -1,5 +1,6 @@
 import { upsertAuthProfileWithLock } from "../agents/auth-profiles.js";
 import type { OpenClawConfig } from "../config/config.js";
+import { tcfg } from "../i18n/index.js";
 import type { WizardPrompter } from "../wizard/prompts.js";
 
 export const VLLM_DEFAULT_BASE_URL = "http://127.0.0.1:8000/v1";
@@ -18,19 +19,19 @@ export async function promptAndConfigureVllm(params: {
   agentDir?: string;
 }): Promise<{ config: OpenClawConfig; modelId: string; modelRef: string }> {
   const baseUrlRaw = await params.prompter.text({
-    message: "vLLM base URL",
+    message: tcfg("vllm.baseUrl", "vLLM base URL"),
     initialValue: VLLM_DEFAULT_BASE_URL,
     placeholder: VLLM_DEFAULT_BASE_URL,
     validate: (value) => (value?.trim() ? undefined : "Required"),
   });
   const apiKeyRaw = await params.prompter.text({
-    message: "vLLM API key",
-    placeholder: "sk-... (or any non-empty string)",
+    message: tcfg("vllm.apiKey", "vLLM API key"),
+    placeholder: tcfg("vllm.apiKeyPlaceholder", "sk-... (or any non-empty string)"),
     validate: (value) => (value?.trim() ? undefined : "Required"),
   });
   const modelIdRaw = await params.prompter.text({
-    message: "vLLM model",
-    placeholder: "meta-llama/Meta-Llama-3-8B-Instruct",
+    message: tcfg("vllm.model", "vLLM model"),
+    placeholder: tcfg("vllm.modelPlaceholder", "meta-llama/Meta-Llama-3-8B-Instruct"),
     validate: (value) => (value?.trim() ? undefined : "Required"),
   });
 

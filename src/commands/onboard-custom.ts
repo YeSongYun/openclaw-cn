@@ -763,9 +763,17 @@ export async function promptCustomApiConfig(params: {
       break;
     }
     if (result.status !== undefined) {
-      verifySpinner.stop(`Verification failed: status ${result.status}`);
+      verifySpinner.stop(
+        toi("custom.verifyFailedStatus", "Verification failed: status {status}", {
+          status: String(result.status),
+        }),
+      );
     } else {
-      verifySpinner.stop(`Verification failed: ${formatVerificationError(result.error)}`);
+      verifySpinner.stop(
+        toi("custom.verifyFailedError", "Verification failed: {error}", {
+          error: formatVerificationError(result.error),
+        }),
+      );
     }
     const retryChoice = await promptCustomApiRetryChoice(prompter);
     ({ baseUrl, apiKey, resolvedApiKey, modelId } = await applyCustomApiRetryChoice({

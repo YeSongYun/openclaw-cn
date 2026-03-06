@@ -417,5 +417,7 @@
   "register.gatewayDiscovery": "网关发现",
   "register.gatewayHealth": "网关健康状态",
 
-  "model.probingAuth": "正在探测认证配置…"
+  "model.probingAuth": "正在探测认证配置…",
+
+  "daemon.serviceRuntime": "网关服务运行时"
 }

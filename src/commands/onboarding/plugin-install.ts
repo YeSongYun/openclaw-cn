@@ -3,6 +3,7 @@ import path from "node:path";
 import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "../../agents/agent-scope.js";
 import type { ChannelPluginCatalogEntry } from "../../channels/plugins/catalog.js";
 import type { OpenClawConfig } from "../../config/config.js";
+import { to, toi } from "../../i18n/index.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import { enablePluginInConfig } from "../../plugins/enable.js";
 import { installPluginFromNpmSpec } from "../../plugins/install.js";
@@ -84,20 +85,25 @@ async function promptInstallChoice(params: {
     ? [
         {
           value: "local",
-          label: "Use local plugin path",
+          label: to("plugin.useLocalPath", "Use local plugin path"),
           hint: localPath,
         },
       ]
     : [];
   const options: Array<{ value: InstallChoice; label: string; hint?: string }> = [
-    { value: "npm", label: `Download from npm (${entry.install.npmSpec})` },
+    {
+      value: "npm",
+      label: toi("plugin.downloadNpm", "Download from npm ({spec})", {
+        spec: entry.install.npmSpec,
+      }),
+    },
     ...localOptions,
-    { value: "skip", label: "Skip for now" },
+    { value: "skip", label: to("plugin.skipForNow", "Skip for now") },
   ];
   const initialValue: InstallChoice =
     defaultChoice === "local" && !localPath ? "npm" : defaultChoice;
   return await prompter.select<InstallChoice>({
-    message: `Install ${entry.meta.label} plugin?`,
+    message: toi("plugin.installPrompt", "Install {label} plugin?", { label: entry.meta.label }),
     options,
     initialValue,
   });
@@ -181,13 +187,18 @@ export async function ensureOnboardingPluginInstalled(params: {
   }
 
   await prompter.note(
-    `Failed to install ${entry.install.npmSpec}: ${result.error}`,
-    "Plugin install",
+    toi("plugin.installFailed", "Failed to install {spec}: {error}", {
+      spec: entry.install.npmSpec,
+      error: String(result.error),
+    }),
+    to("plugin.installFailedTitle", "Plugin install"),
   );
 
   if (localPath) {
     const fallback = await prompter.confirm({
-      message: `Use local plugin path instead? (${localPath})`,
+      message: toi("plugin.useLocalFallback", "Use local plugin path instead? ({path})", {
+        path: localPath,
+      }),
       initialValue: true,
     });
     if (fallback) {

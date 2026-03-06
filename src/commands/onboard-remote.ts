@@ -1,6 +1,7 @@
 import type { OpenClawConfig } from "../config/config.js";
 import type { SecretInput } from "../config/types.secrets.js";
 import { isSecureWebSocketUrl } from "../gateway/net.js";
+import { to, toi } from "../i18n/index.js";
 import type { GatewayBonjourBeacon } from "../infra/bonjour-discovery.js";
 import { discoverGatewayBeacons } from "../infra/bonjour-discovery.js";
 import { resolveWideAreaDiscoveryDomain } from "../infra/widearea-dns.js";
@@ -39,16 +40,17 @@ function ensureWsUrl(value: string): string {
 function validateGatewayWebSocketUrl(value: string): string | undefined {
   const trimmed = value.trim();
   if (!trimmed.startsWith("ws://") && !trimmed.startsWith("wss://")) {
-    return "URL must start with ws:// or wss://";
+    return to("remote.urlMustStartWs", "URL must start with ws:// or wss://");
   }
   if (
     !isSecureWebSocketUrl(trimmed, {
       allowPrivateWs: process.env.OPENCLAW_ALLOW_INSECURE_PRIVATE_WS === "1",
     })
   ) {
-    return (
+    return to(
+      "remote.useWssForRemote",
       "Use wss:// for remote hosts, or ws://127.0.0.1/localhost via SSH tunnel. " +
-      "Break-glass: OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1 for trusted private networks."
+        "Break-glass: OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1 for trusted private networks.",
     );
   }
   return undefined;
@@ -65,18 +67,18 @@ export async function promptRemoteGatewayConfig(
   const hasBonjourTool = (await detectBinary("dns-sd")) || (await detectBinary("avahi-browse"));
   const wantsDiscover = hasBonjourTool
     ? await prompter.confirm({
-        message: "Discover gateway on LAN (Bonjour)?",
+        message: to("remote.discoverBonjour", "Discover gateway on LAN (Bonjour)?"),
         initialValue: true,
       })
     : false;
 
   if (!hasBonjourTool) {
     await prompter.note(
-      [
-        "Bonjour discovery requires dns-sd (macOS) or avahi-browse (Linux).",
-        "Docs: https://docs.openclaw.ai/gateway/discovery",
-      ].join("\n"),
-      "Discovery",
+      to(
+        "remote.discoveryNote",
+        "Bonjour discovery requires dns-sd (macOS) or avahi-browse (Linux).\nDocs: https://docs.openclaw.ai/gateway/discovery",
+      ),
+      to("remote.discoveryTitle", "Discovery"),
     );
   }
 
@@ -84,19 +86,23 @@ export async function promptRemoteGatewayConfig(
     const wideAreaDomain = resolveWideAreaDiscoveryDomain({
       configDomain: cfg.discovery?.wideArea?.domain,
     });
-    const spin = prompter.progress("Searching for gateways…");
+    const spin = prompter.progress(to("remote.searching", "Searching for gateways…"));
     const beacons = await discoverGatewayBeacons({ timeoutMs: 2000, wideAreaDomain });
-    spin.stop(beacons.length > 0 ? `Found ${beacons.length} gateway(s)` : "No gateways found");
+    spin.stop(
+      beacons.length > 0
+        ? toi("remote.found", "Found {count} gateway(s)", { count: String(beacons.length) })
+        : to("remote.notFound", "No gateways found"),
+    );
 
     if (beacons.length > 0) {
       const selection = await prompter.select({
-        message: "Select gateway",
+        message: to("remote.selectGateway", "Select gateway"),
         options: [
           ...beacons.map((beacon, index) => ({
             value: String(index),
             label: buildLabel(beacon),
           })),
-          { value: "manual", label: "Enter URL manually" },
+          { value: "manual", label: to("remote.enterManually", "Enter URL manually") },
         ],
       });
       if (selection !== "manual") {
@@ -111,54 +117,57 @@ export async function promptRemoteGatewayConfig(
     const port = selectedBeacon.port ?? selectedBeacon.gatewayPort ?? 18789;
     if (host) {
       const mode = await prompter.select({
-        message: "Connection method",
+        message: to("remote.connectionMethod", "Connection method"),
         options: [
           {
             value: "direct",
-            label: `Direct gateway WS (${host}:${port})`,
+            label: toi("remote.directWs", "Direct gateway WS ({endpoint})", {
+              endpoint: `${host}:${port}`,
+            }),
           },
-          { value: "ssh", label: "SSH tunnel (loopback)" },
+          { value: "ssh", label: to("remote.sshTunnel", "SSH tunnel (loopback)") },
         ],
       });
       if (mode === "direct") {
         suggestedUrl = `wss://${host}:${port}`;
         await prompter.note(
-          [
-            "Direct remote access defaults to TLS.",
-            `Using: ${suggestedUrl}`,
-            "If your gateway is loopback-only, choose SSH tunnel and keep ws://127.0.0.1:18789.",
-          ].join("\n"),
-          "Direct remote",
+          toi(
+            "remote.directRemoteNote",
+            "Direct remote access defaults to TLS.\nUsing: {url}\nIf your gateway is loopback-only, choose SSH tunnel and keep ws://127.0.0.1:18789.",
+            { url: suggestedUrl },
+          ),
+          to("remote.directRemoteTitle", "Direct remote"),
         );
       } else {
         suggestedUrl = DEFAULT_GATEWAY_URL;
+        const sshCmd = `ssh -N -L 18789:127.0.0.1:18789 <user>@${host}${
+          selectedBeacon.sshPort ? ` -p ${selectedBeacon.sshPort}` : ""
+        }`;
         await prompter.note(
-          [
-            "Start a tunnel before using the CLI:",
-            `ssh -N -L 18789:127.0.0.1:18789 <user>@${host}${
-              selectedBeacon.sshPort ? ` -p ${selectedBeacon.sshPort}` : ""
-            }`,
-            "Docs: https://docs.openclaw.ai/gateway/remote",
-          ].join("\n"),
-          "SSH tunnel",
+          toi(
+            "remote.sshTunnelNote",
+            "Start a tunnel before using the CLI:\n{sshCmd}\nDocs: https://docs.openclaw.ai/gateway/remote",
+            { sshCmd },
+          ),
+          to("remote.sshTunnelTitle", "SSH tunnel"),
         );
       }
     }
   }
 
   const urlInput = await prompter.text({
-    message: "Gateway WebSocket URL",
+    message: to("remote.gatewayWsUrl", "Gateway WebSocket URL"),
     initialValue: suggestedUrl,
     validate: (value) => validateGatewayWebSocketUrl(String(value)),
   });
   const url = ensureWsUrl(String(urlInput));
 
   const authChoice = await prompter.select({
-    message: "Gateway auth",
+    message: to("remote.gatewayAuth", "Gateway auth"),
     options: [
-      { value: "token", label: "Token (recommended)" },
-      { value: "password", label: "Password" },
-      { value: "off", label: "No auth" },
+      { value: "token", label: to("remote.authToken", "Token (recommended)") },
+      { value: "password", label: to("remote.authPassword", "Password") },
+      { value: "off", label: to("remote.authNone", "No auth") },
     ],
   });
 
@@ -169,9 +178,15 @@ export async function promptRemoteGatewayConfig(
       prompter,
       explicitMode: options?.secretInputMode,
       copy: {
-        modeMessage: "How do you want to provide this gateway token?",
-        plaintextLabel: "Enter token now",
-        plaintextHint: "Stores the token directly in OpenClaw config",
+        modeMessage: to(
+          "remote.tokenModeMessage",
+          "How do you want to provide this gateway token?",
+        ),
+        plaintextLabel: to("remote.tokenPlaintextLabel", "Enter token now"),
+        plaintextHint: to(
+          "remote.tokenPlaintextHint",
+          "Stores the token directly in OpenClaw config",
+        ),
       },
     });
     if (selectedMode === "ref") {
@@ -181,7 +196,7 @@ export async function promptRemoteGatewayConfig(
         prompter,
         preferredEnvVar: "OPENCLAW_GATEWAY_TOKEN",
         copy: {
-          sourceMessage: "Where is this gateway token stored?",
+          sourceMessage: to("remote.tokenSourceMessage", "Where is this gateway token stored?"),
           envVarPlaceholder: "OPENCLAW_GATEWAY_TOKEN",
         },
       });
@@ -189,9 +204,9 @@ export async function promptRemoteGatewayConfig(
     } else {
       token = String(
         await prompter.text({
-          message: "Gateway token",
+          message: to("remote.gatewayToken", "Gateway token"),
           initialValue: typeof token === "string" ? token : undefined,
-          validate: (value) => (value?.trim() ? undefined : "Required"),
+          validate: (value) => (value?.trim() ? undefined : to("remote.required", "Required")),
         }),
       ).trim();
     }
@@ -201,9 +216,15 @@ export async function promptRemoteGatewayConfig(
       prompter,
       explicitMode: options?.secretInputMode,
       copy: {
-        modeMessage: "How do you want to provide this gateway password?",
-        plaintextLabel: "Enter password now",
-        plaintextHint: "Stores the password directly in OpenClaw config",
+        modeMessage: to(
+          "remote.passwordModeMessage",
+          "How do you want to provide this gateway password?",
+        ),
+        plaintextLabel: to("remote.passwordPlaintextLabel", "Enter password now"),
+        plaintextHint: to(
+          "remote.passwordPlaintextHint",
+          "Stores the password directly in OpenClaw config",
+        ),
       },
     });
     if (selectedMode === "ref") {
@@ -213,7 +234,10 @@ export async function promptRemoteGatewayConfig(
         prompter,
         preferredEnvVar: "OPENCLAW_GATEWAY_PASSWORD",
         copy: {
-          sourceMessage: "Where is this gateway password stored?",
+          sourceMessage: to(
+            "remote.passwordSourceMessage",
+            "Where is this gateway password stored?",
+          ),
           envVarPlaceholder: "OPENCLAW_GATEWAY_PASSWORD",
         },
       });
@@ -221,9 +245,9 @@ export async function promptRemoteGatewayConfig(
     } else {
       password = String(
         await prompter.text({
-          message: "Gateway password",
+          message: to("remote.gatewayPassword", "Gateway password"),
           initialValue: typeof password === "string" ? password : undefined,
-          validate: (value) => (value?.trim() ? undefined : "Required"),
+          validate: (value) => (value?.trim() ? undefined : to("remote.required", "Required")),
         }),
       ).trim();
     }

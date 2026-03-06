@@ -5,6 +5,7 @@ import {
   select as clackSelect,
   text as clackText,
 } from "@clack/prompts";
+import { tcfg } from "../i18n/index.js";
 import { stylePromptHint, stylePromptMessage, stylePromptTitle } from "../terminal/prompt-style.js";
 
 export const CONFIGURE_WIZARD_SECTIONS = [
@@ -50,25 +51,45 @@ export const CONFIGURE_SECTION_OPTIONS: Array<{
   label: string;
   hint: string;
 }> = [
-  { value: "workspace", label: "Workspace", hint: "Set workspace + sessions" },
-  { value: "model", label: "Model", hint: "Pick provider + credentials" },
-  { value: "web", label: "Web tools", hint: "Configure Brave search + fetch" },
-  { value: "gateway", label: "Gateway", hint: "Port, bind, auth, tailscale" },
+  {
+    value: "workspace",
+    label: tcfg("shared.workspace.label", "Workspace"),
+    hint: tcfg("shared.workspace.hint", "Set workspace + sessions"),
+  },
+  {
+    value: "model",
+    label: tcfg("shared.model.label", "Model"),
+    hint: tcfg("shared.model.hint", "Pick provider + credentials"),
+  },
+  {
+    value: "web",
+    label: tcfg("shared.web.label", "Web tools"),
+    hint: tcfg("shared.web.hint", "Configure Brave search + fetch"),
+  },
+  {
+    value: "gateway",
+    label: tcfg("shared.gateway.label", "Gateway"),
+    hint: tcfg("shared.gateway.hint", "Port, bind, auth, tailscale"),
+  },
   {
     value: "daemon",
-    label: "Daemon",
-    hint: "Install/manage the background service",
+    label: tcfg("shared.daemon.label", "Daemon"),
+    hint: tcfg("shared.daemon.hint", "Install/manage the background service"),
   },
   {
     value: "channels",
-    label: "Channels",
-    hint: "Link WhatsApp/Telegram/etc and defaults",
+    label: tcfg("shared.channels.label", "Channels"),
+    hint: tcfg("shared.channels.hint", "Link WhatsApp/Telegram/etc and defaults"),
   },
-  { value: "skills", label: "Skills", hint: "Install/enable workspace skills" },
+  {
+    value: "skills",
+    label: tcfg("shared.skills.label", "Skills"),
+    hint: tcfg("shared.skills.hint", "Install/enable workspace skills"),
+  },
   {
     value: "health",
-    label: "Health check",
-    hint: "Run gateway + channel checks",
+    label: tcfg("shared.health.label", "Health check"),
+    hint: tcfg("shared.health.hint", "Run gateway + channel checks"),
   },
 ];
 
