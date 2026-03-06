@@ -5,6 +5,7 @@ import type { OpenClawConfig } from "../config/config.js";
 import { readConfigFileSnapshot, resolveGatewayPort, writeConfigFile } from "../config/config.js";
 import { logConfigUpdated } from "../config/logging.js";
 import { normalizeSecretInputString } from "../config/types.secrets.js";
+import { tcfg, ti, tw } from "../i18n/index.js";
 import { ensureControlUiAssetsBuilt } from "../infra/control-ui-assets.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { defaultRuntime } from "../runtime.js";
@@ -83,7 +84,7 @@ async function runGatewayHealthCheck(params: {
         "https://docs.openclaw.ai/gateway/health",
         "https://docs.openclaw.ai/gateway/troubleshooting",
       ].join("\n"),
-      "Health check help",
+      tcfg("wizard.healthCheckHelp", "Health check help"),
     );
   }
 }
@@ -94,13 +95,15 @@ async function promptConfigureSection(
 ): Promise<ConfigureSectionChoice> {
   return guardCancel(
     await select<ConfigureSectionChoice>({
-      message: "Select sections to configure",
+      message: tcfg("wizard.selectSections", "Select sections to configure"),
       options: [
         ...CONFIGURE_SECTION_OPTIONS,
         {
           value: "__continue",
-          label: "Continue",
-          hint: hasSelection ? "Done" : "Skip for now",
+          label: tcfg("wizard.continue", "Continue"),
+          hint: hasSelection
+            ? tcfg("wizard.done", "Done")
+            : tcfg("wizard.skipForNow", "Skip for now"),
         },
       ],
       initialValue: CONFIGURE_SECTION_OPTIONS[0]?.value,
@@ -112,17 +115,23 @@ async function promptConfigureSection(
 async function promptChannelMode(runtime: RuntimeEnv): Promise<ChannelsWizardMode> {
   return guardCancel(
     await select({
-      message: "Channels",
+      message: tw("channels.title", "Channels"),
       options: [
         {
           value: "configure",
-          label: "Configure/link",
-          hint: "Add/update channels; disable unselected accounts",
+          label: tcfg("wizard.channelsConfigureLink", "Configure/link"),
+          hint: tcfg(
+            "wizard.channelsConfigureLinkHint",
+            "Add/update channels; disable unselected accounts",
+          ),
         },
         {
           value: "remove",
-          label: "Remove channel config",
-          hint: "Delete channel tokens/settings from openclaw.json",
+          label: tcfg("wizard.channelsRemove", "Remove channel config"),
+          hint: tcfg(
+            "wizard.channelsRemoveHint",
+            "Delete channel tokens/settings from openclaw.json",
+          ),
         },
       ],
       initialValue: "configure",
@@ -141,16 +150,22 @@ async function promptWebToolsConfig(
 
   note(
     [
-      "Web search lets your agent look things up online using the `web_search` tool.",
-      "It requires a Brave Search API key (you can store it in the config or set BRAVE_API_KEY in the Gateway environment).",
+      tcfg(
+        "wizard.webSearchNote1",
+        "Web search lets your agent look things up online using the `web_search` tool.",
+      ),
+      tcfg(
+        "wizard.webSearchNote2",
+        "It requires a Brave Search API key (you can store it in the config or set BRAVE_API_KEY in the Gateway environment).",
+      ),
       "Docs: https://docs.openclaw.ai/tools/web",
     ].join("\n"),
-    "Web search",
+    tcfg("wizard.webSearchTitle", "Web search"),
   );
 
   const enableSearch = guardCancel(
     await confirm({
-      message: "Enable web_search (Brave Search)?",
+      message: tcfg("wizard.enableWebSearch", "Enable web_search (Brave Search)?"),
       initialValue: existingSearch?.enabled ?? hasSearchKey,
     }),
     runtime,
@@ -165,9 +180,17 @@ async function promptWebToolsConfig(
     const keyInput = guardCancel(
       await text({
         message: hasSearchKey
-          ? "Brave Search API key (leave blank to keep current or use BRAVE_API_KEY)"
-          : "Brave Search API key (paste it here; leave blank to use BRAVE_API_KEY)",
-        placeholder: hasSearchKey ? "Leave blank to keep current" : "BSA...",
+          ? tcfg(
+              "wizard.braveKeyExisting",
+              "Brave Search API key (leave blank to keep current or use BRAVE_API_KEY)",
+            )
+          : tcfg(
+              "wizard.braveKeyNew",
+              "Brave Search API key (paste it here; leave blank to use BRAVE_API_KEY)",
+            ),
+        placeholder: hasSearchKey
+          ? tcfg("wizard.braveKeyPlaceholder", "Leave blank to keep current")
+          : "BSA...",
       }),
       runtime,
     );
@@ -177,18 +200,21 @@ async function promptWebToolsConfig(
     } else if (!hasSearchKey) {
       note(
         [
-          "No key stored yet, so web_search will stay unavailable.",
-          "Store a key here or set BRAVE_API_KEY in the Gateway environment.",
+          tcfg("wizard.noKeyStored1", "No key stored yet, so web_search will stay unavailable."),
+          tcfg(
+            "wizard.noKeyStored2",
+            "Store a key here or set BRAVE_API_KEY in the Gateway environment.",
+          ),
           "Docs: https://docs.openclaw.ai/tools/web",
         ].join("\n"),
-        "Web search",
+        tcfg("wizard.webSearchTitle", "Web search"),
       );
     }
   }
 
   const enableFetch = guardCancel(
     await confirm({
-      message: "Enable web_fetch (keyless HTTP fetch)?",
+      message: tcfg("wizard.enableWebFetch", "Enable web_fetch (keyless HTTP fetch)?"),
       initialValue: existingFetch?.enabled ?? true,
     }),
     runtime,
@@ -218,14 +244,20 @@ export async function runConfigureWizard(
 ) {
   try {
     printWizardHeader(runtime);
-    intro(opts.command === "update" ? "OpenClaw update wizard" : "OpenClaw configure");
+    intro(
+      opts.command === "update"
+        ? tcfg("wizard.updateTitle", "OpenClaw update wizard")
+        : tcfg("wizard.configureTitle", "OpenClaw configure"),
+    );
     const prompter = createClackPrompter();
 
     const snapshot = await readConfigFileSnapshot();
     const baseConfig: OpenClawConfig = snapshot.valid ? snapshot.config : {};
 
     if (snapshot.exists) {
-      const title = snapshot.valid ? "Existing config detected" : "Invalid config";
+      const title = snapshot.valid
+        ? tw("config.existing", "Existing config detected")
+        : tw("config.invalid", "Invalid config");
       note(summarizeExistingConfig(baseConfig), title);
       if (!snapshot.valid && snapshot.issues.length > 0) {
         note(
@@ -234,12 +266,17 @@ export async function runConfigureWizard(
             "",
             "Docs: https://docs.openclaw.ai/gateway/configuration",
           ].join("\n"),
-          "Config issues",
+          tw("config.issues", "Config issues"),
         );
       }
       if (!snapshot.valid) {
         outro(
-          `Config invalid. Run \`${formatCliCommand("openclaw doctor")}\` to repair it, then re-run configure.`,
+          ti(
+            "configure",
+            "config.invalidRun",
+            "Config invalid. Run `{cmd}` to repair it, then re-run configure.",
+            { cmd: formatCliCommand("openclaw doctor") },
+          ),
         );
         runtime.exit(1);
         return;
@@ -264,23 +301,34 @@ export async function runConfigureWizard(
 
     const mode = guardCancel(
       await select({
-        message: "Where will the Gateway run?",
+        message: tcfg("wizard.whereGateway", "Where will the Gateway run?"),
         options: [
           {
             value: "local",
-            label: "Local (this machine)",
+            label: tcfg("wizard.localMachine", "Local (this machine)"),
             hint: localProbe.ok
-              ? `Gateway reachable (${localUrl})`
-              : `No gateway detected (${localUrl})`,
+              ? ti("configure", "wizard.probeLocalReachable", "Gateway reachable ({url})", {
+                  url: localUrl,
+                })
+              : ti("configure", "wizard.probeLocalNotDetected", "No gateway detected ({url})", {
+                  url: localUrl,
+                }),
           },
           {
             value: "remote",
-            label: "Remote (info-only)",
+            label: tcfg("wizard.remoteMachine", "Remote (info-only)"),
             hint: !remoteUrl
-              ? "No remote URL configured yet"
+              ? tw("setup.remoteNotConfigured", "No remote URL configured yet")
               : remoteProbe?.ok
-                ? `Gateway reachable (${remoteUrl})`
-                : `Configured but unreachable (${remoteUrl})`,
+                ? ti("configure", "wizard.probeRemoteReachable", "Gateway reachable ({url})", {
+                    url: remoteUrl,
+                  })
+                : ti(
+                    "configure",
+                    "wizard.probeRemoteUnreachable",
+                    "Configured but unreachable ({url})",
+                    { url: remoteUrl },
+                  ),
           },
         ],
       }),
@@ -295,7 +343,7 @@ export async function runConfigureWizard(
       });
       await writeConfigFile(remoteConfig);
       logConfigUpdated(runtime);
-      outro("Remote gateway configured.");
+      outro(tcfg("wizard.remoteConfigured", "Remote gateway configured."));
       return;
     }
 
@@ -333,7 +381,7 @@ export async function runConfigureWizard(
     const configureWorkspace = async () => {
       const workspaceInput = guardCancel(
         await text({
-          message: "Workspace directory",
+          message: tw("workspace.title", "Workspace directory"),
           initialValue: workspaceDir,
         }),
         runtime,
@@ -358,10 +406,15 @@ export async function runConfigureWizard(
         if (hasExistingContent) {
           note(
             [
-              `Existing workspace detected at ${workspaceDir}`,
-              "Existing files are preserved. Missing templates may be created, never overwritten.",
+              ti("configure", "wizard.workspaceDetected", "Existing workspace detected at {dir}", {
+                dir: workspaceDir,
+              }),
+              tcfg(
+                "wizard.workspacePreserved",
+                "Existing files are preserved. Missing templates may be created, never overwritten.",
+              ),
             ].join("\n"),
-            "Existing workspace",
+            tcfg("wizard.existingWorkspaceTitle", "Existing workspace"),
           );
         }
       }
@@ -396,9 +449,12 @@ export async function runConfigureWizard(
     const promptDaemonPort = async () => {
       const portInput = guardCancel(
         await text({
-          message: "Gateway port for service install",
+          message: tcfg("wizard.daemonPort", "Gateway port for service install"),
           initialValue: String(gatewayPort),
-          validate: (value) => (Number.isFinite(Number(value)) ? undefined : "Invalid port"),
+          validate: (value) =>
+            Number.isFinite(Number(value))
+              ? undefined
+              : tcfg("gateway.invalidPort", "Invalid port"),
         }),
         runtime,
       );
@@ -408,7 +464,7 @@ export async function runConfigureWizard(
     if (opts.sections) {
       const selected = opts.sections;
       if (!selected || selected.length === 0) {
-        outro("No changes selected.");
+        outro(tcfg("wizard.noChanges", "No changes selected."));
         return;
       }
 
@@ -518,10 +574,10 @@ export async function runConfigureWizard(
       if (!ranSection) {
         if (didSetGatewayMode) {
           await persistConfig();
-          outro("Gateway mode set to local.");
+          outro(tcfg("wizard.gatewayLocal", "Gateway mode set to local."));
           return;
         }
-        outro("No changes selected.");
+        outro(tcfg("wizard.noChanges", "No changes selected."));
         return;
       }
     }
@@ -561,20 +617,24 @@ export async function runConfigureWizard(
       });
     }
     const gatewayStatusLine = gatewayProbe.ok
-      ? "Gateway: reachable"
-      : `Gateway: not detected${gatewayProbe.detail ? ` (${gatewayProbe.detail})` : ""}`;
+      ? tcfg("wizard.gatewayReachable", "Gateway: reachable")
+      : gatewayProbe.detail
+        ? ti("configure", "wizard.gatewayNotDetectedDetail", "Gateway: not detected ({detail})", {
+            detail: gatewayProbe.detail,
+          })
+        : tcfg("wizard.gatewayNotDetected", "Gateway: not detected");
 
     note(
       [
-        `Web UI: ${links.httpUrl}`,
-        `Gateway WS: ${links.wsUrl}`,
+        ti("configure", "wizard.webUiLabel", "Web UI: {url}", { url: links.httpUrl }),
+        ti("configure", "wizard.gatewayWsLabel", "Gateway WS: {url}", { url: links.wsUrl }),
         gatewayStatusLine,
         "Docs: https://docs.openclaw.ai/web/control-ui",
       ].join("\n"),
-      "Control UI",
+      tcfg("wizard.controlUiTitle", "Control UI"),
     );
 
-    outro("Configure complete.");
+    outro(tcfg("wizard.complete", "Configure complete."));
   } catch (err) {
     if (err instanceof WizardCancelledError) {
       runtime.exit(1);

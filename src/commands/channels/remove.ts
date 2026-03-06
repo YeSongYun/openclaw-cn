@@ -5,6 +5,7 @@ import {
   normalizeChannelId,
 } from "../../channels/plugins/index.js";
 import { type OpenClawConfig, writeConfigFile } from "../../config/config.js";
+import { tch, tchi } from "../../i18n/index.js";
 import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "../../routing/session-key.js";
 import { defaultRuntime, type RuntimeEnv } from "../../runtime.js";
 import { deleteTelegramUpdateOffset } from "../../telegram/update-offset-store.js";
@@ -42,9 +43,9 @@ export async function channelsRemoveCommand(
   const deleteConfig = Boolean(opts.delete);
 
   if (useWizard && prompter) {
-    await prompter.intro("Remove channel account");
+    await prompter.intro(tch("remove.intro", "Remove channel account"));
     const selectedChannel = await prompter.select({
-      message: "Channel",
+      message: tch("remove.selectChannel", "Channel"),
       options: listChannelPlugins().map((plugin) => ({
         value: plugin.id,
         label: plugin.meta.label,
@@ -55,10 +56,10 @@ export async function channelsRemoveCommand(
     accountId = await (async () => {
       const ids = listAccountIds(cfg, selectedChannel);
       const choice = await prompter.select({
-        message: "Account",
+        message: tch("remove.selectAccount", "Account"),
         options: ids.map((id) => ({
           value: id,
-          label: id === DEFAULT_ACCOUNT_ID ? "default (primary)" : id,
+          label: id === DEFAULT_ACCOUNT_ID ? tch("remove.defaultAccount", "default (primary)") : id,
         })),
         initialValue: ids[0] ?? DEFAULT_ACCOUNT_ID,
       });
@@ -66,23 +67,37 @@ export async function channelsRemoveCommand(
     })();
 
     const wantsDisable = await prompter.confirm({
-      message: `Disable ${channelLabel(selectedChannel)} account "${accountId}"? (keeps config)`,
+      message: tchi(
+        "remove.confirmDisable",
+        'Disable {channel} account "{accountId}"? (keeps config)',
+        {
+          channel: channelLabel(selectedChannel),
+          accountId: accountId ?? DEFAULT_ACCOUNT_ID,
+        },
+      ),
       initialValue: true,
     });
     if (!wantsDisable) {
-      await prompter.outro("Cancelled.");
+      await prompter.outro(tch("remove.cancelled", "Cancelled."));
       return;
     }
   } else {
     if (!channel) {
-      runtime.error("Channel is required. Use --channel <name>.");
+      runtime.error(tch("remove.channelRequired", "Channel is required. Use --channel <name>."));
       runtime.exit(1);
       return;
     }
     if (!deleteConfig) {
       const confirm = createClackPrompter();
       const ok = await confirm.confirm({
-        message: `Disable ${channelLabel(channel)} account "${accountId}"? (keeps config)`,
+        message: tchi(
+          "remove.confirmDisable",
+          'Disable {channel} account "{accountId}"? (keeps config)',
+          {
+            channel: channelLabel(channel),
+            accountId: accountId ?? DEFAULT_ACCOUNT_ID,
+          },
+        ),
         initialValue: true,
       });
       if (!ok) {
@@ -93,7 +108,9 @@ export async function channelsRemoveCommand(
 
   const plugin = getChannelPlugin(channel);
   if (!plugin) {
-    runtime.error(`Unknown channel: ${channel}`);
+    runtime.error(
+      tchi("remove.unknownChannel", "Unknown channel: {channel}", { channel: String(channel) }),
+    );
     runtime.exit(1);
     return;
   }
@@ -105,7 +122,11 @@ export async function channelsRemoveCommand(
   let next = { ...cfg };
   if (deleteConfig) {
     if (!plugin.config.deleteAccount) {
-      runtime.error(`Channel ${channel} does not support delete.`);
+      runtime.error(
+        tchi("remove.noDeleteSupport", "Channel {channel} does not support delete.", {
+          channel: String(channel),
+        }),
+      );
       runtime.exit(1);
       return;
     }
@@ -120,7 +141,11 @@ export async function channelsRemoveCommand(
     }
   } else {
     if (!plugin.config.setAccountEnabled) {
-      runtime.error(`Channel ${channel} does not support disable.`);
+      runtime.error(
+        tchi("remove.noDisableSupport", "Channel {channel} does not support disable.", {
+          channel: String(channel),
+        }),
+      );
       runtime.exit(1);
       return;
     }
@@ -135,14 +160,26 @@ export async function channelsRemoveCommand(
   if (useWizard && prompter) {
     await prompter.outro(
       deleteConfig
-        ? `Deleted ${channelLabel(channel)} account "${accountKey}".`
-        : `Disabled ${channelLabel(channel)} account "${accountKey}".`,
+        ? tchi("remove.deleted", 'Deleted {channel} account "{accountId}".', {
+            channel: channelLabel(channel),
+            accountId: accountKey,
+          })
+        : tchi("remove.disabled", 'Disabled {channel} account "{accountId}".', {
+            channel: channelLabel(channel),
+            accountId: accountKey,
+          }),
     );
   } else {
     runtime.log(
       deleteConfig
-        ? `Deleted ${channelLabel(channel)} account "${accountKey}".`
-        : `Disabled ${channelLabel(channel)} account "${accountKey}".`,
+        ? tchi("remove.deleted", 'Deleted {channel} account "{accountId}".', {
+            channel: channelLabel(channel),
+            accountId: accountKey,
+          })
+        : tchi("remove.disabled", 'Disabled {channel} account "{accountId}".', {
+            channel: channelLabel(channel),
+            accountId: accountKey,
+          }),
     );
   }
 }

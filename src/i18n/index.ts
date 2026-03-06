@@ -99,7 +99,19 @@ export function clearTranslationCache(): void {
  * 预加载常用命名空间，避免首次翻译时的 I/O 延迟
  */
 export function preloadCommonNamespaces(): void {
-  for (const ns of ["cli", "wizard", "status", "commands", "doctor", "errors", "tui", "onboard"]) {
+  for (const ns of [
+    "cli",
+    "wizard",
+    "status",
+    "commands",
+    "doctor",
+    "errors",
+    "tui",
+    "onboard",
+    "channels",
+    "agents",
+    "configure",
+  ]) {
     try {
       loadNamespace(ns);
     } catch {
@@ -132,3 +144,21 @@ export const to = (key: string, fallback: string): string => t("onboard", key, f
 /** onboard 命名空间带插值快捷函数 */
 export const toi = (key: string, fallback: string, vars: Record<string, string | number>): string =>
   ti("onboard", key, fallback, vars);
+/** channels 命名空间快捷函数 */
+export const tch = (key: string, fallback: string): string => t("channels", key, fallback);
+/** channels 命名空间带插值快捷函数 */
+export const tchi = (
+  key: string,
+  fallback: string,
+  vars: Record<string, string | number>,
+): string => ti("channels", key, fallback, vars);
+/** agents 命名空间快捷函数 */
+export const tag = (key: string, fallback: string): string => t("agents", key, fallback);
+/** agents 命名空间带插值快捷函数 */
+export const tagi = (
+  key: string,
+  fallback: string,
+  vars: Record<string, string | number>,
+): string => ti("agents", key, fallback, vars);
+/** configure 命名空间快捷函数 */
+export const tcfg = (key: string, fallback: string): string => t("configure", key, fallback);
