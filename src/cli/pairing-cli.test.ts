@@ -108,14 +108,14 @@ describe("pairing cli", () => {
       name: "telegram ids",
       channel: "telegram",
       id: "123",
-      label: "telegramUserId",
+      label: "ID",
       meta: { username: "peter" },
     },
     {
       name: "discord ids",
       channel: "discord",
       id: "999",
-      label: "discordUserId",
+      label: "ID",
       meta: { tag: "Ada#0001" },
     },
   ])("labels $name correctly", async ({ channel, id, label, meta }) => {
