@@ -29,7 +29,9 @@ import {
 } from "./cloudflare-ai-gateway.js";
 import {
   buildDmxapiModelDefinition,
+  detectDmxapiApiFormat,
   DMXAPI_DEFAULT_BASE_URL,
+  DMXAPI_DEFAULT_MODEL_ID,
   DMXAPI_MODEL_CATALOG,
 } from "./dmxapi-models.js";
 import {
@@ -873,10 +875,12 @@ export function buildQianfanProvider(): ProviderConfig {
   };
 }
 
-export function buildDmxapiProvider(): ProviderConfig {
+export function buildDmxapiProvider(baseUrl?: string, primaryModelId?: string): ProviderConfig {
+  const resolvedBaseUrl = baseUrl?.trim() || DMXAPI_DEFAULT_BASE_URL;
+  const resolvedModelId = primaryModelId ?? DMXAPI_DEFAULT_MODEL_ID;
   return {
-    baseUrl: DMXAPI_DEFAULT_BASE_URL,
-    api: "anthropic-messages",
+    baseUrl: resolvedBaseUrl,
+    api: detectDmxapiApiFormat(resolvedModelId),
     models: DMXAPI_MODEL_CATALOG.map(buildDmxapiModelDefinition),
   };
 }

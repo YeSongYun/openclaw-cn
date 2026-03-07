@@ -1,7 +1,28 @@
 import type { ModelDefinitionConfig } from "../config/types.js";
 import type { ModelApi } from "../config/types.models.js";
 
-export const DMXAPI_DEFAULT_BASE_URL = "https://www.dmxapi.cn";
+export const DMXAPI_DEFAULT_BASE_URL = "https://www.dmxapi.cn/v1";
+
+/**
+ * 根据模型名称前缀自动推断 API 格式。
+ * - claude-* / *-cc → anthropic-messages（兼容 Anthropic Messages API）
+ * - gemini-* → google-generative-ai
+ * - gpt-5* → openai-responses（GPT-5 使用 Responses API）
+ * - 其他 → openai-completions
+ */
+export function detectDmxapiApiFormat(modelId: string): ModelApi {
+  const lower = modelId.toLowerCase();
+  if (lower.startsWith("claude") || lower.endsWith("-cc")) {
+    return "anthropic-messages";
+  }
+  if (lower.startsWith("gemini")) {
+    return "google-generative-ai";
+  }
+  if (lower.startsWith("gpt-5")) {
+    return "openai-responses";
+  }
+  return "openai-completions";
+}
 export const DMXAPI_DEFAULT_MODEL_ID = "claude-opus-4-6";
 export const DMXAPI_DEFAULT_MODEL_REF = `dmxapi/${DMXAPI_DEFAULT_MODEL_ID}`;
 export const DMXAPI_DEFAULT_COST = {

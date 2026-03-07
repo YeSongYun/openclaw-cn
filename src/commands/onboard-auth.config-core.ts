@@ -579,28 +579,36 @@ export function applyQianfanConfig(cfg: OpenClawConfig): OpenClawConfig {
 /**
  * Apply DMXAPI provider configuration without changing the default model.
  * Registers all DMXAPI models (Claude, GPT-5, Gemini) and sets up the provider.
+ * @param baseUrl 可选的自定义 API 端点 URL（默认：https://www.dmxapi.cn/v1）
  */
-export function applyDmxapiProviderConfig(cfg: OpenClawConfig): OpenClawConfig {
+export function applyDmxapiProviderConfig(cfg: OpenClawConfig, baseUrl?: string): OpenClawConfig {
   const models = { ...cfg.agents?.defaults?.models };
   models[DMXAPI_DEFAULT_MODEL_REF] = {
     ...models[DMXAPI_DEFAULT_MODEL_REF],
     alias: models[DMXAPI_DEFAULT_MODEL_REF]?.alias ?? "Claude Opus 4.6",
   };
-  const defaultProvider = buildDmxapiProvider();
+  // 根据当前主模型检测 API 格式（影响无独立 api 字段的模型）
+  const modelConfig = cfg.agents?.defaults?.model;
+  const currentPrimaryModel = typeof modelConfig === "string" ? modelConfig : modelConfig?.primary;
+  const primaryModelId = currentPrimaryModel?.startsWith("dmxapi/")
+    ? currentPrimaryModel.slice("dmxapi/".length)
+    : undefined;
+  const provider = buildDmxapiProvider(baseUrl, primaryModelId);
   return applyProviderConfigWithModelCatalog(cfg, {
     agentModels: models,
     providerId: "dmxapi",
-    api: "anthropic-messages",
-    baseUrl: defaultProvider.baseUrl,
-    catalogModels: defaultProvider.models ?? [],
+    api: provider.api ?? "anthropic-messages",
+    baseUrl: provider.baseUrl,
+    catalogModels: provider.models ?? [],
   });
 }
 
 /**
  * Apply DMXAPI provider configuration AND set DMXAPI as the default model.
  * Use this when DMXAPI is the primary provider choice during onboarding.
+ * @param baseUrl 可选的自定义 API 端点 URL（默认：https://www.dmxapi.cn/v1）
  */
-export function applyDmxapiConfig(cfg: OpenClawConfig): OpenClawConfig {
-  const next = applyDmxapiProviderConfig(cfg);
+export function applyDmxapiConfig(cfg: OpenClawConfig, baseUrl?: string): OpenClawConfig {
+  const next = applyDmxapiProviderConfig(cfg, baseUrl);
   return applyAgentDefaultModelPrimary(next, DMXAPI_DEFAULT_MODEL_REF);
 }

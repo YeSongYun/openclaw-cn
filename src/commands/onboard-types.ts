@@ -137,6 +137,7 @@ export type OnboardOptions = {
   volcengineApiKey?: string;
   byteplusApiKey?: string;
   dmxapiApiKey?: string;
+  dmxapiBaseUrl?: string;
   qianfanApiKey?: string;
   customBaseUrl?: string;
   customApiKey?: string;

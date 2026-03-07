@@ -140,6 +140,14 @@ type SimpleApiKeyProviderFlow = {
   noteDefault?: string;
   noteMessage?: string;
   noteTitle?: string;
+  /** 若设置，向导中会在 API key 之前额外 prompt 一个端点 URL */
+  baseUrlPromptMessage?: string;
+  /** URL prompt 的默认值 */
+  baseUrlDefault?: string;
+  /** 工厂函数：接受 capturedBaseUrl，返回绑定了 URL 的 applyDefaultConfig 闭包 */
+  applyDefaultConfigWithUrl?: (baseUrl: string) => ApiKeyProviderConfigApplier;
+  /** 工厂函数：接受 capturedBaseUrl，返回绑定了 URL 的 applyProviderConfig 闭包 */
+  applyProviderConfigWithUrl?: (baseUrl: string) => ApiKeyProviderConfigApplier;
 };
 
 const SIMPLE_API_KEY_PROVIDER_FLOWS: Partial<Record<AuthChoice, SimpleApiKeyProviderFlow>> = {
@@ -324,9 +332,13 @@ const SIMPLE_API_KEY_PROVIDER_FLOWS: Partial<Record<AuthChoice, SimpleApiKeyProv
     noteDefault: DMXAPI_DEFAULT_MODEL_REF,
     noteMessage: ta(
       "apply.noteMessage.dmxapi",
-      "DMXAPI 支持 Claude、GPT-5、Gemini 等多种模型。\n获取 API key：https://www.dmxapi.cn\n默认模型：claude-opus-4-6（可通过 openclaw config set 切换）",
+      "DMXAPI 支持 Claude、GPT-5、Gemini 等多种模型。\n获取 API key：https://www.dmxapi.cn\n默认模型：claude-opus-4-6（可通过 openclaw config set 切换）\n可用 --dmxapi-base-url 自定义 API 端点",
     ),
     noteTitle: "DMXAPI",
+    baseUrlPromptMessage: ta("apply.promptMessage.dmxapiBaseUrl", "DMXAPI API 端点 URL"),
+    baseUrlDefault: "https://www.dmxapi.cn/v1",
+    applyDefaultConfigWithUrl: (baseUrl) => (cfg) => applyDmxapiConfig(cfg, baseUrl),
+    applyProviderConfigWithUrl: (baseUrl) => (cfg) => applyDmxapiProviderConfig(cfg, baseUrl),
   },
 };
 
@@ -481,6 +493,41 @@ export async function applyAuthChoiceApiProviders(
 
   const simpleApiKeyProviderFlow = SIMPLE_API_KEY_PROVIDER_FLOWS[authChoice];
   if (simpleApiKeyProviderFlow) {
+    // 若 flow 定义了 URL prompt 字段，先提示用户输入端点 URL
+    let resolvedApplyDefaultConfig = simpleApiKeyProviderFlow.applyDefaultConfig;
+    let resolvedApplyProviderConfig = simpleApiKeyProviderFlow.applyProviderConfig;
+    if (
+      simpleApiKeyProviderFlow.baseUrlPromptMessage &&
+      simpleApiKeyProviderFlow.applyDefaultConfigWithUrl &&
+      simpleApiKeyProviderFlow.applyProviderConfigWithUrl
+    ) {
+      const baseUrlRaw = await params.prompter.text({
+        message: simpleApiKeyProviderFlow.baseUrlPromptMessage,
+        initialValue: simpleApiKeyProviderFlow.baseUrlDefault ?? "",
+        validate: (v) => {
+          const trimmed = String(v ?? "").trim();
+          // 允许为空（使用默认值）
+          if (!trimmed) {
+            return undefined;
+          }
+          try {
+            new URL(trimmed);
+            return undefined;
+          } catch {
+            return ta("apply.validate.invalidUrl", "请输入有效的 URL");
+          }
+        },
+      });
+      const capturedBaseUrl = String(baseUrlRaw ?? "").trim();
+      if (capturedBaseUrl) {
+        // 用闭包绑定 URL，避免修改 ApiKeyProviderConfigApplier 签名
+        resolvedApplyDefaultConfig =
+          simpleApiKeyProviderFlow.applyDefaultConfigWithUrl(capturedBaseUrl);
+        resolvedApplyProviderConfig =
+          simpleApiKeyProviderFlow.applyProviderConfigWithUrl(capturedBaseUrl);
+      }
+    }
+
     return await applyApiKeyProviderWithDefaultModel({
       provider: simpleApiKeyProviderFlow.provider,
       profileId: simpleApiKeyProviderFlow.profileId,
@@ -492,8 +539,8 @@ export async function applyAuthChoiceApiProviders(
           secretInputMode: mode ?? requestedSecretInputMode,
         }),
       defaultModel: simpleApiKeyProviderFlow.defaultModel,
-      applyDefaultConfig: simpleApiKeyProviderFlow.applyDefaultConfig,
-      applyProviderConfig: simpleApiKeyProviderFlow.applyProviderConfig,
+      applyDefaultConfig: resolvedApplyDefaultConfig,
+      applyProviderConfig: resolvedApplyProviderConfig,
       noteDefault: simpleApiKeyProviderFlow.noteDefault,
       noteMessage: simpleApiKeyProviderFlow.noteMessage,
       noteTitle: simpleApiKeyProviderFlow.noteTitle,
