@@ -122,6 +122,12 @@ export const zh_CN: TranslationMap = {
     ptBR: "Português (巴西葡萄牙语)",
     de: "Deutsch (德语)",
   },
+  update: {
+    available: "有可用更新：",
+    running: "当前版本",
+    updating: "更新中…",
+    updateNow: "立即更新",
+  },
   cron: {
     summary: {
       enabled: "已启用",

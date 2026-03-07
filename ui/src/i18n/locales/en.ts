@@ -123,6 +123,12 @@ export const en: TranslationMap = {
     ptBR: "Português (Brazilian Portuguese)",
     de: "Deutsch (German)",
   },
+  update: {
+    available: "Update available:",
+    running: "running",
+    updating: "Updating…",
+    updateNow: "Update now",
+  },
   cron: {
     summary: {
       enabled: "Enabled",

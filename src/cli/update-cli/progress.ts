@@ -52,7 +52,7 @@ export function inferUpdateFailureHints(result: UpdateRunResult): string[] {
     hints.push(
       "Detected permission failure (EACCES). Re-run with a writable global prefix or sudo (for system-managed Node installs).",
     );
-    hints.push("Example: npm config set prefix ~/.local && npm i -g openclaw@latest");
+    hints.push("Example: npm config set prefix ~/.local && npm i -g openclaw-cn@latest");
   }
 
   if (
@@ -64,7 +64,7 @@ export function inferUpdateFailureHints(result: UpdateRunResult): string[] {
     hints.push(
       "Detected native optional dependency build failure (e.g. opus). The updater retries with --omit=optional automatically.",
     );
-    hints.push("If it still fails: npm i -g openclaw@latest --omit=optional");
+    hints.push("If it still fails: npm i -g openclaw-cn@latest --omit=optional");
   }
 
   return hints;

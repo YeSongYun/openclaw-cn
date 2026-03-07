@@ -26,17 +26,21 @@ describe("resolveNpmChannelTag", () => {
 
   beforeEach(() => {
     versionByTag = {};
+    // Mock CNB registry: always returns full package doc with dist-tags
     vi.stubGlobal(
       "fetch",
-      vi.fn(async (input: RequestInfo | URL) => {
-        const url =
-          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
-        const tag = decodeURIComponent(url.split("/").pop() ?? "");
-        const version = versionByTag[tag] ?? null;
+      vi.fn(async () => {
+        const distTags: Record<string, string> = {};
+        for (const [tag, version] of Object.entries(versionByTag)) {
+          if (version != null) {
+            distTags[tag] = version;
+          }
+        }
+        const hasAny = Object.keys(distTags).length > 0;
         return {
-          ok: version != null,
-          status: version != null ? 200 : 404,
-          json: async () => ({ version }),
+          ok: hasAny,
+          status: hasAny ? 200 : 404,
+          json: async () => ({ "dist-tags": distTags }),
         } as Response;
       }),
     );

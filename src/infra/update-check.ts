@@ -300,16 +300,18 @@ export async function fetchNpmTagVersion(params: {
   const timeoutMs = params?.timeoutMs ?? 3500;
   const tag = params.tag;
   try {
+    // CNB registry: fetch full package doc and extract version from dist-tags
     const res = await fetchWithTimeout(
-      `https://registry.npmjs.org/openclaw/${encodeURIComponent(tag)}`,
+      "https://npm.cnb.cool/dmxapi/openclaw-cn/-/packages/openclaw-cn",
       {},
       Math.max(250, timeoutMs),
     );
     if (!res.ok) {
       return { tag, version: null, error: `HTTP ${res.status}` };
     }
-    const json = (await res.json()) as { version?: unknown };
-    const version = typeof json?.version === "string" ? json.version : null;
+    const json = (await res.json()) as { "dist-tags"?: Record<string, unknown> };
+    const distTag = json?.["dist-tags"]?.[tag];
+    const version = typeof distTag === "string" ? distTag : null;
     return { tag, version };
   } catch (err) {
     return { tag, version: null, error: String(err) };
