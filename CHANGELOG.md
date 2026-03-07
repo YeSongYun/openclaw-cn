@@ -2,6 +2,23 @@
 
 Docs: https://docs.openclaw.ai
 
+## 1.2.7
+
+### Fixes
+
+- fix(webui): 修复全局安装时 webUI 头部版本标签显示 "dev" 而非实际版本号
+
+## 1.2.6
+
+### Changes
+
+- feat(i18n): 汉化入网/配置向导（channels/remote/hooks/plugins/vllm/daemon）
+- feat(i18n): 汉化频道 onboarding 向导（WhatsApp/Discord/Slack/Telegram/Signal）
+
+### Fixes
+
+- fix(update): 切换更新检查至 CNB Registry 查询 openclaw-cn 包
+
 ## 1.2.5
 
 ### Changes
