@@ -2,6 +2,13 @@
 
 Docs: https://docs.openclaw.ai
 
+## 1.2.8
+
+### Changes
+
+- feat(dmxapi): 入网向导新增 API 端点 URL 配置，可自定义 DMXAPI 服务地址（默认：https://www.dmxapi.cn/v1）
+- feat(dmxapi): 新增多模型 API 格式自动检测（Claude→anthropic-messages，Gemini→google-generative-ai，GPT-5→openai-responses）
+
 ## 1.2.7
 
 ### Fixes
